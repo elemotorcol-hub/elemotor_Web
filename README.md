@@ -1,200 +1,144 @@
-# EleMotor - Plataforma Web Empresarial
+<div align="center">
 
-Sistema de gestión y operación web escalable bajo arquitectura monorepo, diseñado para ofrecer un rendimiento óptimo y una mantenibilidad empresarial a largo plazo.
+# EleMotor Web
+
+**Plataforma cliente del sistema EleMotor — Interfaz de usuario moderna, rápida y empresarial**
+
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38BDF8?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![ESLint](https://img.shields.io/badge/ESLint-9-4B32C3?style=for-the-badge&logo=eslint&logoColor=white)
+![Estado](https://img.shields.io/badge/Estado-En%20Desarrollo-orange?style=for-the-badge)
+
+</div>
 
 ---
 
-## Descripción General
+## 📋 Descripción General
 
-EleMotor es una plataforma web empresarial moderna construida para resolver necesidades complejas de gestión mediante una interfaz de usuario fluida y un backend robusto. El sistema está orientado a optimizar la escalabilidad y ofrecer una experiencia de desarrollo estructurada que permita a los equipos técnicos iterar de forma rápida y segura, asegurando la calidad del código mediante la separación de responsabilidades y tipado estricto extremo a extremo.
+**EleMotor Web** es la capa de presentación del sistema EleMotor. Está construida para resolver necesidades complejas de gestión mediante una interfaz de usuario interactiva y responsiva. El proyecto asegura la calidad del código mediante la separación de responsabilidades y tipado estricto extremo a extremo.
+
+> 🔗 El frontend consume la API REST provista por el repositorio [`elemotor_DMS`](../elemotor_DMS) (Backend).
 
 ---
 
-## Arquitectura del Proyecto
+## 🛠️ Tecnologías Utilizadas
 
-El sistema adopta una arquitectura de monorepo, dividiendo claramente las capas de presentación y lógica de negocio/acceso a datos en módulos independientes dentro de un mismo repositorio.
+| Tecnología       | Versión         | Propósito                             |
+| ---------------- | --------------- | ------------------------------------- |
+| **Next.js**      | 16 (App Router) | Framework principal de React          |
+| **TypeScript**   | Strict          | Tipado estático extremo a extremo     |
+| **Tailwind CSS** | v4              | Framework de estilos utilitario       |
+| **ESLint**       | 9 (Flat Config) | Análisis estático y calidad de código |
+| **Prettier**     | —               | Formateo automático del código        |
+| **Node.js**      | LTS             | Entorno de ejecución                  |
 
-```text
-elemotor_Web/
- ├── frontend/          # Aplicación cliente web (Next.js 16)
- │   ├── src/app/       # Rutas y Server Components (App Router)
- │   ├── src/components/ # Componentes UI reutilizables
- │   └── src/lib/       # Utilidades y configuración
- │
- ├── backend/           # API REST y lógica de dominio (NestJS)
- │   ├── src/           # Módulos, Controladores, Servicios
- │   └── test/          # Pruebas automatizadas
- │
- ├── README.md          # Documentación del proyecto
- └── .gitignore         # Configuración de exclusión para Git
+---
+
+## ✅ Requisitos Previos
+
+Antes de iniciar, asegúrese de tener instalado en su entorno local:
+
+- **Node.js** — Versión LTS recomendada ([nodejs.org](https://nodejs.org))
+- **Git** — Sistema de control de versiones ([git-scm.com](https://git-scm.com))
+
+---
+
+## 🚀 Instalación
+
+### 1. Clonar el repositorio
+
+```bash
+git clone <url-del-repositorio-frontend>
+cd elemotor_Web
 ```
 
----
+### 2. Instalar dependencias
 
-## Tecnologías Utilizadas
-
-### Frontend
-
-- **Framework:** Next.js 16
-- **Lenguaje:** TypeScript (Strict)
-- **Estilos:** Tailwind CSS v4
-- **Calidad de Código:** ESLint 9 (Flat Config) y Prettier
-
-### Backend
-
-- **Framework:** NestJS
-- **Lenguaje:** TypeScript
-- **Base de Datos:** MySQL
-- **ORM:** TypeORM
-
-### Herramientas y Entorno
-
-- **Entorno de Ejecución:** Node.js (Versión LTS recomendada)
-- **Control de Versiones:** Git
-
----
-
-## Requisitos Previos
-
-Para ejecutar y contribuir en el desarrollo del proyecto, el entorno local debe contar con:
-
-- **Node.js**: Versión LTS recomendada.
-- **MySQL**: Instalado y corriendo localmente o credenciales para un servidor remoto.
-- **Git**: Sistema de control de versiones.
-- **Nest CLI** (Opcional pero recomendado para el desarrollo de backend).
-
----
-
-## Instalación del Proyecto
-
-Siga estos pasos para configurar el entorno de ejecución local desde cero:
-
-1. **Clonar el repositorio**
-
-   ```bash
-   git clone <url-del-repositorio>
-   cd elemotor_Web
-   ```
-
-2. **Instalar dependencias del Backend**
-
-   ```bash
-   cd backend
-   npm install
-   ```
-
-3. **Instalar dependencias del Frontend**
-
-   ```bash
-   cd ../frontend
-   npm install
-   ```
-
-4. **Configurar archivos `.env`**
-   - Duplicar o crear archivos `.env` basándose en las plantillas detalladas en la sección "Variables de Entorno".
-
-5. **Ejecutar migraciones o sincronización de Base de Datos**
-   - Asegúrese de que el servidor MySQL esté activo y ejecute las sincronizaciones de TypeORM (si aplica).
-
-6. **Iniciar el Backend**
-
-   ```bash
-   cd backend
-   npm run start:dev
-   ```
-
-7. **Iniciar el Frontend**
-   En una nueva terminal:
-   ```bash
-   cd frontend
-   npm run dev
-   ```
-
----
-
-## Variables de Entorno
-
-### Backend (`backend/.env`)
-
-```env
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=tu_contraseña
-DB_NAME=db_elemotor
-PORT=3001
+```bash
+npm install
 ```
 
-### Frontend (`frontend/.env.local`)
+### 3. Configurar variables de entorno
 
-Solo las variables con el prefijo `NEXT_PUBLIC_` son accesibles en el navegador.
+```bash
+# Crear el archivo de entorno local
+cp .env.example .env.local
+```
+
+> Edite `.env.local` con los valores correspondientes a su entorno. Consulte la sección de [Variables de Entorno](#-variables-de-entorno).
+
+---
+
+## 🔑 Variables de Entorno
+
+Crear el archivo `.env.local` en la raíz del proyecto. Solo las variables con el prefijo `NEXT_PUBLIC_` son accesibles desde el navegador.
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ```
 
+| Variable              | Descripción                    | Ejemplo                     |
+| --------------------- | ------------------------------ | --------------------------- |
+| `NEXT_PUBLIC_API_URL` | URL base de la API del backend | `http://localhost:3001/api` |
+
 ---
 
-## Ejecución del Proyecto
+## 📂 Estructura de Carpetas
 
-### Backend
-
-```bash
-npm run start:dev
+```
+elemotor_Web/
+ ├── src/
+ │   ├── app/         # Rutas y Server Components (App Router)
+ │   ├── components/  # Componentes UI reutilizables
+ │   └── lib/         # Utilidades, hooks y configuración
+ ├── public/          # Archivos estáticos
+ ├── .env.local       # Variables de entorno (no versionar)
+ ├── next.config.ts   # Configuración de Next.js
+ ├── tailwind.config.ts
+ └── tsconfig.json
 ```
 
-El backend se ejecuta por defecto en http://localhost:3001
+---
 
-### Frontend
+## 📜 Scripts Disponibles
+
+| Comando            | Descripción                             |
+| ------------------ | --------------------------------------- |
+| `npm run dev`      | Inicia el servidor de desarrollo        |
+| `npm run build`    | Construye la aplicación para producción |
+| `npm run start`    | Inicia la aplicación en modo producción |
+| `npm run lint`     | Ejecuta el linter (ESLint)              |
+| `npm run lint:fix` | Linter con auto-corrección              |
+| `npm run format`   | Formatea el código con Prettier         |
+
+---
+
+## ▶️ Cómo Ejecutar el Proyecto
 
 ```bash
 npm run dev
 ```
 
-El frontend se ejecuta por defecto en http://localhost:3000
+El frontend estará disponible en: **[http://localhost:3000](http://localhost:3000)**
+
+> ⚠️ Asegúrese de que el backend (`elemotor_DMS`) esté ejecutándose antes de iniciar el frontend para que las peticiones a la API funcionen correctamente.
 
 ---
 
-## Scripts Disponibles
+## 👥 Equipo de Desarrollo
 
-### Frontend
-
-- `npm run dev`: Inicia el servidor de desarrollo.
-- `npm run build`: Construye la aplicación para producción.
-- `npm run start`: Inicia la aplicación en producción.
-- `npm run lint`: Ejecuta el linter.
-- `npm run lint:fix`: Ejecuta el linter y auto-corrige problemas.
-- `npm run format`: Formatea el código con Prettier.
-
-### Backend
-
-- `npm run start:dev`: Inicia el servidor en modo desarrollo con watch mode.
-- `npm run build`: Construye la aplicación.
-- `npm run test`: Ejecuta las pruebas.
+| Rol                       | Nombre                  |
+| ------------------------- | ----------------------- |
+| 🧑‍💼 Líder Técnico          | Marly Tatiana Rangel    |
+| 💻 Desarrollador Frontend | Juan Camilo Rodríguez   |
+| ⚙️ Desarrollador Backend  | David Fernando Carrillo |
+| 🎨 Modelador 3D           | Santiago Plata          |
 
 ---
 
-## Buenas Prácticas del Repositorio
+<div align="center">
 
-- No subir la carpeta `node_modules` (ya excluida en el `.gitignore`).
-- Uso de `.gitignore` para archivos de entorno (`.env`), builds (`.next`, `dist`), etc.
-- Uso del estándar Conventional Commits para el historial de control de versiones.
-- Separación clara de responsabilidades entre frontend y backend.
+**EleMotor Web** · En desarrollo · 2026
 
----
-
-## Estado Actual del Proyecto
-
-- **Frontend:** En desarrollo.
-- **Backend:** En desarrollo.
-- **Integración:** En progreso.
-
----
-
-## Equipo de Desarrollo
-
-- **Líder Técnico:** Marly Tatiana Rangel
-- **Desarrollador Frontend:** Juan Camilo Rodríguez
-- **Desarrollador Backend:** David Fernando Carrillo
-- **Modelador 3D:** Santiago Plata
-
+</div>
