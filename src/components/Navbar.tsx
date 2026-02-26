@@ -42,7 +42,7 @@ const NAVIGATION_ITEMS: NavItem[] = [
             { name: 'Cómo Cargo', href: '#carga', description: 'Guía de estaciones y carga' },
         ],
     },
-    { name: 'Nosotros', href: '#nosotros' },
+    { name: 'Nosotros', href: '/nosotros' },
 ];
 
 export function Navbar() {
@@ -195,6 +195,14 @@ export function Navbar() {
                 <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none"
                     style={{ background: 'radial-gradient(circle at 50% 50%, #00E5FF 0%, transparent 70%)' }}>
                 </div>
+
+                {/* Botón Cerrar Dedicado (Top Right) */}
+                <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="absolute top-8 right-6 z-[60] text-white p-2 bg-white/5 rounded-xl border border-white/10 shadow-lg hover:bg-white/10 transition-colors"
+                >
+                    <X className="w-6 h-6" />
+                </button>
 
                 <div className="flex flex-col gap-8 relative z-10">
                     {NAVIGATION_ITEMS.map((item) => (
