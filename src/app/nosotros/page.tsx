@@ -6,6 +6,15 @@ import { AboutProcess } from '@/components/About/AboutProcess';
 import { AboutPartners } from '@/components/About/AboutPartners';
 import { AboutTeam } from '@/components/About/AboutTeam';
 import { AboutCTA } from '@/components/About/AboutCTA';
+import { buildMetadata } from '@/lib/metadata';
+
+export const metadata = buildMetadata({
+  title: 'Nosotros',
+  description:
+    'Conoce al equipo detrás de EleMotor: especialistas en importación de vehículos eléctricos de lujo para Colombia. Nuestra misión, proceso y valores.',
+  path: '/nosotros',
+  keywords: ['equipo EleMotor', 'importadores eléctricos Colombia', 'sobre nosotros'],
+});
 
 export default function NosotrosPage() {
     return (
