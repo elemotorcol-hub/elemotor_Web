@@ -44,7 +44,7 @@ export function AboutTeam() {
                         <div key={index} className="bg-slate-800/30 border border-white/5 rounded-[2.5rem] p-6 md:p-8 flex flex-col items-center group hover:bg-slate-800/50 transition-colors">
                             <div className="relative w-32 h-32 mb-6">
                                 {/* Image Placeholder with fallback to a colored circle if file doesn't exist yet */}
-                                <div className="absolute inset-0 rounded-full bg-slate-700 overflow-hidden border-2 border-cyan-400/20 group-hover:border-cyan-400 transition-colors">
+                                <div className="absolute inset-0 rounded-full bg-slate-700 overflow-hidden border-2 border-[#00D4AA]/20 group-hover:border-[#00D4AA] transition-colors">
                                     <Image
                                         src={member.image}
                                         alt={member.name}
@@ -58,7 +58,7 @@ export function AboutTeam() {
                             <h3 className="text-lg font-bold text-white mb-1 uppercase tracking-tight">
                                 {member.name}
                             </h3>
-                            <p className="text-cyan-400 text-[10px] font-black tracking-widest uppercase mb-6">
+                            <p className="text-[#00D4AA] text-[10px] font-black tracking-widest uppercase mb-6">
                                 {member.role}
                             </p>
 

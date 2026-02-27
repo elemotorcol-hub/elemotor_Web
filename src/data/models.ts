@@ -1,0 +1,160 @@
+export const VehicleCategories = ['SUV', 'Sedán', 'Hatchback', 'Pick-Up'] as const;
+export type CategoryTuple = typeof VehicleCategories[number];
+
+export interface Vehicle {
+    id: string;
+    brand: string;
+    model: string;
+    category: CategoryTuple;
+    price: number;
+    topSpeed: number; // km/h
+    range: number; // km
+    acceleration: number; // 0-100 km/h in seconds
+    power: number; // Hp
+    battery: number; // kW(h)
+    image: string;
+    stockStatus: 'EN STOCK' | 'PREVENTA' | 'POR PEDIDO';
+}
+
+export const vehiclesData: Vehicle[] = [
+    {
+        id: 'avatr-11',
+        brand: 'AVATR',
+        model: '11',
+        category: 'SUV',
+        price: 59900,
+        topSpeed: 200,
+        range: 700,
+        acceleration: 3.9,
+        power: 578,
+        battery: 83,
+        image: '/MODELOS/AVATR-11.avif',
+        stockStatus: 'EN STOCK',
+    },
+    {
+        id: 'bmw-ix1',
+        brand: 'BMW',
+        model: 'iX1',
+        category: 'SUV',
+        price: 65900,
+        topSpeed: 180,
+        range: 510,
+        acceleration: 5.6,
+        power: 463,
+        battery: 65,
+        image: '/MODELOS/BMW IX1.avif',
+        stockStatus: 'PREVENTA',
+    },
+    {
+        id: 'byd-bao-3',
+        brand: 'BYD',
+        model: 'BAO 3',
+        category: 'SUV',
+        price: 45000,
+        topSpeed: 201,
+        range: 501,
+        acceleration: 5.2,
+        power: 218,
+        battery: 65,
+        image: '/MODELOS/BYD BAO_3.webp',
+        stockStatus: 'POR PEDIDO',
+    },
+    {
+        id: 'byd-dolphin-knight',
+        brand: 'BYD',
+        model: 'DOLPHIN EDITION KNIGHT',
+        category: 'Hatchback',
+        price: 34900,
+        topSpeed: 150,
+        range: 520,
+        acceleration: 7.5,
+        power: 177,
+        battery: 45,
+        image: '/MODELOS/BYD DOLPHIN EDITION KNIGHT.avif',
+        stockStatus: 'EN STOCK',
+    },
+    {
+        id: 'byd-yuan-plus',
+        brand: 'BYD',
+        model: 'YUAN PLUS',
+        category: 'SUV',
+        price: 38900,
+        topSpeed: 160,
+        range: 500,
+        acceleration: 7.3,
+        power: 205,
+        battery: 60,
+        image: '/MODELOS/BYD YUAN PLUS -.webp',
+        stockStatus: 'EN STOCK',
+    },
+    {
+        id: 'byd-sealion-7',
+        brand: 'BYD',
+        model: 'SEALION 7',
+        category: 'SUV',
+        price: 52000,
+        topSpeed: 265,
+        range: 465,
+        acceleration: 4.5,
+        power: 308,
+        battery: 83,
+        image: '/MODELOS/BYD-SEALION7 (1).avif',
+        stockStatus: 'EN STOCK',
+    },
+    {
+        id: 'byd-seagull',
+        brand: 'BYD',
+        model: 'SEAGULL',
+        category: 'Hatchback',
+        price: 21900,
+        topSpeed: 130,
+        range: 400,
+        acceleration: 13.0,
+        power: 74,
+        battery: 38,
+        image: '/MODELOS/BYD-Seagull.webp',
+        stockStatus: 'EN STOCK',
+    },
+    {
+        id: 'geely-galaxy-e8',
+        brand: 'GEELY',
+        model: 'GALAXY E8',
+        category: 'Sedán',
+        price: 49900,
+        topSpeed: 190,
+        range: 665,
+        acceleration: 3.49,
+        power: 335,
+        battery: 75,
+        image: '/MODELOS/GALAXY_E8.avif',
+        stockStatus: 'PREVENTA',
+    },
+    {
+        id: 'vw-id3-outstanding',
+        brand: 'VOLKSWAGEN',
+        model: 'ID.3 OUTSTANDING',
+        category: 'Hatchback',
+        price: 36900,
+        topSpeed: 160,
+        range: 450,
+        acceleration: 7.3,
+        power: 201,
+        battery: 82,
+        image: '/MODELOS/Volkswagen- ID3 OUTSTANGING.webp',
+        stockStatus: 'POR PEDIDO',
+    },
+    {
+        id: 'byd-yuan-up',
+        brand: 'BYD',
+        model: 'YUAN UP',
+        category: 'SUV',
+        price: 28900,
+        topSpeed: 160,
+        range: 401,
+        acceleration: 7.9,
+        power: 174,
+        battery: 45,
+        image: '/MODELOS/YUANUPBYD (1).avif',
+        stockStatus: 'EN STOCK',
+    }
+];

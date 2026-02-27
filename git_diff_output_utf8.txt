@@ -1,0 +1,760 @@
+﻿diff --git a/package-lock.json b/package-lock.json
+index 25db441..bf55cf8 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -8,6 +8,7 @@
+       "name": "frontend",
+       "version": "0.1.0",
+       "dependencies": {
++        "@radix-ui/react-slider": "^1.3.6",
+         "clsx": "^2.1.1",
+         "embla-carousel-react": "^8.6.0",
+         "framer-motion": "^12.34.3",
+@@ -1235,6 +1236,248 @@
+         "node": ">=12.4.0"
+       }
+     },
++    "node_modules/@radix-ui/number": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmjs.org/@radix-ui/number/-/number-1.1.1.tgz",
++      "integrity": "sha512-MkKCwxlXTgz6CFoJx3pCwn07GKp36+aZyu/u2Ln2VrA5DcdyCZkASEDBTd8x5whTQQL5CiYf4prXKLcgQdv29g==",
++      "license": "MIT"
++    },
++    "node_modules/@radix-ui/primitive": {
++      "version": "1.1.3",
++      "resolved": "https://registry.npmjs.org/@radix-ui/primitive/-/primitive-1.1.3.tgz",
++      "integrity": "sha512-JTF99U/6XIjCBo0wqkU5sK10glYe27MRRsfwoiq5zzOEZLHU3A3KCMa5X/azekYRCJ0HlwI0crAXS/5dEHTzDg==",
++      "license": "MIT"
++    },
++    "node_modules/@radix-ui/react-collection": {
++      "version": "1.1.7",
++      "resolved": "https://registry.npmjs.org/@radix-ui/react-collection/-/react-collection-1.1.7.tgz",
++      "integrity": "sha512-Fh9rGN0MoI4ZFUNyfFVNU4y9LUz93u9/0K+yLgA2bwRojxM8JU1DyvvMBabnZPBgMWREAJvU2jjVzq+LrFUglw==",
++      "license": "MIT",
++      "dependencies": {
++        "@radix-ui/react-compose-refs": "1.1.2",
++        "@radix-ui/react-context": "1.1.2",
++        "@radix-ui/react-primitive": "2.1.3",
++        "@radix-ui/react-slot": "1.2.3"
++      },
++      "peerDependencies": {
++        "@types/react": "*",
++        "@types/react-dom": "*",
++        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc",
++        "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        },
++        "@types/react-dom": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@radix-ui/react-compose-refs": {
++      "version": "1.1.2",
++      "resolved": "https://registry.npmjs.org/@radix-ui/react-compose-refs/-/react-compose-refs-1.1.2.tgz",
++      "integrity": "sha512-z4eqJvfiNnFMHIIvXP3CY57y2WJs5g2v3X0zm9mEJkrkNv4rDxu+sg9Jh8EkXyeqBkB7SOcboo9dMVqhyrACIg==",
++      "license": "MIT",
++      "peerDependencies": {
++        "@types/react": "*",
++        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@radix-ui/react-context": {
++      "version": "1.1.2",
++      "resolved": "https://registry.npmjs.org/@radix-ui/react-context/-/react-context-1.1.2.tgz",
++      "integrity": "sha512-jCi/QKUM2r1Ju5a3J64TH2A5SpKAgh0LpknyqdQ4m6DCV0xJ2HG1xARRwNGPQfi1SLdLWZ1OJz6F4OMBBNiGJA==",
++      "license": "MIT",
++      "peerDependencies": {
++        "@types/react": "*",
++        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@radix-ui/react-direction": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmjs.org/@radix-ui/react-direction/-/react-direction-1.1.1.tgz",
++      "integrity": "sha512-1UEWRX6jnOA2y4H5WczZ44gOOjTEmlqv1uNW4GAJEO5+bauCBhv8snY65Iw5/VOS/ghKN9gr2KjnLKxrsvoMVw==",
++      "license": "MIT",
++      "peerDependencies": {
++        "@types/react": "*",
++        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@radix-ui/react-primitive": {
++      "version": "2.1.3",
++      "resolved": "https://registry.npmjs.org/@radix-ui/react-primitive/-/react-primitive-2.1.3.tgz",
++      "integrity": "sha512-m9gTwRkhy2lvCPe6QJp4d3G1TYEUHn/FzJUtq9MjH46an1wJU+GdoGC5VLof8RX8Ft/DlpshApkhswDLZzHIcQ==",
++      "license": "MIT",
++      "dependencies": {
++        "@radix-ui/react-slot": "1.2.3"
++      },
++      "peerDependencies": {
++        "@types/react": "*",
++        "@types/react-dom": "*",
++        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc",
++        "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        },
++        "@types/react-dom": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@radix-ui/react-slider": {
++      "version": "1.3.6",
++      "resolved": "https://registry.npmjs.org/@radix-ui/react-slider/-/react-slider-1.3.6.tgz",
++      "integrity": "sha512-JPYb1GuM1bxfjMRlNLE+BcmBC8onfCi60Blk7OBqi2MLTFdS+8401U4uFjnwkOr49BLmXxLC6JHkvAsx5OJvHw==",
++      "license": "MIT",
++      "dependencies": {
++        "@radix-ui/number": "1.1.1",
++        "@radix-ui/primitive": "1.1.3",
++        "@radix-ui/react-collection": "1.1.7",
++        "@radix-ui/react-compose-refs": "1.1.2",
++        "@radix-ui/react-context": "1.1.2",
++        "@radix-ui/react-direction": "1.1.1",
++        "@radix-ui/react-primitive": "2.1.3",
++        "@radix-ui/react-use-controllable-state": "1.2.2",
++        "@radix-ui/react-use-layout-effect": "1.1.1",
++        "@radix-ui/react-use-previous": "1.1.1",
++        "@radix-ui/react-use-size": "1.1.1"
++      },
++      "peerDependencies": {
++        "@types/react": "*",
++        "@types/react-dom": "*",
++        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc",
++        "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        },
++        "@types/react-dom": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@radix-ui/react-slot": {
++      "version": "1.2.3",
++      "resolved": "https://registry.npmjs.org/@radix-ui/react-slot/-/react-slot-1.2.3.tgz",
++      "integrity": "sha512-aeNmHnBxbi2St0au6VBVC7JXFlhLlOnvIIlePNniyUNAClzmtAUEY8/pBiK3iHjufOlwA+c20/8jngo7xcrg8A==",
++      "license": "MIT",
++      "dependencies": {
++        "@radix-ui/react-compose-refs": "1.1.2"
++      },
++      "peerDependencies": {
++        "@types/react": "*",
++        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@radix-ui/react-use-controllable-state": {
++      "version": "1.2.2",
++      "resolved": "https://registry.npmjs.org/@radix-ui/react-use-controllable-state/-/react-use-controllable-state-1.2.2.tgz",
++      "integrity": "sha512-BjasUjixPFdS+NKkypcyyN5Pmg83Olst0+c6vGov0diwTEo6mgdqVR6hxcEgFuh4QrAs7Rc+9KuGJ9TVCj0Zzg==",
++      "license": "MIT",
++      "dependencies": {
++        "@radix-ui/react-use-effect-event": "0.0.2",
++        "@radix-ui/react-use-layout-effect": "1.1.1"
++      },
++      "peerDependencies": {
++        "@types/react": "*",
++        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@radix-ui/react-use-effect-event": {
++      "version": "0.0.2",
++      "resolved": "https://registry.npmjs.org/@radix-ui/react-use-effect-event/-/react-use-effect-event-0.0.2.tgz",
++      "integrity": "sha512-Qp8WbZOBe+blgpuUT+lw2xheLP8q0oatc9UpmiemEICxGvFLYmHm9QowVZGHtJlGbS6A6yJ3iViad/2cVjnOiA==",
++      "license": "MIT",
++      "dependencies": {
++        "@radix-ui/react-use-layout-effect": "1.1.1"
++      },
++      "peerDependencies": {
++        "@types/react": "*",
++        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@radix-ui/react-use-layout-effect": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmjs.org/@radix-ui/react-use-layout-effect/-/react-use-layout-effect-1.1.1.tgz",
++      "integrity": "sha512-RbJRS4UWQFkzHTTwVymMTUv8EqYhOp8dOOviLj2ugtTiXRaRQS7GLGxZTLL1jWhMeoSCf5zmcZkqTl9IiYfXcQ==",
++      "license": "MIT",
++      "peerDependencies": {
++        "@types/react": "*",
++        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@radix-ui/react-use-previous": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmjs.org/@radix-ui/react-use-previous/-/react-use-previous-1.1.1.tgz",
++      "integrity": "sha512-2dHfToCj/pzca2Ck724OZ5L0EVrr3eHRNsG/b3xQJLA2hZpVCS99bLAX+hm1IHXDEnzU6by5z/5MIY794/a8NQ==",
++      "license": "MIT",
++      "peerDependencies": {
++        "@types/react": "*",
++        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@radix-ui/react-use-size": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmjs.org/@radix-ui/react-use-size/-/react-use-size-1.1.1.tgz",
++      "integrity": "sha512-ewrXRDTAqAXlkl6t/fkXWNAhFX9I+CkKlw6zjEwk86RSPKwZr3xpBRso655aqYafwtnbpHLj6toFzmd6xdVptQ==",
++      "license": "MIT",
++      "dependencies": {
++        "@radix-ui/react-use-layout-effect": "1.1.1"
++      },
++      "peerDependencies": {
++        "@types/react": "*",
++        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        }
++      }
++    },
+     "node_modules/@rtsao/scc": {
+       "version": "1.1.0",
+       "resolved": "https://registry.npmjs.org/@rtsao/scc/-/scc-1.1.0.tgz",
+@@ -1568,7 +1811,7 @@
+       "version": "19.2.14",
+       "resolved": "https://registry.npmjs.org/@types/react/-/react-19.2.14.tgz",
+       "integrity": "sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "MIT",
+       "dependencies": {
+         "csstype": "^3.2.2"
+@@ -1578,7 +1821,7 @@
+       "version": "19.2.3",
+       "resolved": "https://registry.npmjs.org/@types/react-dom/-/react-dom-19.2.3.tgz",
+       "integrity": "sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "MIT",
+       "peerDependencies": {
+         "@types/react": "^19.2.0"
+@@ -2686,7 +2929,7 @@
+       "version": "3.2.3",
+       "resolved": "https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz",
+       "integrity": "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "MIT"
+     },
+     "node_modules/damerau-levenshtein": {
+diff --git a/package.json b/package.json
+index d2bcd4a..b8b4eff 100644
+--- a/package.json
++++ b/package.json
+@@ -12,6 +12,7 @@
+     "format:check": "prettier --check ."
+   },
+   "dependencies": {
++    "@radix-ui/react-slider": "^1.3.6",
+     "clsx": "^2.1.1",
+     "embla-carousel-react": "^8.6.0",
+     "framer-motion": "^12.34.3",
+diff --git a/src/app/nosotros/page.tsx b/src/app/nosotros/page.tsx
+index 74daf70..5d2e995 100644
+--- a/src/app/nosotros/page.tsx
++++ b/src/app/nosotros/page.tsx
+@@ -9,7 +9,7 @@ import { AboutCTA } from '@/components/About/AboutCTA';
+ 
+ export default function NosotrosPage() {
+     return (
+-        <div className="bg-slate-900 selection:bg-cyan-400 selection:text-slate-900 overflow-x-hidden min-h-screen">
++        <div className="bg-slate-900 selection:bg-[#00D4AA] selection:text-slate-900 overflow-x-hidden min-h-screen">
+             <header>
+                 <Navbar />
+             </header>
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 5ee0ccd..c375e01 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -7,7 +7,7 @@ import { Footer } from '@/components/Footer';
+ 
+ export default function Home() {
+   return (
+-    <div className="bg-slate-900 selection:bg-cyan-400 selection:text-slate-900 overflow-x-hidden">
++    <div className="bg-slate-900 selection:bg-[#00D4AA] selection:text-slate-900 overflow-x-hidden">
+       <header>
+         <Navbar />
+       </header>
+diff --git a/src/components/About/AboutCTA.tsx b/src/components/About/AboutCTA.tsx
+index bbdfa38..120df02 100644
+--- a/src/components/About/AboutCTA.tsx
++++ b/src/components/About/AboutCTA.tsx
+@@ -6,13 +6,13 @@ import { ArrowLeftRight, CreditCard } from 'lucide-react';
+ export function AboutCTA() {
+     return (
+         <section className="container mx-auto px-6 mb-24">
+-            <div className="bg-cyan-400 rounded-[3rem] p-8 lg:p-20 text-center flex flex-col items-center">
++            <div className="bg-[#00D4AA] rounded-[3rem] p-8 lg:p-20 text-center flex flex-col items-center">
+                 <h2 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight mb-8 md:mb-10 max-w-2xl">
+                     ┬┐Listo para conocer tu pr├│ximo veh├¡culo?
+                 </h2>
+ 
+                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+-                    <Link href="/#modelos" className="w-full sm:w-auto">
++                    <Link href="/modelos" className="w-full sm:w-auto">
+                         <Button
+                             size="lg"
+                             className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 md:px-10 py-6 md:py-7 w-full min-w-[220px] flex items-center justify-center gap-2"
+diff --git a/src/components/About/AboutHero.tsx b/src/components/About/AboutHero.tsx
+index a4247d1..e4a86b6 100644
+--- a/src/components/About/AboutHero.tsx
++++ b/src/components/About/AboutHero.tsx
+@@ -5,15 +5,15 @@ export function AboutHero() {
+         <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+             {/* Background Glows */}
+             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none">
+-                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px]" />
+-                <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px]" />
++                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#00B38F]/10 rounded-full blur-[120px]" />
++                <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#00D4AA]/5 rounded-full blur-[100px]" />
+             </div>
+ 
+             <div className="container mx-auto px-6 relative z-10">
+                 <div className="max-w-4xl">
+                     <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.1] mb-8 tracking-tight">
+                         Liderando la <br />
+-                        Transici├│n <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">El├®ctrica</span> <br />
++                        Transici├│n <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D4AA] to-emerald-400">El├®ctrica</span> <br />
+                         en Colombia
+                     </h1>
+                     <p className="text-lg md:text-xl text-slate-400 leading-relaxed max-w-2xl font-medium">
+diff --git a/src/components/About/AboutProcess.tsx b/src/components/About/AboutProcess.tsx
+index 37148b0..fedca13 100644
+--- a/src/components/About/AboutProcess.tsx
++++ b/src/components/About/AboutProcess.tsx
+@@ -44,7 +44,7 @@ export function AboutProcess() {
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 relative z-10">
+                         {steps.map((step, index) => (
+                             <div key={index} className="flex flex-col items-center text-center group">
+-                                <div className="w-20 h-20 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-cyan-400 mb-8 transition-transform group-hover:scale-110 group-hover:bg-cyan-400 group-hover:text-slate-900">
++                                <div className="w-20 h-20 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-[#00D4AA] mb-8 transition-transform group-hover:scale-110 group-hover:bg-[#00D4AA] group-hover:text-slate-900">
+                                     {step.icon}
+                                 </div>
+                                 <h3 className="text-lg font-bold text-white mb-2 uppercase tracking-widest">
+diff --git a/src/components/About/AboutStats.tsx b/src/components/About/AboutStats.tsx
+index 620ff93..322eaa0 100644
+--- a/src/components/About/AboutStats.tsx
++++ b/src/components/About/AboutStats.tsx
+@@ -19,7 +19,7 @@ export function AboutStats() {
+             <div className="container mx-auto">
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start mb-24">
+                     <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-8 text-center sm:text-left">
+-                        <div className="text-7xl md:text-9xl font-black text-cyan-400 leading-none">10+</div>
++                        <div className="text-7xl md:text-9xl font-black text-[#00D4AA] leading-none">10+</div>
+                         <h2 className="text-2xl md:text-5xl font-black text-white leading-tight">
+                             A├▒os de Experiencia en <br className="hidden sm:block" />
+                             <span className="text-slate-500 uppercase text-base sm:text-2xl md:text-3xl tracking-widest block sm:inline mt-2 sm:mt-0">Electromovilidad</span>
+@@ -40,12 +40,12 @@ export function AboutStats() {
+                     {stats.map((stat, index) => (
+                         <div
+                             key={index}
+-                            className="bg-slate-800/50 border border-white/5 rounded-3xl p-6 md:p-10 text-center group hover:border-cyan-400/20 transition-colors"
++                            className="bg-slate-800/50 border border-white/5 rounded-3xl p-6 md:p-10 text-center group hover:border-[#00D4AA]/20 transition-colors"
+                         >
+                             <div className="text-4xl md:text-5xl font-black text-white mb-4">
+                                 <AnimatedCounter value={stat.value} suffix={stat.suffix} />
+                             </div>
+-                            <div className="text-[10px] md:text-xs font-bold text-cyan-400 tracking-[0.2em] uppercase">
++                            <div className="text-[10px] md:text-xs font-bold text-[#00D4AA] tracking-[0.2em] uppercase">
+                                 {stat.label}
+                             </div>
+                         </div>
+diff --git a/src/components/About/AboutTeam.tsx b/src/components/About/AboutTeam.tsx
+index bdfcdb1..5e92497 100644
+--- a/src/components/About/AboutTeam.tsx
++++ b/src/components/About/AboutTeam.tsx
+@@ -44,7 +44,7 @@ export function AboutTeam() {
+                         <div key={index} className="bg-slate-800/30 border border-white/5 rounded-[2.5rem] p-6 md:p-8 flex flex-col items-center group hover:bg-slate-800/50 transition-colors">
+                             <div className="relative w-32 h-32 mb-6">
+                                 {/* Image Placeholder with fallback to a colored circle if file doesn't exist yet */}
+-                                <div className="absolute inset-0 rounded-full bg-slate-700 overflow-hidden border-2 border-cyan-400/20 group-hover:border-cyan-400 transition-colors">
++                                <div className="absolute inset-0 rounded-full bg-slate-700 overflow-hidden border-2 border-[#00D4AA]/20 group-hover:border-[#00D4AA] transition-colors">
+                                     <Image
+                                         src={member.image}
+                                         alt={member.name}
+@@ -58,7 +58,7 @@ export function AboutTeam() {
+                             <h3 className="text-lg font-bold text-white mb-1 uppercase tracking-tight">
+                                 {member.name}
+                             </h3>
+-                            <p className="text-cyan-400 text-[10px] font-black tracking-widest uppercase mb-6">
++                            <p className="text-[#00D4AA] text-[10px] font-black tracking-widest uppercase mb-6">
+                                 {member.role}
+                             </p>
+ 
+diff --git a/src/components/Button.tsx b/src/components/Button.tsx
+index 46052ae..bc349a1 100644
+--- a/src/components/Button.tsx
++++ b/src/components/Button.tsx
+@@ -12,7 +12,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+ 
+ const variantStyles: Record<Variant, string> = {
+   primary:
+-    'bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500',
++    'bg-[#00D4AA] text-slate-900 hover:bg-[#00B38F] focus-visible:ring-[#00D4AA]',
+   secondary:
+     'bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-400',
+   ghost:
+diff --git a/src/components/CTABanner.tsx b/src/components/CTABanner.tsx
+index 8bb9d1d..fa14983 100644
+--- a/src/components/CTABanner.tsx
++++ b/src/components/CTABanner.tsx
+@@ -10,7 +10,7 @@ export function CTABanner() {
+             <div className="container mx-auto">
+                 <div className="bg-gradient-to-r from-slate-800 to-slate-900/50 rounded-[3rem] p-12 md:p-20 relative overflow-hidden border border-white/5">
+                     {/* Giant background number */}
+-                    <span className="absolute -right-10 -bottom-20 text-[20rem] font-black text-cyan-400/5 select-none pointer-events-none italic">
++                    <span className="absolute -right-10 -bottom-20 text-[20rem] font-black text-[#00D4AA]/5 select-none pointer-events-none italic">
+                         4
+                     </span>
+ 
+@@ -18,12 +18,12 @@ export function CTABanner() {
+                         <div className="max-w-2xl text-center lg:text-left">
+                             <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-8">
+                                 ┬┐LISTO PARA DAR EL <br />
+-                                <span className="text-cyan-400">SALTO EL├ëCTRICO?</span>
++                                <span className="text-[#00D4AA]">SALTO EL├ëCTRICO?</span>
+                             </h2>
+                             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                                 <Button
+                                     size="lg"
+-                                    className="bg-cyan-400 hover:bg-cyan-500 text-slate-900 font-bold px-10 py-7 min-w-[220px]"
++                                    className="bg-[#00D4AA] hover:bg-[#00B38F] text-slate-900 font-bold px-10 py-7 min-w-[220px]"
+                                 >
+                                     COTIZAR AHORA
+                                 </Button>
+@@ -40,15 +40,15 @@ export function CTABanner() {
+                         {/* Feature small bullets */}
+                         <div className="hidden lg:grid grid-cols-1 gap-6 text-white/60">
+                             <div className="flex items-center gap-3">
+-                                <div className="w-2 h-2 rounded-full bg-cyan-400" />
++                                <div className="w-2 h-2 rounded-full bg-[#00D4AA]" />
+                                 <span>Reserva online en 5 minutos</span>
+                             </div>
+                             <div className="flex items-center gap-3">
+-                                <div className="w-2 h-2 rounded-full bg-cyan-400" />
++                                <div className="w-2 h-2 rounded-full bg-[#00D4AA]" />
+                                 <span>Financiamiento preferencial</span>
+                             </div>
+                             <div className="flex items-center gap-3">
+-                                <div className="w-2 h-2 rounded-full bg-cyan-400" />
++                                <div className="w-2 h-2 rounded-full bg-[#00D4AA]" />
+                                 <span>Entrega garantizada</span>
+                             </div>
+                         </div>
+diff --git a/src/components/Footer.tsx b/src/components/Footer.tsx
+index 3526f46..b567ddf 100644
+--- a/src/components/Footer.tsx
++++ b/src/components/Footer.tsx
+@@ -9,14 +9,15 @@ export function Footer() {
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+                     {/* Col 1: Logo & Social */}
+                     <div>
+-                        <div className="flex items-center gap-2 mb-8">
+-                            <div className="bg-cyan-400 p-1.5 rounded-lg">
+-                                <Zap className="w-6 h-6 text-slate-900 fill-current" />
+-                            </div>
+-                            <span className="text-2xl font-bold tracking-tight uppercase">
+-                                EleMotor
+-                            </span>
+-                        </div>
++                        <Link href="/" className="inline-block relative z-10 flex items-center group flex-shrink-0 mb-8">
++                            <Image
++                                src="/logo-elementor1.avif"
++                                alt="EleMotor Logo"
++                                width={180}
++                                height={40}
++                                className="h-8 md:h-10 w-auto object-contain brightness-110"
++                            />
++                        </Link>
+                         <p className="text-gray-500 mb-8 leading-relaxed">
+                             L├¡deres en importaci├│n de veh├¡culos el├®ctricos de alta gama. <br />
+                             Vanguardia, lujo y sostenibilidad.
+@@ -26,7 +27,7 @@ export function Footer() {
+                                 <a
+                                     key={idx}
+                                     href="#"
+-                                    className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-cyan-400 hover:text-slate-900 transition-all hover:border-cyan-400"
++                                    className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-[#00D4AA] hover:text-slate-900 transition-all hover:border-[#00D4AA]"
+                                 >
+                                     <Icon className="w-5 h-5" />
+                                 </a>
+@@ -36,7 +37,7 @@ export function Footer() {
+ 
+                     {/* Col 2: Contact */}
+                     <div>
+-                        <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-cyan-400">Contacto</h4>
++                        <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-[#00D4AA]">Contacto</h4>
+                         <div className="flex flex-col gap-6">
+                             <div className="flex items-start gap-4">
+                                 <MapPin className="w-5 h-5 text-gray-400 shrink-0 mt-1" />
+@@ -58,7 +59,7 @@ export function Footer() {
+ 
+                     {/* Col 3: Links */}
+                     <div>
+-                        <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-cyan-400">Enlaces</h4>
++                        <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-[#00D4AA]">Enlaces</h4>
+                         <nav className="flex flex-col gap-4">
+                             <Link href="#" className="text-gray-400 hover:text-white transition-colors">Modelos</Link>
+                             <Link href="#" className="text-gray-400 hover:text-white transition-colors">T├®rminos y Condiciones</Link>
+@@ -69,7 +70,7 @@ export function Footer() {
+ 
+                     {/* Col 4: Map Placeholder */}
+                     <div>
+-                        <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-cyan-400">Ubicaci├│n</h4>
++                        <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-[#00D4AA]">Ubicaci├│n</h4>
+                         <div className="relative aspect-square w-full rounded-2xl overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-700">
+                             <Image
+                                 src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=1000&auto=format&fit=crop"
+@@ -78,7 +79,7 @@ export function Footer() {
+                                 className="object-cover"
+                             />
+                             <div className="absolute inset-0 flex items-center justify-center">
+-                                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.5)] animate-pulse">
++                                <div className="w-10 h-10 bg-[#00D4AA] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,212,170,0.5)] animate-pulse">
+                                     <MapPin className="w-6 h-6 text-slate-900 fill-current" />
+                                 </div>
+                             </div>
+diff --git a/src/components/Hero.tsx b/src/components/Hero.tsx
+index 39e8b49..6091591 100644
+--- a/src/components/Hero.tsx
++++ b/src/components/Hero.tsx
+@@ -22,7 +22,7 @@ export function Hero() {
+             <div className="container relative z-10 px-6 text-center max-w-5xl mx-auto">
+                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight">
+                     IMPORTAMOS EL VEH├ìCULO <br />
+-                    <span className="text-cyan-400">EL├ëCTRICO DE TUS</span> SUE├æOS
++                    <span className="text-[#00D4AA]">EL├ëCTRICO DE TUS</span> SUE├æOS
+                 </h1>
+ 
+                 <p className="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+@@ -33,7 +33,7 @@ export function Hero() {
+                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                     <Button
+                         size="lg"
+-                        className="bg-cyan-400 hover:bg-cyan-500 text-slate-900 font-bold px-8 py-7 text-lg min-w-[200px]"
++                        className="bg-[#00D4AA] hover:bg-[#00B38F] text-slate-900 font-bold px-8 py-7 text-lg min-w-[200px]"
+                     >
+                         EXPLORAR MODELOS
+                     </Button>
+diff --git a/src/components/ModelCarousel.tsx b/src/components/ModelCarousel.tsx
+index 54a3285..6c83fb0 100644
+--- a/src/components/ModelCarousel.tsx
++++ b/src/components/ModelCarousel.tsx
+@@ -86,7 +86,7 @@ export function ModelCarousel() {
+                         {/* Header */}
+                         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 gap-6">
+                             <div>
+-                                <span className="text-cyan-400 font-bold tracking-widest uppercase text-sm mb-2 block animate-pulse">
++                                <span className="text-[#00D4AA] font-bold tracking-widest uppercase text-sm mb-2 block animate-pulse">
+                                     Exclusividad
+                                 </span>
+                                 <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
+@@ -97,14 +97,14 @@ export function ModelCarousel() {
+                             <div className="flex gap-4">
+                                 <button
+                                     onClick={scrollPrev}
+-                                    className="p-4 rounded-full border border-white/10 text-white hover:bg-cyan-400 hover:text-slate-900 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg hover:shadow-cyan-400/20"
++                                    className="p-4 rounded-full border border-white/10 text-white hover:bg-[#00D4AA] hover:text-slate-900 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg hover:shadow-[#00D4AA]/20"
+                                     aria-label="Anterior"
+                                 >
+                                     <ChevronLeft className="w-6 h-6" />
+                                 </button>
+                                 <button
+                                     onClick={scrollNext}
+-                                    className="p-4 rounded-full border border-white/10 text-white hover:bg-cyan-400 hover:text-slate-900 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg hover:shadow-cyan-400/20"
++                                    className="p-4 rounded-full border border-white/10 text-white hover:bg-[#00D4AA] hover:text-slate-900 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg hover:shadow-[#00D4AA]/20"
+                                     aria-label="Siguiente"
+                                 >
+                                     <ChevronRight className="w-6 h-6" />
+@@ -120,7 +120,7 @@ export function ModelCarousel() {
+                                         key={model.name}
+                                         className="embla__slide flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.33%] min-w-0 pl-6"
+                                     >
+-                                        <FeatureCard className="h-full flex flex-col p-6 bg-slate-900/40 border-white/5 hover:border-cyan-400/30 group">
++                                        <FeatureCard className="h-full flex flex-col p-6 bg-slate-900/40 border-white/5 hover:border-[#00D4AA]/30 group">
+                                             {/* Image Container */}
+                                             <div className="relative aspect-[16/10] rounded-2xl overflow-hidden mb-6 bg-slate-800/50 shadow-inner">
+                                                 <Image
+@@ -137,10 +137,10 @@ export function ModelCarousel() {
+ 
+                                             {/* Title & Badge */}
+                                             <div className="flex items-start justify-between mb-4">
+-                                                <h3 className="text-xl font-bold text-white uppercase tracking-tight group-hover:text-cyan-400 transition-colors duration-300">
++                                                <h3 className="text-xl font-bold text-white uppercase tracking-tight group-hover:text-[#00D4AA] transition-colors duration-300">
+                                                     {model.name}
+                                                 </h3>
+-                                                <span className="bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-tighter">
++                                                <span className="bg-[#00D4AA]/10 border border-[#00D4AA]/20 text-[#00D4AA] text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-tighter">
+                                                     {model.badge}
+                                                 </span>
+                                             </div>
+@@ -165,11 +165,11 @@ export function ModelCarousel() {
+                                             <div className="mt-auto flex items-center justify-between">
+                                                 <div className="flex flex-col">
+                                                     <span className="text-[10px] text-gray-500 uppercase font-black">Precio</span>
+-                                                    <span className="text-2xl font-black text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.2)]">
++                                                    <span className="text-2xl font-black text-[#00D4AA] drop-shadow-[0_0_8px_rgba(34,211,238,0.2)]">
+                                                         {model.price}
+                                                     </span>
+                                                 </div>
+-                                                <button className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-cyan-400 hover:text-slate-900 transition-all duration-300 group/btn shadow-xl">
++                                                <button className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-[#00D4AA] hover:text-slate-900 transition-all duration-300 group/btn shadow-xl">
+                                                     <ChevronRight className="w-5 h-5 transform group-hover/btn:translate-x-1 transition-transform" />
+                                                 </button>
+                                             </div>
+diff --git a/src/components/Navbar.tsx b/src/components/Navbar.tsx
+index 8e47261..2a3d7fd 100644
+--- a/src/components/Navbar.tsx
++++ b/src/components/Navbar.tsx
+@@ -22,8 +22,9 @@ interface NavItem {
+ const NAVIGATION_ITEMS: NavItem[] = [
+     {
+         name: 'Modelos',
++        href: '/modelos',
+         subMenu: [
+-            { name: 'Ver Cat├ílogo', href: '#modelos', description: 'Explora nuestra gama exclusiva' },
++            { name: 'Ver Cat├ílogo', href: '/modelos', description: 'Explora nuestra gama exclusiva' },
+             { name: 'Comparar', href: '#comparar', description: 'Encuentra el ideal para ti' },
+         ],
+     },
+@@ -124,7 +125,7 @@ export function Navbar() {
+                                                         href={sub.href}
+                                                         className="block group/sub"
+                                                     >
+-                                                        <span className="block text-sm font-semibold text-white group-hover/sub:text-cyan-400 transition-colors">
++                                                        <span className="block text-sm font-semibold text-white group-hover/sub:text-[#00D4AA] transition-colors">
+                                                             {sub.name}
+                                                         </span>
+                                                         <span className="block text-[10px] text-gray-500 group-hover/sub:text-gray-400 mt-1">
+@@ -144,7 +145,7 @@ export function Navbar() {
+                     <div className="hidden lg:flex items-center gap-6">
+                         {/* Toggle Idioma (Solo Visual) */}
+                         <div className="flex items-center gap-2 text-[13px] font-medium mr-4">
+-                            <span className="text-white cursor-pointer hover:text-cyan-400 transition-colors">ES</span>
++                            <span className="text-white cursor-pointer hover:text-[#00D4AA] transition-colors">ES</span>
+                             <span className="text-gray-600">/</span>
+                             <span className="text-gray-400 cursor-pointer hover:text-white transition-colors">EN</span>
+                         </div>
+@@ -160,7 +161,7 @@ export function Navbar() {
+                         {/* Bot├│n Cotizar */}
+                         <Link
+                             href="#cotizar"
+-                            className="bg-[#00E5FF] hover:bg-[#00D1E6] text-[#0A0F1C] font-bold text-[13px] px-6 py-2 rounded-xl transition-all duration-300 shadow-[0_4px_15px_rgba(0,229,255,0.2)] hover:shadow-[0_6px_20px_rgba(0,229,255,0.3)] active:scale-95"
++                            className="bg-[#00D4AA] hover:bg-[#00B38F] text-[#0A0F1C] font-bold text-[13px] px-6 py-2 rounded-xl transition-all duration-300 shadow-[0_4px_15px_rgba(0,212,170,0.2)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.3)] active:scale-95"
+                         >
+                             Cotizar
+                         </Link>
+@@ -170,7 +171,7 @@ export function Navbar() {
+                     <div className="flex items-center gap-4 lg:hidden relative z-[60]">
+                         <Link
+                             href="#cotizar"
+-                            className="bg-[#00E5FF] text-[#0A0F1C] font-black text-[10px] px-4 py-2 rounded-full uppercase tracking-tighter shadow-lg"
++                            className="bg-[#00D4AA] text-[#0A0F1C] font-black text-[10px] px-4 py-2 rounded-full uppercase tracking-tighter shadow-lg"
+                         >
+                             Cotizar
+                         </Link>
+@@ -193,7 +194,7 @@ export function Navbar() {
+             >
+                 {/* Background Pattern */}
+                 <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none"
+-                    style={{ background: 'radial-gradient(circle at 50% 50%, #00E5FF 0%, transparent 70%)' }}>
++                    style={{ background: 'radial-gradient(circle at 50% 50%, #00D4AA 0%, transparent 70%)' }}>
+                 </div>
+ 
+                 {/* Bot├│n Cerrar Dedicado (Top Right) */}
+@@ -215,7 +216,7 @@ export function Navbar() {
+                                     >
+                                         {item.name}
+                                         <ChevronDown className={cn(
+-                                            "w-6 h-6 text-cyan-400 transition-transform duration-500",
++                                            "w-6 h-6 text-[#00D4AA] transition-transform duration-500",
+                                             activeAccordion === item.name ? "rotate-180" : ""
+                                         )} />
+                                     </button>
+@@ -231,7 +232,7 @@ export function Navbar() {
+                                                     className="group"
+                                                     onClick={() => setMobileMenuOpen(false)}
+                                                 >
+-                                                    <span className="block text-lg font-bold text-gray-300 group-active:text-cyan-400">{sub.name}</span>
++                                                    <span className="block text-lg font-bold text-gray-300 group-active:text-[#00D4AA]">{sub.name}</span>
+                                                     <span className="block text-xs text-gray-500 uppercase tracking-widest">{sub.description}</span>
+                                                 </Link>
+                                             ))}
+@@ -253,11 +254,11 @@ export function Navbar() {
+                     {/* Botones de Acci├│n M├│vil */}
+                     <div className="grid grid-cols-2 gap-4 mt-8">
+                         <button className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-widest">
+-                            <Globe className="w-6 h-6 text-cyan-400" />
++                            <Globe className="w-6 h-6 text-[#00D4AA]" />
+                             ES / EN
+                         </button>
+                         <Link href="#login" className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-widest">
+-                            <User className="w-6 h-6 text-cyan-400" />
++                            <User className="w-6 h-6 text-[#00D4AA]" />
+                             Mi Cuenta
+                         </Link>
+                     </div>
+diff --git a/src/components/ValueProps.tsx b/src/components/ValueProps.tsx
+index 4e698a3..75585de 100644
+--- a/src/components/ValueProps.tsx
++++ b/src/components/ValueProps.tsx
+@@ -37,8 +37,8 @@ export function ValueProps() {
+                             className="flex flex-col items-center"
+                         >
+                             <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6 border border-white/5 relative group">
+-                                <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+-                                <prop.icon className="w-10 h-10 text-cyan-400 relative z-10" />
++                                <div className="absolute inset-0 bg-[#00D4AA]/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
++                                <prop.icon className="w-10 h-10 text-[#00D4AA] relative z-10" />
+                             </div>
+                             <h3 className="text-xl font-bold text-white mb-4 tracking-tight uppercase">
+                                 {prop.title}

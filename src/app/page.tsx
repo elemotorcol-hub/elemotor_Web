@@ -7,7 +7,7 @@ import { Footer } from '@/components/Footer';
 
 export default function Home() {
   return (
-    <div className="bg-slate-900 selection:bg-cyan-400 selection:text-slate-900 overflow-x-hidden">
+    <div className="bg-slate-900 selection:bg-[#00D4AA] selection:text-slate-900 overflow-x-hidden">
       <header>
         <Navbar />
       </header>

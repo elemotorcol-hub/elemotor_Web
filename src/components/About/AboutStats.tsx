@@ -19,7 +19,7 @@ export function AboutStats() {
             <div className="container mx-auto">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start mb-24">
                     <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-8 text-center sm:text-left">
-                        <div className="text-7xl md:text-9xl font-black text-cyan-400 leading-none">10+</div>
+                        <div className="text-7xl md:text-9xl font-black text-[#00D4AA] leading-none">10+</div>
                         <h2 className="text-2xl md:text-5xl font-black text-white leading-tight">
                             Años de Experiencia en <br className="hidden sm:block" />
                             <span className="text-slate-500 uppercase text-base sm:text-2xl md:text-3xl tracking-widest block sm:inline mt-2 sm:mt-0">Electromovilidad</span>
@@ -40,12 +40,12 @@ export function AboutStats() {
                     {stats.map((stat, index) => (
                         <div
                             key={index}
-                            className="bg-slate-800/50 border border-white/5 rounded-3xl p-6 md:p-10 text-center group hover:border-cyan-400/20 transition-colors"
+                            className="bg-slate-800/50 border border-white/5 rounded-3xl p-6 md:p-10 text-center group hover:border-[#00D4AA]/20 transition-colors"
                         >
                             <div className="text-4xl md:text-5xl font-black text-white mb-4">
                                 <AnimatedCounter value={stat.value} suffix={stat.suffix} />
                             </div>
-                            <div className="text-[10px] md:text-xs font-bold text-cyan-400 tracking-[0.2em] uppercase">
+                            <div className="text-[10px] md:text-xs font-bold text-[#00D4AA] tracking-[0.2em] uppercase">
                                 {stat.label}
                             </div>
                         </div>

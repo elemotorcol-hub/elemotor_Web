@@ -37,8 +37,8 @@ export function ValueProps() {
                             className="flex flex-col items-center"
                         >
                             <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6 border border-white/5 relative group">
-                                <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <prop.icon className="w-10 h-10 text-cyan-400 relative z-10" />
+                                <div className="absolute inset-0 bg-[#00D4AA]/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <prop.icon className="w-10 h-10 text-[#00D4AA] relative z-10" />
                             </div>
                             <h3 className="text-xl font-bold text-white mb-4 tracking-tight uppercase">
                                 {prop.title}

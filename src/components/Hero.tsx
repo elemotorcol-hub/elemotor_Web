@@ -22,7 +22,7 @@ export function Hero() {
             <div className="container relative z-10 px-6 text-center max-w-5xl mx-auto">
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight">
                     IMPORTAMOS EL VEHÍCULO <br />
-                    <span className="text-cyan-400">ELÉCTRICO DE TUS</span> SUEÑOS
+                    <span className="text-[#00D4AA]">ELÉCTRICO DE TUS</span> SUEÑOS
                 </h1>
 
                 <p className="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -33,7 +33,7 @@ export function Hero() {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Button
                         size="lg"
-                        className="bg-cyan-400 hover:bg-cyan-500 text-slate-900 font-bold px-8 py-7 text-lg min-w-[200px]"
+                        className="bg-[#00D4AA] hover:bg-[#00B38F] text-slate-900 font-bold px-8 py-7 text-lg min-w-[200px]"
                     >
                         EXPLORAR MODELOS
                     </Button>

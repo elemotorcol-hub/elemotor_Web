@@ -86,7 +86,7 @@ export function ModelCarousel() {
                         {/* Header */}
                         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 gap-6">
                             <div>
-                                <span className="text-cyan-400 font-bold tracking-widest uppercase text-sm mb-2 block animate-pulse">
+                                <span className="text-[#00D4AA] font-bold tracking-widest uppercase text-sm mb-2 block animate-pulse">
                                     Exclusividad
                                 </span>
                                 <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
@@ -97,14 +97,14 @@ export function ModelCarousel() {
                             <div className="flex gap-4">
                                 <button
                                     onClick={scrollPrev}
-                                    className="p-4 rounded-full border border-white/10 text-white hover:bg-cyan-400 hover:text-slate-900 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg hover:shadow-cyan-400/20"
+                                    className="p-4 rounded-full border border-white/10 text-white hover:bg-[#00D4AA] hover:text-slate-900 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg hover:shadow-[#00D4AA]/20"
                                     aria-label="Anterior"
                                 >
                                     <ChevronLeft className="w-6 h-6" />
                                 </button>
                                 <button
                                     onClick={scrollNext}
-                                    className="p-4 rounded-full border border-white/10 text-white hover:bg-cyan-400 hover:text-slate-900 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg hover:shadow-cyan-400/20"
+                                    className="p-4 rounded-full border border-white/10 text-white hover:bg-[#00D4AA] hover:text-slate-900 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg hover:shadow-[#00D4AA]/20"
                                     aria-label="Siguiente"
                                 >
                                     <ChevronRight className="w-6 h-6" />
@@ -120,7 +120,7 @@ export function ModelCarousel() {
                                         key={model.name}
                                         className="embla__slide flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.33%] min-w-0 pl-6"
                                     >
-                                        <FeatureCard className="h-full flex flex-col p-6 bg-slate-900/40 border-white/5 hover:border-cyan-400/30 group">
+                                        <FeatureCard className="h-full flex flex-col p-6 bg-slate-900/40 border-white/5 hover:border-[#00D4AA]/30 group">
                                             {/* Image Container */}
                                             <div className="relative aspect-[16/10] rounded-2xl overflow-hidden mb-6 bg-slate-800/50 shadow-inner">
                                                 <Image
@@ -137,10 +137,10 @@ export function ModelCarousel() {
 
                                             {/* Title & Badge */}
                                             <div className="flex items-start justify-between mb-4">
-                                                <h3 className="text-xl font-bold text-white uppercase tracking-tight group-hover:text-cyan-400 transition-colors duration-300">
+                                                <h3 className="text-xl font-bold text-white uppercase tracking-tight group-hover:text-[#00D4AA] transition-colors duration-300">
                                                     {model.name}
                                                 </h3>
-                                                <span className="bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-tighter">
+                                                <span className="bg-[#00D4AA]/10 border border-[#00D4AA]/20 text-[#00D4AA] text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-tighter">
                                                     {model.badge}
                                                 </span>
                                             </div>
@@ -165,11 +165,11 @@ export function ModelCarousel() {
                                             <div className="mt-auto flex items-center justify-between">
                                                 <div className="flex flex-col">
                                                     <span className="text-[10px] text-gray-500 uppercase font-black">Precio</span>
-                                                    <span className="text-2xl font-black text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.2)]">
+                                                    <span className="text-2xl font-black text-[#00D4AA] drop-shadow-[0_0_8px_rgba(34,211,238,0.2)]">
                                                         {model.price}
                                                     </span>
                                                 </div>
-                                                <button className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-cyan-400 hover:text-slate-900 transition-all duration-300 group/btn shadow-xl">
+                                                <button className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-[#00D4AA] hover:text-slate-900 transition-all duration-300 group/btn shadow-xl">
                                                     <ChevronRight className="w-5 h-5 transform group-hover/btn:translate-x-1 transition-transform" />
                                                 </button>
                                             </div>

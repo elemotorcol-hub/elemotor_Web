@@ -9,14 +9,15 @@ export function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
                     {/* Col 1: Logo & Social */}
                     <div>
-                        <div className="flex items-center gap-2 mb-8">
-                            <div className="bg-cyan-400 p-1.5 rounded-lg">
-                                <Zap className="w-6 h-6 text-slate-900 fill-current" />
-                            </div>
-                            <span className="text-2xl font-bold tracking-tight uppercase">
-                                EleMotor
-                            </span>
-                        </div>
+                        <Link href="/" className="inline-block relative z-10 flex items-center group flex-shrink-0 mb-8">
+                            <Image
+                                src="/logo-elementor1.avif"
+                                alt="EleMotor Logo"
+                                width={180}
+                                height={40}
+                                className="h-8 md:h-10 w-auto object-contain brightness-110"
+                            />
+                        </Link>
                         <p className="text-gray-500 mb-8 leading-relaxed">
                             Líderes en importación de vehículos eléctricos de alta gama. <br />
                             Vanguardia, lujo y sostenibilidad.
@@ -26,7 +27,7 @@ export function Footer() {
                                 <a
                                     key={idx}
                                     href="#"
-                                    className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-cyan-400 hover:text-slate-900 transition-all hover:border-cyan-400"
+                                    className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-[#00D4AA] hover:text-slate-900 transition-all hover:border-[#00D4AA]"
                                 >
                                     <Icon className="w-5 h-5" />
                                 </a>
@@ -36,7 +37,7 @@ export function Footer() {
 
                     {/* Col 2: Contact */}
                     <div>
-                        <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-cyan-400">Contacto</h4>
+                        <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-[#00D4AA]">Contacto</h4>
                         <div className="flex flex-col gap-6">
                             <div className="flex items-start gap-4">
                                 <MapPin className="w-5 h-5 text-gray-400 shrink-0 mt-1" />
@@ -58,7 +59,7 @@ export function Footer() {
 
                     {/* Col 3: Links */}
                     <div>
-                        <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-cyan-400">Enlaces</h4>
+                        <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-[#00D4AA]">Enlaces</h4>
                         <nav className="flex flex-col gap-4">
                             <Link href="#" className="text-gray-400 hover:text-white transition-colors">Modelos</Link>
                             <Link href="#" className="text-gray-400 hover:text-white transition-colors">Términos y Condiciones</Link>
@@ -69,7 +70,7 @@ export function Footer() {
 
                     {/* Col 4: Map Placeholder */}
                     <div>
-                        <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-cyan-400">Ubicación</h4>
+                        <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-[#00D4AA]">Ubicación</h4>
                         <div className="relative aspect-square w-full rounded-2xl overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-700">
                             <Image
                                 src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=1000&auto=format&fit=crop"
@@ -78,7 +79,7 @@ export function Footer() {
                                 className="object-cover"
                             />
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.5)] animate-pulse">
+                                <div className="w-10 h-10 bg-[#00D4AA] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,212,170,0.5)] animate-pulse">
                                     <MapPin className="w-6 h-6 text-slate-900 fill-current" />
                                 </div>
                             </div>

@@ -22,8 +22,9 @@ interface NavItem {
 const NAVIGATION_ITEMS: NavItem[] = [
     {
         name: 'Modelos',
+        href: '/modelos',
         subMenu: [
-            { name: 'Ver Catálogo', href: '#modelos', description: 'Explora nuestra gama exclusiva' },
+            { name: 'Ver Catálogo', href: '/modelos', description: 'Explora nuestra gama exclusiva' },
             { name: 'Comparar', href: '#comparar', description: 'Encuentra el ideal para ti' },
         ],
     },
@@ -124,7 +125,7 @@ export function Navbar() {
                                                         href={sub.href}
                                                         className="block group/sub"
                                                     >
-                                                        <span className="block text-sm font-semibold text-white group-hover/sub:text-cyan-400 transition-colors">
+                                                        <span className="block text-sm font-semibold text-white group-hover/sub:text-[#00D4AA] transition-colors">
                                                             {sub.name}
                                                         </span>
                                                         <span className="block text-[10px] text-gray-500 group-hover/sub:text-gray-400 mt-1">
@@ -144,7 +145,7 @@ export function Navbar() {
                     <div className="hidden lg:flex items-center gap-6">
                         {/* Toggle Idioma (Solo Visual) */}
                         <div className="flex items-center gap-2 text-[13px] font-medium mr-4">
-                            <span className="text-white cursor-pointer hover:text-cyan-400 transition-colors">ES</span>
+                            <span className="text-white cursor-pointer hover:text-[#00D4AA] transition-colors">ES</span>
                             <span className="text-gray-600">/</span>
                             <span className="text-gray-400 cursor-pointer hover:text-white transition-colors">EN</span>
                         </div>
@@ -160,7 +161,7 @@ export function Navbar() {
                         {/* Botón Cotizar */}
                         <Link
                             href="#cotizar"
-                            className="bg-[#00E5FF] hover:bg-[#00D1E6] text-[#0A0F1C] font-bold text-[13px] px-6 py-2 rounded-xl transition-all duration-300 shadow-[0_4px_15px_rgba(0,229,255,0.2)] hover:shadow-[0_6px_20px_rgba(0,229,255,0.3)] active:scale-95"
+                            className="bg-[#00D4AA] hover:bg-[#00B38F] text-[#0A0F1C] font-bold text-[13px] px-6 py-2 rounded-xl transition-all duration-300 shadow-[0_4px_15px_rgba(0,212,170,0.2)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.3)] active:scale-95"
                         >
                             Cotizar
                         </Link>
@@ -170,7 +171,7 @@ export function Navbar() {
                     <div className="flex items-center gap-4 lg:hidden relative z-[60]">
                         <Link
                             href="#cotizar"
-                            className="bg-[#00E5FF] text-[#0A0F1C] font-black text-[10px] px-4 py-2 rounded-full uppercase tracking-tighter shadow-lg"
+                            className="bg-[#00D4AA] text-[#0A0F1C] font-black text-[10px] px-4 py-2 rounded-full uppercase tracking-tighter shadow-lg"
                         >
                             Cotizar
                         </Link>
@@ -193,7 +194,7 @@ export function Navbar() {
             >
                 {/* Background Pattern */}
                 <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none"
-                    style={{ background: 'radial-gradient(circle at 50% 50%, #00E5FF 0%, transparent 70%)' }}>
+                    style={{ background: 'radial-gradient(circle at 50% 50%, #00D4AA 0%, transparent 70%)' }}>
                 </div>
 
                 {/* Botón Cerrar Dedicado (Top Right) */}
@@ -215,7 +216,7 @@ export function Navbar() {
                                     >
                                         {item.name}
                                         <ChevronDown className={cn(
-                                            "w-6 h-6 text-cyan-400 transition-transform duration-500",
+                                            "w-6 h-6 text-[#00D4AA] transition-transform duration-500",
                                             activeAccordion === item.name ? "rotate-180" : ""
                                         )} />
                                     </button>
@@ -231,7 +232,7 @@ export function Navbar() {
                                                     className="group"
                                                     onClick={() => setMobileMenuOpen(false)}
                                                 >
-                                                    <span className="block text-lg font-bold text-gray-300 group-active:text-cyan-400">{sub.name}</span>
+                                                    <span className="block text-lg font-bold text-gray-300 group-active:text-[#00D4AA]">{sub.name}</span>
                                                     <span className="block text-xs text-gray-500 uppercase tracking-widest">{sub.description}</span>
                                                 </Link>
                                             ))}
@@ -253,11 +254,11 @@ export function Navbar() {
                     {/* Botones de Acción Móvil */}
                     <div className="grid grid-cols-2 gap-4 mt-8">
                         <button className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-widest">
-                            <Globe className="w-6 h-6 text-cyan-400" />
+                            <Globe className="w-6 h-6 text-[#00D4AA]" />
                             ES / EN
                         </button>
                         <Link href="#login" className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-widest">
-                            <User className="w-6 h-6 text-cyan-400" />
+                            <User className="w-6 h-6 text-[#00D4AA]" />
                             Mi Cuenta
                         </Link>
                     </div>

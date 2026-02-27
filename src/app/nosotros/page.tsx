@@ -9,7 +9,7 @@ import { AboutCTA } from '@/components/About/AboutCTA';
 
 export default function NosotrosPage() {
     return (
-        <div className="bg-slate-900 selection:bg-cyan-400 selection:text-slate-900 overflow-x-hidden min-h-screen">
+        <div className="bg-slate-900 selection:bg-[#00D4AA] selection:text-slate-900 overflow-x-hidden min-h-screen">
             <header>
                 <Navbar />
             </header>

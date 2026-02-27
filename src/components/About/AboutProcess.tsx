@@ -44,7 +44,7 @@ export function AboutProcess() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 relative z-10">
                         {steps.map((step, index) => (
                             <div key={index} className="flex flex-col items-center text-center group">
-                                <div className="w-20 h-20 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-cyan-400 mb-8 transition-transform group-hover:scale-110 group-hover:bg-cyan-400 group-hover:text-slate-900">
+                                <div className="w-20 h-20 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-[#00D4AA] mb-8 transition-transform group-hover:scale-110 group-hover:bg-[#00D4AA] group-hover:text-slate-900">
                                     {step.icon}
                                 </div>
                                 <h3 className="text-lg font-bold text-white mb-2 uppercase tracking-widest">

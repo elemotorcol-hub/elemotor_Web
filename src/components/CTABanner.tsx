@@ -10,7 +10,7 @@ export function CTABanner() {
             <div className="container mx-auto">
                 <div className="bg-gradient-to-r from-slate-800 to-slate-900/50 rounded-[3rem] p-12 md:p-20 relative overflow-hidden border border-white/5">
                     {/* Giant background number */}
-                    <span className="absolute -right-10 -bottom-20 text-[20rem] font-black text-cyan-400/5 select-none pointer-events-none italic">
+                    <span className="absolute -right-10 -bottom-20 text-[20rem] font-black text-[#00D4AA]/5 select-none pointer-events-none italic">
                         4
                     </span>
 
@@ -18,12 +18,12 @@ export function CTABanner() {
                         <div className="max-w-2xl text-center lg:text-left">
                             <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-8">
                                 ¿LISTO PARA DAR EL <br />
-                                <span className="text-cyan-400">SALTO ELÉCTRICO?</span>
+                                <span className="text-[#00D4AA]">SALTO ELÉCTRICO?</span>
                             </h2>
                             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                                 <Button
                                     size="lg"
-                                    className="bg-cyan-400 hover:bg-cyan-500 text-slate-900 font-bold px-10 py-7 min-w-[220px]"
+                                    className="bg-[#00D4AA] hover:bg-[#00B38F] text-slate-900 font-bold px-10 py-7 min-w-[220px]"
                                 >
                                     COTIZAR AHORA
                                 </Button>
@@ -40,15 +40,15 @@ export function CTABanner() {
                         {/* Feature small bullets */}
                         <div className="hidden lg:grid grid-cols-1 gap-6 text-white/60">
                             <div className="flex items-center gap-3">
-                                <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                                <div className="w-2 h-2 rounded-full bg-[#00D4AA]" />
                                 <span>Reserva online en 5 minutos</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                                <div className="w-2 h-2 rounded-full bg-[#00D4AA]" />
                                 <span>Financiamiento preferencial</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                                <div className="w-2 h-2 rounded-full bg-[#00D4AA]" />
                                 <span>Entrega garantizada</span>
                             </div>
                         </div>
