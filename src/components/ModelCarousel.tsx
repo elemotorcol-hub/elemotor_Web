@@ -11,49 +11,49 @@ const models = [
         name: 'TESLA MODEL S PLAID',
         price: '$125.000 USD',
         specs: { range: '600 km', zeroToHundred: '2.1s', battery: '100 kWh' },
-        image: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=2071&auto=format&fit=crop',
+        image: '/MODELOS/AVATR-11.avif',
         badge: 'NUEVO',
     },
     {
         name: 'LUCID AIR SAPPHIRE',
         price: '$249.000 USD',
         specs: { range: '687 km', zeroToHundred: '1.89s', battery: '118 kWh' },
-        image: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?q=80&w=2070&auto=format&fit=crop',
+        image: '/MODELOS/GALAXY_E8.avif',
         badge: 'PREMIUM',
     },
     {
         name: 'PORSCHE TAYCAN TURBO S',
         price: '$194.000 USD',
         specs: { range: '412 km', zeroToHundred: '2.8s', battery: '93 kWh' },
-        image: 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?q=80&w=2070&auto=format&fit=crop',
+        image: '/MODELOS/BYD-SEALION7 (1).avif',
         badge: 'LUJO',
     },
     {
         name: 'RIVIAN R1S',
         price: '$84.000 USD',
         specs: { range: '516 km', zeroToHundred: '3.0s', battery: '135 kWh' },
-        image: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?q=80&w=2070&auto=format&fit=crop', // Swapping with Lucid placeholder as it's guaranteed working
+        image: '/MODELOS/BYD BAO_3.webp',
         badge: 'AVENTURA',
     },
     {
         name: 'LOTUS ELETRE',
         price: '$107.000 USD',
         specs: { range: '600 km', zeroToHundred: '2.95s', battery: '112 kWh' },
-        image: 'https://images.unsplash.com/photo-1617788130037-30a3014d9990?q=80&w=2070&auto=format&fit=crop', // Swapping with Tesla placeholder as it's guaranteed working
+        image: '/MODELOS/BYD DOLPHIN EDITION KNIGHT.avif',
         badge: 'DEPORTIVO',
     },
     {
         name: 'POLESTAR 3',
         price: '$83.000 USD',
         specs: { range: '482 km', zeroToHundred: '4.6s', battery: '111 kWh' },
-        image: 'https://images.unsplash.com/photo-1590362891175-3793037000d6?q=80&w=2070&auto=format&fit=crop',
+        image: '/MODELOS/BYD YUAN PLUS -.webp',
         badge: 'DISEÑO',
     },
     {
         name: 'RIMAC NEVERA',
         price: '$2.100.000 USD',
         specs: { range: '490 km', zeroToHundred: '1.81s', battery: '120 kWh' },
-        image: 'https://images.unsplash.com/photo-1542362567-b055002b9134?q=80&w=2070&auto=format&fit=crop',
+        image: '/MODELOS/BMW IX1.avif',
         badge: 'EXTREMO',
     },
 ];
@@ -127,10 +127,11 @@ export function ModelCarousel() {
                                                     src={model.image}
                                                     alt={model.name}
                                                     fill
-                                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                    sizes="(max-width: 768px) 150px, (max-width: 1200px) 300px, 400px"
                                                     className="object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1"
                                                     placeholder="blur"
                                                     blurDataURL={BLUR_DATA_URL}
+                                                    loading="lazy"
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                             </div>

@@ -23,15 +23,27 @@ export function Footer() {
                             Vanguardia, lujo y sostenibilidad.
                         </p>
                         <div className="flex gap-4">
-                            {[Facebook, Instagram, Twitter].map((Icon, idx) => (
-                                <a
-                                    key={idx}
-                                    href="#"
-                                    className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-[#00D4AA] hover:text-slate-900 transition-all hover:border-[#00D4AA]"
-                                >
-                                    <Icon className="w-5 h-5" />
-                                </a>
-                            ))}
+                            <a
+                                href="#"
+                                aria-label="Visitar nuestra página de Facebook"
+                                className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-[#00D4AA] hover:text-slate-900 transition-all hover:border-[#00D4AA]"
+                            >
+                                <Facebook className="w-5 h-5" />
+                            </a>
+                            <a
+                                href="#"
+                                aria-label="Visitar nuestro perfil de Instagram"
+                                className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-[#00D4AA] hover:text-slate-900 transition-all hover:border-[#00D4AA]"
+                            >
+                                <Instagram className="w-5 h-5" />
+                            </a>
+                            <a
+                                href="#"
+                                aria-label="Visitar nuestra cuenta de Twitter / X"
+                                className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-[#00D4AA] hover:text-slate-900 transition-all hover:border-[#00D4AA]"
+                            >
+                                <Twitter className="w-5 h-5" />
+                            </a>
                         </div>
                     </div>
 

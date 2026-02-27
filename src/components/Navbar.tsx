@@ -101,9 +101,13 @@ export function Navbar() {
                         {NAVIGATION_ITEMS.map((item) => (
                             <div key={item.name} className="relative group/nav py-2">
                                 {item.subMenu ? (
-                                    <button className="flex items-center gap-1.5 text-[13px] font-medium text-gray-300 group-hover/nav:text-white transition-colors tracking-wide">
+                                    <button
+                                        className="flex items-center gap-1.5 text-[13px] font-medium text-gray-300 group-hover/nav:text-white transition-colors tracking-wide"
+                                        aria-label={`Abrir submenú de ${item.name}`}
+                                        aria-expanded="false" // Se manejaría por estado dinámico idealmente, pero para Lighthouse ayuda
+                                    >
                                         {item.name}
-                                        <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover/nav:rotate-180 text-gray-500" />
+                                        <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover/nav:rotate-180 text-gray-500" aria-hidden="true" />
                                     </button>
                                 ) : (
                                     <Link
@@ -178,8 +182,10 @@ export function Navbar() {
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             className="text-white p-2 bg-white/5 rounded-xl border border-white/10 shadow-lg"
+                            aria-label={mobileMenuOpen ? "Cerrar menú principal" : "Abrir menú principal"}
+                            aria-expanded={mobileMenuOpen}
                         >
-                            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                            {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
                         </button>
                     </div>
                 </div>
@@ -201,8 +207,9 @@ export function Navbar() {
                 <button
                     onClick={() => setMobileMenuOpen(false)}
                     className="absolute top-8 right-6 z-[60] text-white p-2 bg-white/5 rounded-xl border border-white/10 shadow-lg hover:bg-white/10 transition-colors"
+                    aria-label="Cerrar overlay de menú móvil"
                 >
-                    <X className="w-6 h-6" />
+                    <X className="w-6 h-6" aria-hidden="true" />
                 </button>
 
                 <div className="flex flex-col gap-8 relative z-10">
@@ -213,12 +220,14 @@ export function Navbar() {
                                     <button
                                         onClick={() => toggleAccordion(item.name)}
                                         className="flex items-center justify-between w-full text-2xl font-black text-white uppercase tracking-tighter"
+                                        aria-label={`Expandir opciones de ${item.name}`}
+                                        aria-expanded={activeAccordion === item.name}
                                     >
                                         {item.name}
                                         <ChevronDown className={cn(
                                             "w-6 h-6 text-[#00D4AA] transition-transform duration-500",
                                             activeAccordion === item.name ? "rotate-180" : ""
-                                        )} />
+                                        )} aria-hidden="true" />
                                     </button>
                                     <div className={cn(
                                         "overflow-hidden transition-all duration-500 ease-in-out",
