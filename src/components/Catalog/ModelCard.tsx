@@ -30,7 +30,7 @@ export function ModelCard({ vehicle, priority = false }: ModelCardProps) {
                         alt={vehicle.model}
                         fill
                         className="object-contain object-center drop-shadow-2xl"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        sizes="(max-width: 768px) 80vw, (max-width: 1200px) 40vw, 30vw"
                         priority={priority}
                     />
                 </div>
