@@ -132,6 +132,7 @@ export function ModelCarousel() {
                                                     placeholder="blur"
                                                     blurDataURL={BLUR_DATA_URL}
                                                     loading="lazy"
+                                                    unoptimized={true}
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                             </div>

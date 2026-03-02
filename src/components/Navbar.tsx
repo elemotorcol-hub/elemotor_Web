@@ -102,7 +102,7 @@ export function Navbar() {
                             <div key={item.name} className="relative group/nav py-2">
                                 {item.subMenu ? (
                                     <button
-                                        className="flex items-center gap-1.5 text-[13px] font-medium text-gray-300 group-hover/nav:text-white transition-colors tracking-wide"
+                                        className="flex items-center gap-1.5 text-[14px] font-semibold text-white group-hover/nav:text-[#00D4AA] transition-colors tracking-wide drop-shadow-md"
                                         aria-label={`Abrir submenú de ${item.name}`}
                                         aria-expanded="false" // Se manejaría por estado dinámico idealmente, pero para Lighthouse ayuda
                                     >
@@ -112,7 +112,7 @@ export function Navbar() {
                                 ) : (
                                     <Link
                                         href={item.href || '#'}
-                                        className="text-[13px] font-medium text-gray-300 hover:text-white transition-colors tracking-wide"
+                                        className="text-[14px] font-semibold text-white hover:text-[#00D4AA] transition-colors tracking-wide drop-shadow-md"
                                     >
                                         {item.name}
                                     </Link>
@@ -148,24 +148,29 @@ export function Navbar() {
                     {/* Acciones (Derecha) */}
                     <div className="hidden lg:flex items-center gap-6">
                         {/* Toggle Idioma (Solo Visual) */}
-                        <div className="flex items-center gap-2 text-[13px] font-medium mr-4">
+                        <div className="flex items-center gap-2 text-[14px] font-medium mr-4">
                             <span className="text-white cursor-pointer hover:text-[#00D4AA] transition-colors">ES</span>
-                            <span className="text-gray-600">/</span>
-                            <span className="text-gray-400 cursor-pointer hover:text-white transition-colors">EN</span>
+                            <span className="text-gray-500">/</span>
+                            <span className="text-gray-300 cursor-pointer hover:text-white transition-colors">EN</span>
                         </div>
 
                         {/* Separador Vertical */}
                         <div className="h-5 w-[1px] bg-white/10 mx-1 hidden xl:block" />
 
-                        {/* Login */}
-                        <Link href="#login" className="text-[13px] font-medium text-gray-400 hover:text-white transition-colors tracking-wide">
-                            Login
-                        </Link>
+                        {/* Login & Register */}
+                        <div className="flex items-center gap-4">
+                            <Link href="/auth/login" className="text-[14px] font-semibold text-white hover:text-[#00D4AA] transition-colors tracking-wide drop-shadow-md">
+                                Login
+                            </Link>
+                            <Link href="/auth/register" className="text-[14px] font-semibold text-white hover:text-[#00D4AA] transition-colors tracking-wide drop-shadow-md">
+                                Registrarse
+                            </Link>
+                        </div>
 
                         {/* Botón Cotizar */}
                         <Link
                             href="#cotizar"
-                            className="bg-[#00D4AA] hover:bg-[#00B38F] text-[#0A0F1C] font-bold text-[13px] px-6 py-2 rounded-xl transition-all duration-300 shadow-[0_4px_15px_rgba(0,212,170,0.2)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.3)] active:scale-95"
+                            className="bg-[#00D4AA] hover:bg-[#00B38F] text-[#0A0F1C] font-bold text-[14px] px-7 py-2.5 rounded-xl transition-all duration-300 shadow-[0_4px_15px_rgba(0,212,170,0.2)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.3)] active:scale-95"
                         >
                             Cotizar
                         </Link>
@@ -266,7 +271,7 @@ export function Navbar() {
                             <Globe className="w-6 h-6 text-[#00D4AA]" />
                             ES / EN
                         </button>
-                        <Link href="#login" className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-widest">
+                        <Link href="/auth/login" className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-widest">
                             <User className="w-6 h-6 text-[#00D4AA]" />
                             Mi Cuenta
                         </Link>
