@@ -41,7 +41,11 @@ export default function LoginForm() {
         if (result?.error) {
             setAuthError(result.error);
         } else if (result?.success) {
-            router.push('/admin/inventory');
+            if (result.role === 'ADMIN') {
+                router.push('/admin/inventory');
+            } else {
+                router.push('/dashboard');
+            }
         }
     };
 

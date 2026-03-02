@@ -45,7 +45,8 @@ export default function RegisterForm() {
         if (result?.error) {
             setAuthError(result.error);
         } else if (result?.success) {
-            router.push('/admin/inventory');
+            // Un usuario recién registrado siempre es CUSTOMER en este flow
+            router.push('/dashboard');
         }
     };
 

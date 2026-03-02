@@ -20,10 +20,11 @@ export async function loginAction(email: string, password: string) {
     await createSession({
         id: user.id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        role: user.role
     });
 
-    return { success: true };
+    return { success: true, role: user.role };
 }
 
 export async function registerAction(name: string, email: string, phone: string, password: string) {
@@ -39,7 +40,8 @@ export async function registerAction(name: string, email: string, phone: string,
         id: crypto.randomUUID(),
         name,
         email,
-        password // En la vida real haríamos hasheo aquí con bcrypt
+        password, // En la vida real haríamos hasheo aquí con bcrypt
+        role: 'CUSTOMER' as const
     };
 
     mockUsersDB.push(newUser);
@@ -48,10 +50,11 @@ export async function registerAction(name: string, email: string, phone: string,
     await createSession({
         id: newUser.id,
         name: newUser.name,
-        email: newUser.email
+        email: newUser.email,
+        role: newUser.role
     });
 
-    return { success: true };
+    return { success: true, role: newUser.role };
 }
 
 export async function logoutAction() {

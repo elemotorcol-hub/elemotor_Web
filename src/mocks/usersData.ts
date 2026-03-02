@@ -6,6 +6,7 @@ export type User = {
     name: string;
     email: string;
     password?: string; // En una DB real esto sería el hash
+    role: 'ADMIN' | 'CUSTOMER';
 };
 
 // Usuario semilla (Admin inicial)
@@ -14,6 +15,7 @@ export const mockUsersDB: User[] = [
         id: '1',
         name: 'David Admin',
         email: 'admin@elemotor.com',
-        password: 'password123'
+        password: 'password123',
+        role: 'ADMIN'
     }
 ];
