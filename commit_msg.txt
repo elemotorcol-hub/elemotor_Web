@@ -1,0 +1,10 @@
+feat(admin): implementar interfaz del panel de inventario de vehículos
+
+* Crear layout base para el panel de administración con navegación lateral
+* Definir tipos estrictos e interfaces para el modelo de dominio (VehicleModel, Trim, Status, etc.)
+* Implementar componente de tabla interactiva (InventoryTable) con funcionalidad de búsqueda interactiva
+* Desarrollar panel lateral reutilizable (ModelSlideOver) para añadir y editar modelos
+* Dividir el formulario en pestañas de componentes modulares (GeneralTab, TrimsAndSpecsTab, GalleryTab) aplicando el principio de responsabilidad única (SRP)
+* Crear componente UI reutilizable para entradas de especificaciones técnicas (InputWithUnit)
+* Implementar sistema de vista previa y validación local de carga de imágenes con limpieza de memoria activa
+* Extraer y configurar datos simulados (mock data) en directorios separados para maximizar la mantenibilidad de la capa visual
