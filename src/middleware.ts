@@ -2,27 +2,42 @@ import { NextResponse, NextRequest } from 'next/server';
 import { getSession } from './lib/auth';
 
 // Define las rutas que requieren autenticación
-const protectedRoutes = ['/admin'];
+const adminRoutes = ['/admin'];
+const dashboardRoutes = ['/dashboard'];
 const publicRoutes = ['/auth/login', '/auth/register', '/'];
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Verificar si la ruta actual es una ruta protegida
-    const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+    const isAdminRoute = adminRoutes.some(route => pathname.startsWith(route));
+    const isDashboardRoute = dashboardRoutes.some(route => pathname.startsWith(route));
     const isPublicRoute = publicRoutes.includes(pathname);
 
     // Obtener la sesión del usuario decodificando el JWT en la cookie
-    const session = await getSession();
+    const session: any = await getSession();
 
-    // 1. Si intenta acceder a /admin sin estar logueado, redirigir a /login
-    if (isProtectedRoute && !session) {
+    // 1. Proteger rutas sin login
+    if ((isAdminRoute || isDashboardRoute) && !session) {
         return NextResponse.redirect(new URL('/auth/login', request.nextUrl));
     }
 
-    // 2. Si ya está logueado e intenta acceder a /login o /register, redirigir directo al admin
+    // 2. Control estricto de roles
+    if (session) {
+        if (isAdminRoute && session.role !== 'ADMIN') {
+            return NextResponse.redirect(new URL('/dashboard', request.nextUrl));
+        }
+        if (isDashboardRoute && session.role !== 'CUSTOMER') {
+            return NextResponse.redirect(new URL('/admin/inventory', request.nextUrl));
+        }
+    }
+
+    // 3. Evitar que logueados vuelvan a login/register
     if (isPublicRoute && session && pathname.startsWith('/auth')) {
-        return NextResponse.redirect(new URL('/admin/inventory', request.nextUrl));
+        if (session.role === 'ADMIN') {
+            return NextResponse.redirect(new URL('/admin/inventory', request.nextUrl));
+        } else {
+            return NextResponse.redirect(new URL('/dashboard', request.nextUrl));
+        }
     }
 
     return NextResponse.next();
