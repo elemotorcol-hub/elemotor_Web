@@ -1,8 +1,30 @@
-import React from 'react';
-import { Bell, LayoutDashboard, Car, Users, Settings, Search } from 'lucide-react';
+import { Bell, LayoutDashboard, Car, Users, Settings, Search, LogOut } from 'lucide-react';
+import { getSession, deleteSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    // TODO: Implementar JWT Auth Guard o envolver en <AuthProvider> según la HU de Login.
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+    const session = await getSession();
+
+    if (!session) {
+        redirect('/auth/login');
+    }
+
+    const { name, email } = session;
+
+    // Extractor seguro de iniciales
+    const getInitials = (userName?: string) => {
+        if (!userName || userName.trim() === '') return 'U';
+        const parts = userName.trim().split(/\s+/);
+        return parts.slice(0, 2).map((n) => n[0]).join('').toUpperCase();
+    };
+
+    const initials = getInitials(name);
+
+    const handleLogout = async () => {
+        'use server';
+        await deleteSession();
+        redirect('/auth/login');
+    };
 
     return (
         <div className="min-h-screen bg-slate-950 flex font-sans text-slate-200">
@@ -39,13 +61,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="p-4 border-t border-slate-800/60 mt-auto">
                     <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/40 transition-colors cursor-pointer">
                         <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center font-semibold text-sm text-slate-300 border border-slate-700">
-                            AK
+                            {initials}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-slate-200 truncate">Admin</div>
-                            <div className="text-xs text-slate-500 truncate mt-0.5">admin@elemotor.com</div>
+                            <div className="text-sm font-semibold text-slate-200 truncate">{name}</div>
+                            <div className="text-xs text-slate-500 truncate mt-0.5">{email}</div>
                         </div>
                     </div>
+
+                    <form action={handleLogout} className="mt-2 text-center w-full">
+                        <button type="submit" className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800/40 transition-colors font-medium text-xs">
+                            <LogOut size={16} />
+                            Desconectarse
+                        </button>
+                    </form>
                 </div>
             </aside>
 
@@ -72,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         </button>
                         <div className="h-8 border-l border-slate-800"></div>
                         <button className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-semibold text-sm text-slate-300 border border-slate-700 hover:border-slate-500 transition-colors">
-                            AK
+                            {initials}
                         </button>
                     </div>
                 </header>
