@@ -158,18 +158,18 @@ export function Navbar() {
                         <div className="h-5 w-[1px] bg-white/10 mx-1 hidden xl:block" />
 
                         {/* Login & Register */}
-                        <div className="flex items-center gap-4">
-                            <Link href="/auth/login" className="text-[14px] font-semibold text-white hover:text-[#00D4AA] transition-colors tracking-wide drop-shadow-md">
-                                Login
+                        <div className="flex items-center gap-6">
+                            <Link href="/auth/login" className="text-[14px] font-medium text-gray-300 hover:text-[#00D4AA] transition-colors tracking-wide drop-shadow-md">
+                                Iniciar Sesión
                             </Link>
-                            <Link href="/auth/register" className="text-[14px] font-semibold text-white hover:text-[#00D4AA] transition-colors tracking-wide drop-shadow-md">
+                            <Link href="/auth/register" className="text-[13px] font-bold text-white hover:text-[#0A0F1C] hover:bg-[#00D4AA] transition-all px-4 py-2 border border-white/20 rounded-full tracking-wide">
                                 Registrarse
                             </Link>
                         </div>
 
                         {/* Botón Cotizar */}
                         <Link
-                            href="#cotizar"
+                            href="/cotizar"
                             className="bg-[#00D4AA] hover:bg-[#00B38F] text-[#0A0F1C] font-bold text-[14px] px-7 py-2.5 rounded-xl transition-all duration-300 shadow-[0_4px_15px_rgba(0,212,170,0.2)] hover:shadow-[0_6px_20px_rgba(0,212,170,0.3)] active:scale-95"
                         >
                             Cotizar
