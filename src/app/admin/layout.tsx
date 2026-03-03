@@ -1,6 +1,7 @@
 import { Bell, LayoutDashboard, Car, Users, Settings, Search, LogOut } from 'lucide-react';
 import { getSession, deleteSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import Image from 'next/image';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
     const session = await getSession();
@@ -30,12 +31,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="min-h-screen bg-slate-950 flex font-sans text-slate-200">
             {/* Sidebar */}
             <aside className="w-64 bg-slate-950 border-r border-slate-800/60 flex flex-col flex-shrink-0 relative z-20">
-                <div className="h-16 flex items-center px-6 border-b border-slate-800/60 w-full mb-4 mt-2">
-                    <div className="flex items-center gap-3 text-cyan-400 font-bold text-xl tracking-wide w-full cursor-pointer hover:opacity-90 transition-opacity">
-                        <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center text-slate-950 text-xs shadow-lg shadow-cyan-500/20">
-                            <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M13 3L4 14h7v7l9-11h-7V3z" /></svg>
-                        </div>
-                        Elemotor
+                <div className="h-16 flex items-center justify-center px-6 border-b border-slate-800/60 w-full mb-4 mt-2">
+                    <div className="relative h-10 w-40 cursor-pointer hover:opacity-90 transition-opacity">
+                        <Image
+                            src="/logo-elementor1.avif"
+                            alt="Elemotor Administrador"
+                            fill
+                            className="object-contain"
+                            priority
+                        />
                     </div>
                 </div>
 

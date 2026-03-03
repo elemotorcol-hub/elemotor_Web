@@ -1,6 +1,16 @@
+'use client';
+
 import * as React from 'react';
+import { usePathname } from 'next/navigation';
 
 export function WhatsAppWidget() {
+    const pathname = usePathname();
+
+    // No mostrar el widget en las rutas de admin
+    if (pathname?.startsWith('/admin')) {
+        return null;
+    }
+
     return (
         <a
             href="https://wa.me/573208930578?text=Hola,%20quiero%20dar%20el%20salto%20eléctrico.%20¿Me%20ayudan%20con%20una%20cotización?"

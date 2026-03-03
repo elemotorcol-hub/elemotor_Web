@@ -1,3 +1,5 @@
+'use client';
+
 import { MapPin, Download, MessageSquare } from 'lucide-react';
 
 export function QuickActionsGrid() {

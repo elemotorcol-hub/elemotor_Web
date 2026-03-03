@@ -1,3 +1,5 @@
+'use client';
+
 import { Bell, ChevronDown } from 'lucide-react';
 
 interface Props {
