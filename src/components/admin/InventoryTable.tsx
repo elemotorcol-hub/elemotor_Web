@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
 import { VehicleModel } from '@/types/inventory';
 import ModelSlideOver from './ModelSlideOver';
-import { mockModels } from '@/mocks/inventoryData';
+import { useInventory } from '@/hooks/useInventory';
 
 export default function InventoryTable() {
-    const [searchTerm, setSearchTerm] = useState('');
+    const { searchTerm, setSearchTerm, filteredModels } = useInventory();
     const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
     const [slideOverMode, setSlideOverMode] = useState<'add' | 'edit'>('add');
     const [selectedModel, setSelectedModel] = useState<VehicleModel | null>(null);
@@ -24,11 +25,6 @@ export default function InventoryTable() {
         setIsSlideOverOpen(true);
     };
 
-    const filteredModels = mockModels.filter(model =>
-        model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        model.brand.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
     return (
         <div className="flex flex-col gap-6">
             {/* Table Toolbar */}
@@ -38,7 +34,7 @@ export default function InventoryTable() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
                     <input
                         type="text"
-                        placeholder="Search models, trims..."
+                        placeholder="Buscar modelos, versiones..."
                         className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-medium"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -48,10 +44,10 @@ export default function InventoryTable() {
                 {/* Add Button */}
                 <button
                     onClick={handleAddModel}
-                    className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-5 py-2.5 rounded-lg font-semibold transition-colors text-sm w-full sm:w-auto shadow-lg shadow-cyan-500/20"
+                    className="flex items-center justify-center gap-2 bg-[#10B981] hover:bg-[#059669] text-[#0A110F] px-5 py-2.5 rounded-lg font-semibold transition-colors text-sm w-full sm:w-auto shadow-lg shadow-[#10B981]/20"
                 >
                     <Plus size={18} strokeWidth={2.5} />
-                    <span>Add Model</span>
+                    <span>Añadir Modelo</span>
                 </button>
             </div>
 
@@ -61,10 +57,10 @@ export default function InventoryTable() {
                     <table className="w-full text-left border-collapse min-w-[700px]">
                         <thead>
                             <tr className="border-b border-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-900/80">
-                                <th className="p-4 pl-6 font-medium">Model</th>
-                                <th className="p-4 font-medium">Base Price</th>
-                                <th className="p-4 font-medium">Status</th>
-                                <th className="p-4 text-right pr-6 font-medium">Actions</th>
+                                <th className="p-4 pl-6 font-medium">Modelo</th>
+                                <th className="p-4 font-medium">Precio Base</th>
+                                <th className="p-4 font-medium">Estado</th>
+                                <th className="p-4 text-right pr-6 font-medium">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/50 text-sm">
@@ -73,11 +69,12 @@ export default function InventoryTable() {
                                     <td className="p-4 pl-6">
                                         <div className="flex items-center gap-4">
                                             <div className="h-12 w-20 bg-slate-800 rounded-lg overflow-hidden relative flex-shrink-0 border border-slate-700/50">
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img
+                                                <Image
                                                     src={model.thumbnail}
                                                     alt={model.name}
-                                                    className="w-full h-full object-cover"
+                                                    fill
+                                                    className="object-cover"
+                                                    sizes="(max-width: 768px) 100vw, 80px"
                                                 />
                                             </div>
                                             <div className="flex flex-col justify-center">
@@ -86,7 +83,7 @@ export default function InventoryTable() {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="p-4 font-semibold text-cyan-400">
+                                    <td className="p-4 font-semibold text-[#10B981]">
                                         ${model.basePrice.toLocaleString()}
                                     </td>
                                     <td className="p-4">
@@ -101,12 +98,12 @@ export default function InventoryTable() {
                                         <div className="flex items-center justify-end gap-2 text-slate-400">
                                             <button
                                                 onClick={() => handleEditModel(model)}
-                                                className="p-2 hover:text-cyan-400 hover:bg-cyan-400/10 rounded-md transition-all"
-                                                title="Edit Model"
+                                                className="p-2 hover:text-[#10B981] hover:bg-[#10B981]/10 rounded-md transition-all"
+                                                title="Editar Modelo"
                                             >
                                                 <Edit2 size={16} />
                                             </button>
-                                            <button className="p-2 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all" title="Delete Model">
+                                            <button className="p-2 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all" title="Eliminar Modelo">
                                                 <Trash2 size={16} />
                                             </button>
                                         </div>
@@ -118,7 +115,7 @@ export default function InventoryTable() {
                                     <td colSpan={4} className="p-12 text-center text-slate-500">
                                         <div className="flex flex-col items-center justify-center gap-2 text-slate-600">
                                             <Search size={32} className="mb-2 opacity-50" />
-                                            <p>No vehicle models found matching &quot;{searchTerm}&quot;</p>
+                                            <p>No se encontraron modelos coincidiendo con &quot;{searchTerm}&quot;</p>
                                         </div>
                                     </td>
                                 </tr>

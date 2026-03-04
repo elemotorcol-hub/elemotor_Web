@@ -1,6 +1,7 @@
 'use client';
 
 import { Eye } from 'lucide-react';
+import Link from 'next/link';
 
 interface Props {
     status: string;
@@ -66,10 +67,10 @@ export function TrackingHeroCard({
 
                 {/* Right Action Button */}
                 <div className="flex-shrink-0 mt-4 md:mt-0">
-                    <button className="bg-[#10B981] hover:bg-[#0EA5E9] text-[#0A110F] flex items-center gap-2 px-8 py-4 rounded-full font-black text-sm transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.4)]">
+                    <Link href="/dashboard/rastreo" className="bg-[#10B981] hover:bg-[#0EA5E9] text-[#0A110F] flex items-center gap-2 px-8 py-4 rounded-full font-black text-sm transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.4)]">
                         <Eye className="w-5 h-5" strokeWidth={2.5} />
                         Ver Estado
-                    </button>
+                    </Link>
                 </div>
             </div>
         </div>
