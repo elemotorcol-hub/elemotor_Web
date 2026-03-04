@@ -31,8 +31,8 @@ const NAVIGATION_ITEMS: NavItem[] = [
     {
         name: 'Experiencia',
         subMenu: [
-            { name: 'Showroom 3D', href: '#showroom', description: 'Vive la inmersión digital' },
-            { name: 'Calculadora', href: '#calculadora', description: 'Proyecta tu ahorro energético' },
+            { name: 'Showroom 3D', href: '/showroom', description: 'Vive la inmersión digital' },
+            { name: 'Calculadora', href: '#', description: 'Proyecta tu ahorro — Próximamente' },
         ],
     },
     {

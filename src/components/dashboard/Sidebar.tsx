@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Car, Map, FileText, Settings, User, Headset, Zap, LucideIcon, LogOut } from 'lucide-react';
+import { LayoutDashboard, Car, Map, FileText, Settings, User, Headset, LucideIcon, LogOut } from 'lucide-react';
 import { logoutAction } from '@/actions/authActions';
 
 const MENU_ITEMS = [
@@ -41,54 +42,58 @@ export function Sidebar() {
     };
 
     return (
-        <aside className="w-[260px] bg-[#0A110F] h-screen flex flex-col fixed left-0 top-0 overflow-y-auto hidden lg:flex border-r border-slate-800/50">
-            {/* Logo */}
-            <div className="p-6">
-                <Link href="/" className="flex items-center gap-3 relative group">
-                    <div className="w-8 h-8 rounded-full bg-[#10B981] flex items-center justify-center flex-shrink-0">
-                        <Zap className="w-5 h-5 text-[#0A110F]" fill="currentColor" />
-                    </div>
-                    <div>
-                        <span className="text-white font-bold text-lg tracking-tight leading-none block">Elemotor</span>
-                        <span className="text-[10px] text-slate-500 font-medium tracking-wide">Client Dashboard</span>
-                    </div>
+        <aside className="w-[260px] bg-[#0A110F] h-screen flex flex-col fixed left-0 top-0 hidden lg:flex border-r border-slate-800/50 z-50">
+            {/* Logo — fijo al top, fuera del scroll */}
+            <div className="flex-shrink-0 flex h-16 w-full items-center justify-center border-b border-slate-800/60 px-6">
+                <Link href="/">
+                    <Image
+                        src="/logo-elementor1.avif"
+                        alt="Elemotor"
+                        width={160}
+                        height={40}
+                        className="object-contain"
+                        priority
+                    />
                 </Link>
             </div>
 
-            {/* Main Navigation */}
-            <nav className="flex-1 px-4 mt-2 flex flex-col gap-1">
-                {MENU_ITEMS.map(renderMenuItem)}
+            {/* Zona scrollable */}
+            <div className="flex-1 overflow-y-auto flex flex-col">
+                {/* Main Navigation */}
+                <nav className="flex-1 px-4 mt-4 flex flex-col gap-1">
+                    {MENU_ITEMS.map(renderMenuItem)}
 
-                <div className="mt-8 mb-4 border-t border-slate-800/30 mx-2"></div>
+                    <div className="mt-8 mb-4 border-t border-slate-800/30 mx-2"></div>
 
-                {BOTTOM_MENU_ITEMS.map(renderMenuItem)}
+                    {BOTTOM_MENU_ITEMS.map(renderMenuItem)}
 
-                <form action={logoutAction} className="w-full mt-2 space-y-2">
-                    <button
-                        type="submit"
-                        className="flex w-full items-center gap-3 px-4 py-3 transition-all font-semibold text-sm text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-full"
-                    >
-                        <LogOut className="w-5 h-5 text-red-500" />
-                        Cerrar Sesión
-                    </button>
-                </form>
-            </nav>
+                    <form action={logoutAction} className="w-full mt-2 space-y-2">
+                        <button
+                            type="submit"
+                            className="flex w-full items-center gap-3 px-4 py-3 transition-all font-semibold text-sm text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-full"
+                        >
+                            <LogOut className="w-5 h-5 text-red-500" />
+                            Cerrar Sesión
+                        </button>
+                    </form>
+                </nav>
 
-            {/* Help Widget */}
-            <div className="p-4 mt-auto mb-6">
-                <div className="bg-[#15201D] border border-white/5 rounded-2xl p-5 relative overflow-hidden">
-                    <div className="w-8 h-8 rounded-full bg-emerald-900/20 flex items-center justify-center mb-3">
-                        <Headset className="w-4 h-4 text-emerald-400" />
+                {/* Help Widget */}
+                <div className="p-4 mb-6">
+                    <div className="bg-[#15201D] border border-white/5 rounded-2xl p-5 relative overflow-hidden">
+                        <div className="w-8 h-8 rounded-full bg-emerald-900/20 flex items-center justify-center mb-3">
+                            <Headset className="w-4 h-4 text-emerald-400" />
+                        </div>
+                        <h4 className="text-white font-bold text-sm mb-1.5">¿Necesitas ayuda?</h4>
+                        <p className="text-slate-400 text-xs leading-relaxed mb-4 pr-2">
+                            Contacta a nuestro equipo de soporte premium.
+                        </p>
+                        <button className="w-full bg-transparent hover:bg-white/5 border border-white/10 text-slate-300 text-xs font-bold py-2.5 rounded-lg transition-colors">
+                            Contactar Soporte
+                        </button>
+                        {/* Background glow decoration */}
+                        <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-emerald-500 opacity-5 blur-xl rounded-full pointer-events-none"></div>
                     </div>
-                    <h4 className="text-white font-bold text-sm mb-1.5">¿Necesitas ayuda?</h4>
-                    <p className="text-slate-400 text-xs leading-relaxed mb-4 pr-2">
-                        Contacta a nuestro equipo de soporte premium.
-                    </p>
-                    <button className="w-full bg-transparent hover:bg-white/5 border border-white/10 text-slate-300 text-xs font-bold py-2.5 rounded-lg transition-colors">
-                        Contactar Soporte
-                    </button>
-                    {/* Background glow decoration */}
-                    <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-emerald-500 opacity-5 blur-xl rounded-full pointer-events-none"></div>
                 </div>
             </div>
         </aside>

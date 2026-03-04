@@ -48,7 +48,12 @@ export default function RootLayout({
         <SchemaScript schema={getOrganizationSchema()} id="schema-organization" />
         <SchemaScript schema={getWebSiteSchema()} id="schema-website" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      {/*
+        suppressHydrationWarning: Some browser extensions (e.g. React DevTools, font injectors)
+        modify the body's className attribute before React hydrates, causing a false-positive
+        mismatch warning. This prop silences it safely at the body element level only.
+      */}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         {children}
         <WhatsAppWidget />
       </body>
