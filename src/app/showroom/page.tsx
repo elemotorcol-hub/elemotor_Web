@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { HelpCircle, Share2 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { TrimSelector, ColorSelector } from '@/components/showroom/ShowroomSelectors';
@@ -106,12 +107,14 @@ export default function ShowroomPage() {
                                 className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-[70%] h-16 blur-3xl opacity-30 rounded-full transition-colors duration-700"
                                 style={{ backgroundColor: activeHex }}
                             />
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                            <Image
                                 src="/showroom-car.png"
                                 alt="Elemotor GT"
+                                width={800}
+                                height={500}
                                 className="w-full h-auto object-contain drop-shadow-2xl transition-all duration-500"
                                 style={{ filter: `drop-shadow(0 30px 60px ${activeHex}33)` }}
+                                priority
                             />
                         </div>
                     </div>

@@ -1,13 +1,36 @@
-export type LeadStatus = 'Nuevos' | 'Contactados' | 'En Negociación' | 'Ganados';
+export type QuoteStatus = 'nuevo' | 'contactado' | 'negociacion' | 'ganado' | 'perdido';
+export type LeadSource = 'organico' | 'ads' | 'referido';
+export type DateRange = 'hoy' | 'semana' | 'mes';
 
-export type ContactPreference = 'tel' | 'email' | 'chat';
+export interface Note {
+    id: string;
+    text: string;
+    author: string;
+    createdAt: string; // ISO string
+}
 
-export interface Lead {
+export interface UTMData {
+    source: string;
+    medium: string;
+    campaign: string;
+}
+
+export interface Quote {
     id: string;
     clientName: string;
-    vehicleModel: string;
-    budgetRange: string;
-    requestDate: string;
-    contactPreference: ContactPreference;
-    status: LeadStatus;
+    clientEmail: string;
+    clientPhone: string;
+    modelInterest: string;
+    budget: string;
+    date: string; // ISO string
+    advisor: string;
+    source: LeadSource;
+    status: QuoteStatus;
+    utm: UTMData;
+    notes: Note[];
 }
+
+// Para compatibilidad con componentes existentes que usan 'Lead'
+export type Lead = Quote;
+export type LeadStatus = 'Nuevos' | 'Contactados' | 'En Negociación' | 'Ganados'; // Mantener por ahora si otros componentes lo usan
+export type ContactPreference = 'tel' | 'email' | 'chat';

@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Package, KanbanSquare } from 'lucide-react';
+import { Package, KanbanSquare, ClipboardList } from 'lucide-react';
 import LeadsKanbanBoard from '@/components/admin/crm/LeadsKanbanBoard';
 import OrdersList from '@/components/admin/orders/OrdersList';
+import QuotesTable from '@/components/admin/crm/QuotesTable';
 
 export default function CRMPage() {
-    const [activeTab, setActiveTab] = useState<'pedidos' | 'kanban'>('kanban');
+    const [activeTab, setActiveTab] = useState<'pedidos' | 'kanban' | 'cotizaciones'>('cotizaciones');
 
     return (
         <div className="flex flex-col gap-8 max-w-[1400px] w-full pb-10">
@@ -56,11 +57,11 @@ export default function CRMPage() {
             {/* Toggle Tabs */}
             <div className="flex items-center gap-2 bg-[#15201D] border border-white/5 p-1 rounded-xl w-fit">
                 <button
-                    onClick={() => setActiveTab('pedidos')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'pedidos' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-slate-300 hover:bg-white/5'}`}
+                    onClick={() => setActiveTab('cotizaciones')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'cotizaciones' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-slate-300 hover:bg-white/5'}`}
                 >
-                    <Package className="w-4 h-4" />
-                    Gestión de Pedidos
+                    <ClipboardList className="w-4 h-4" />
+                    Gestión de Cotizaciones
                 </button>
                 <button
                     onClick={() => setActiveTab('kanban')}
@@ -69,15 +70,20 @@ export default function CRMPage() {
                     <KanbanSquare className="w-4 h-4" />
                     Kanban de Prospectos
                 </button>
+                <button
+                    onClick={() => setActiveTab('pedidos')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'pedidos' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-slate-300 hover:bg-white/5'}`}
+                >
+                    <Package className="w-4 h-4" />
+                    Gestión de Pedidos
+                </button>
             </div>
 
             {/* Content Area */}
             <div className="flex-1 mt-2">
-                {activeTab === 'kanban' ? (
-                    <LeadsKanbanBoard />
-                ) : (
-                    <OrdersList />
-                )}
+                {activeTab === 'cotizaciones' && <QuotesTable />}
+                {activeTab === 'kanban' && <LeadsKanbanBoard />}
+                {activeTab === 'pedidos' && <OrdersList />}
             </div>
 
             <style jsx global>{`
