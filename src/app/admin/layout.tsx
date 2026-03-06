@@ -1,4 +1,4 @@
-import { Bell, LayoutDashboard, Car, Users, Settings, Search, LogOut } from 'lucide-react';
+import { Bell, LayoutDashboard, Car, Users, Settings, LogOut } from 'lucide-react';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
@@ -72,16 +72,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <main className="relative z-10 flex min-w-0 flex-1 flex-col bg-[#0f172a] shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.5)]">
                 {/* TopBar */}
                 <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-slate-800/60 bg-slate-950/40 px-8 backdrop-blur-md">
-                    {/* TopBar Left / Global Search Mockup */}
-                    <div className="relative flex max-w-xl flex-1 items-center text-slate-500">
-                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                        <input
-                            type="text"
-                            placeholder="Buscar globalmente..."
-                            className="w-full border-none bg-transparent py-2 pr-4 pl-10 text-sm text-slate-200 placeholder-slate-500 focus:ring-0 focus:outline-none"
-                            disabled
-                        />
-                    </div>
+                    {/* TopBar Left Spacer */}
+                    <div className="flex-1"></div>
 
                     {/* TopBar Right Actions */}
                     <div className="flex items-center gap-5">
@@ -94,15 +86,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                             <button className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-sm font-semibold text-slate-300 transition-colors hover:border-slate-500">
                                 {initials}
                             </button>
-                            <form action={logoutAction}>
-                                <button
-                                    type="submit"
-                                    className="flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-500 transition-colors hover:bg-red-500/20 hover:text-red-400"
-                                >
-                                    <LogOut size={14} />
-                                    Cerrar Sesión
-                                </button>
-                            </form>
                         </div>
                     </div>
                 </header>
