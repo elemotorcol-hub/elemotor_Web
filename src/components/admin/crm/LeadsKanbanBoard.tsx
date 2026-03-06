@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MOCK_LEADS } from '@/mocks/crmData';
+import { MOCK_QUOTES } from '@/config/crm';
 import KanbanColumn from './KanbanColumn';
 
 export default function LeadsKanbanBoard() {
-    const [leads] = useState(MOCK_LEADS);
+    const [leads] = useState(MOCK_QUOTES);
 
     // Agrupación de Leads por Estado
-    const newLeads = leads.filter(lead => lead.status === 'Nuevos');
-    const contactedLeads = leads.filter(lead => lead.status === 'Contactados');
-    const negotiationLeads = leads.filter(lead => lead.status === 'En Negociación');
-    const wonLeads = leads.filter(lead => lead.status === 'Ganados');
+    const newLeads = leads.filter(lead => lead.status === 'nuevo');
+    const contactedLeads = leads.filter(lead => lead.status === 'contactado');
+    const negotiationLeads = leads.filter(lead => lead.status === 'negociacion');
+    const wonLeads = leads.filter(lead => lead.status === 'ganado');
 
     return (
         <div className="w-full h-full overflow-x-auto pb-6 custom-scrollbar-horizontal flex items-start gap-6 px-1">

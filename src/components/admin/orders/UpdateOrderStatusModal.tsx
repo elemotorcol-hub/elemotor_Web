@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, Clock } from 'lucide-react';
 import { Order, OrderStatus } from '@/types/orders';
 
 interface UpdateOrderStatusModalProps {
     order: Order | null;
     isOpen: boolean;
     onClose: () => void;
-    onSave: (orderId: string, newStatus: OrderStatus) => void;
+    onSave: (orderId: string, newStatus: OrderStatus, description: string) => void;
 }
 
 const PIPELINE: OrderStatus[] = [
@@ -20,10 +20,12 @@ const PIPELINE: OrderStatus[] = [
 export default function UpdateOrderStatusModal({ order, isOpen, onClose, onSave }: UpdateOrderStatusModalProps) {
     const [selectedStatus, setSelectedStatus] = useState<OrderStatus>('Fabricación');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [description, setDescription] = useState('');
 
     useEffect(() => {
         if (order) {
             setSelectedStatus(order.status);
+            setDescription('');
         }
     }, [order]);
 
@@ -32,9 +34,10 @@ export default function UpdateOrderStatusModal({ order, isOpen, onClose, onSave 
     const currentIndex = PIPELINE.indexOf(selectedStatus);
 
     const handleSave = () => {
-        onSave(order.id, selectedStatus);
+        onSave(order.id, selectedStatus, description);
         onClose();
         setIsDropdownOpen(false);
+        setDescription('');
     };
 
     return (
@@ -56,23 +59,28 @@ export default function UpdateOrderStatusModal({ order, isOpen, onClose, onSave 
                 </button>
 
                 <div className="p-8 flex-1 overflow-y-auto custom-scrollbar">
-                    <h2 className="text-xl font-bold text-white mb-2 tracking-tight">Actualizar Estado del Pedido</h2>
-                    <p className="text-[14px] text-slate-400 mb-8 font-medium">{order.id} — {order.clientName}</p>
+                    <h2 className="text-xl font-bold text-white mb-2 tracking-tight">Registro de Importación</h2>
+                    <p className="text-[14px] text-slate-400 mb-8 font-medium font-mono">{order.trackingCode} — {order.clientName}</p>
 
-                    <h3 className="text-[13px] font-bold tracking-wide text-slate-500 mb-6">Pipeline Logístico</h3>
+                    <h3 className="text-[13px] font-bold tracking-wide text-slate-500 mb-6">Pipeline e Historial</h3>
 
                     {/* Timeline */}
                     <div className="relative flex flex-col gap-8">
                         {PIPELINE.map((step, index) => {
-                            const isCompleted = index <= currentIndex;
-                            const isCurrent = index === currentIndex;
+                            const currentTargetIndex = PIPELINE.indexOf(order.status);
+                            const isCompleted = index <= currentTargetIndex;
+                            const isCurrent = index === currentTargetIndex;
                             const isLast = index === PIPELINE.length - 1;
+
+                            // Búsqueda del historial para esta fase (si lo hay)
+                            // Al re-pasar fases solo tomará la última vez
+                            const stepHistory = order.history?.find(h => h.status === step);
 
                             return (
                                 <div key={step} className="flex gap-4 relative z-10 min-h-[40px]">
                                     {/* Line connecting to the next item */}
                                     {!isLast && (
-                                        <div className={`absolute left-4 top-8 bottom-[-32px] w-[2px] -translate-x-[1px] ${index < currentIndex ? 'bg-[#10B981]' : 'bg-slate-800'}`}></div>
+                                        <div className={`absolute left-4 top-8 bottom-[-32px] w-[2px] -translate-x-[1px] ${index < currentTargetIndex ? 'bg-[#10B981]' : 'bg-slate-800'}`}></div>
                                     )}
 
                                     <div className="flex flex-col items-center">
@@ -81,12 +89,26 @@ export default function UpdateOrderStatusModal({ order, isOpen, onClose, onSave 
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-col mt-[-1px]">
-                                        <span className={`text-[15px] font-bold leading-none ${isCurrent ? 'text-[#10B981]' : isCompleted ? 'text-white' : 'text-slate-500'}`}>
-                                            {step}
-                                        </span>
-                                        {isCurrent && (
-                                            <span className="text-xs text-slate-500 mt-1.5 font-medium">Estado actual</span>
+                                    <div className="flex flex-col mt-[-1px] max-w-[280px]">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-[15px] font-bold leading-none ${isCurrent ? 'text-[#10B981]' : isCompleted ? 'text-white' : 'text-slate-500'}`}>
+                                                {step}
+                                            </span>
+                                            {stepHistory && (
+                                                <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
+                                                    <Clock size={10} /> {stepHistory.date}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {isCurrent && !stepHistory?.description && (
+                                            <span className="text-xs text-slate-500 mt-1.5 font-medium">Estado actual en bodega</span>
+                                        )}
+
+                                        {stepHistory?.description && (
+                                            <span className="text-[13px] text-slate-400 mt-1.5 leading-snug">
+                                                {stepHistory.description}
+                                            </span>
                                         )}
                                     </div>
                                 </div>
@@ -94,10 +116,10 @@ export default function UpdateOrderStatusModal({ order, isOpen, onClose, onSave 
                         })}
                     </div>
 
-                    <h3 className="text-[13px] font-bold tracking-wide text-slate-500 mt-12 mb-3">Cambiar Estado</h3>
+                    <h3 className="text-[13px] font-bold tracking-wide text-slate-500 mt-12 mb-3 pt-6 border-t border-white/5">Reportar Novedad y Estado</h3>
 
                     {/* Custom Select Dropdown */}
-                    <div className="relative">
+                    <div className="relative mb-4">
                         <button
                             className="w-full bg-[#15201D] border border-white/5 rounded-xl px-4 py-3.5 flex justify-between items-center text-[15px] font-semibold text-white hover:border-white/10 transition-colors focus:outline-none"
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -114,8 +136,8 @@ export default function UpdateOrderStatusModal({ order, isOpen, onClose, onSave 
                                     <button
                                         key={step}
                                         className={`w-full text-left px-3.5 py-3 rounded-lg text-[15px] font-semibold flex justify-between items-center transition-colors hover:bg-[#10B981] hover:text-[#0A110F] ${step === selectedStatus
-                                                ? 'text-white bg-white/5'
-                                                : 'text-slate-300'
+                                            ? 'text-white bg-white/5'
+                                            : 'text-slate-300'
                                             }`}
                                         onClick={() => {
                                             setSelectedStatus(step);
@@ -130,11 +152,22 @@ export default function UpdateOrderStatusModal({ order, isOpen, onClose, onSave 
                         )}
                     </div>
 
+                    <div className="mb-4">
+                        <label className="block text-xs font-bold text-slate-400 mb-2">Descripción de la novedad</label>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            rows={3}
+                            placeholder="Ej: El contenedor superó el control aduanero y va camino al centro de distribución principal."
+                            className="w-full bg-[#15201D] border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-[#00D4AA] transition-colors resize-none custom-scrollbar"
+                        />
+                    </div>
+
                     <button
-                        className="w-full bg-[#10B981] hover:bg-[#059669] text-[#0A110F] font-bold py-3.5 rounded-xl mt-8 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
+                        className="w-full bg-[#10B981] hover:bg-[#059669] text-[#0A110F] font-bold py-3.5 rounded-xl mt-4 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
                         onClick={handleSave}
                     >
-                        Guardar Cambios
+                        Guardar e Informar Novedad
                     </button>
 
                 </div>

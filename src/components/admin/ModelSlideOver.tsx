@@ -27,11 +27,17 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData }: M
         resolver: zodResolver(vehicleModelSchema),
         defaultValues: {
             name: '',
-            brand: '',
+            brand_id: '',
+            slug: '',
+            type: 'suv',
+            year: new Date().getFullYear(),
             basePrice: 0,
             status: 'Draft',
+            featured: false,
+            active: true,
             description: '',
-            thumbnail: ''
+            thumbnail: '',
+            trims: []
         },
     });
 
@@ -39,18 +45,24 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData }: M
         if (isOpen) {
             methods.reset(initialData || {
                 name: '',
-                brand: '',
+                brand_id: '',
+                slug: '',
+                type: 'suv',
+                year: new Date().getFullYear(),
                 basePrice: 0,
                 status: 'Draft',
+                featured: false,
+                active: true,
                 description: '',
-                thumbnail: ''
+                thumbnail: '',
+                trims: []
             });
         }
     }, [isOpen, initialData, methods]);
 
     const onSubmit = (data: VehicleModelFormData) => {
-        // Todo: Connect with Backend / Server Action
-        console.log('Form data to save:', data);
+        console.log('Model data ready for API:', data);
+        // Here we would dispatch to an API route or context
         onClose();
     };
 

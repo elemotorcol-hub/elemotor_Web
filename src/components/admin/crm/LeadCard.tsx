@@ -17,6 +17,14 @@ export default function LeadCard({ lead }: LeadCardProps) {
         }
     };
 
+    const formatDate = (iso: string) => {
+        try {
+            return new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+        } catch {
+            return iso;
+        }
+    };
+
     return (
         <div className="bg-[#15201D] border border-white/5 rounded-2xl p-4 flex flex-col gap-3 hover:border-white/10 hover:bg-[#15201D]/80 transition-all cursor-grab active:cursor-grabbing">
             <div className="flex items-center justify-between">
@@ -27,13 +35,13 @@ export default function LeadCard({ lead }: LeadCardProps) {
             </div>
 
             <div className="flex flex-col gap-0.5 mt-[-4px]">
-                <span className="text-teal-400 font-medium text-sm">{lead.vehicleModel}</span>
-                <span className="text-slate-400 text-xs">{lead.budgetRange}</span>
+                <span className="text-teal-400 font-medium text-sm">{lead.modelInterest}</span>
+                <span className="text-slate-400 text-xs">{lead.budget}</span>
             </div>
 
             <div className="flex items-center gap-1.5 mt-1 text-slate-500 text-xs">
                 <Calendar className="w-3.5 h-3.5" />
-                <span>{lead.requestDate}</span>
+                <span>{formatDate(lead.date)}</span>
             </div>
         </div>
     );

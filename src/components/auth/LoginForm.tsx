@@ -41,7 +41,8 @@ export default function LoginForm() {
         if (result?.error) {
             setAuthError(result.error);
         } else if (result?.success) {
-            if (result.role === 'ADMIN') {
+            const hasAdminAccess = ['admin', 'super_admin', 'advisor'].includes(result.role as string);
+            if (hasAdminAccess) {
                 router.push('/admin/inventory');
             } else {
                 router.push('/dashboard');

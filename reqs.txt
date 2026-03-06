@@ -1,0 +1,1779 @@
+ELEMOTOR
+Ecosistema Digital
+DOCUMENTO DE REQUERIMIENTOS TÉCNICOS
+Módulo: DMS — Dealer Management System
+Campo
+Detalle
+Proyecto
+Ecosistema Digital Elemotor
+Módulo
+DMS — Dealer Management System (Backend API + Panel Admin + Base de Datos)
+Versión
+1.0
+Fecha
+Febrero 2026
+Autor
+Ing. Brayan Alfonso Aparicio Duran
+Cliente
+Dirección General — Elemotor
+Estado
+En revisión
+CONFIDENCIAL — Propiedad de Elemotor
+Tabla de Contenido
+Tabla de Contenido1
+1. Introducción1
+1.1 Propósito del Documento1
+1.2 Alcance1
+1.3 Relación con el Ecosistema1
+1.4 Usuarios del Sistema1
+2. Arquitectura Técnica1
+2.1 Stack Tecnológico1
+2.2 Módulos NestJS1
+2.3 Seguridad1
+2.4 Despliegue1
+3. Modelo de Datos (MySQL)1
+3.1 brands1
+3.2 models1
+3.3 trims1
+3.4 specs1
+3.5 colors1
+3.6 images1
+3.7 models_3d1
+3.8 users1
+3.9 orders1
+3.10 order_status_history1
+3.11 quotes1
+3.12 documents1
+3.13 workshops1
+3.13.1 workshop_services1
+3.13.2 workshop_hours1
+3.13.3 workshop_images1
+3.14 electricity_rates1
+3.15 fuel_prices1
+3.16 Diagrama de Relaciones1
+4. Requerimientos Funcionales — API REST1
+RF-DMS-01: Autenticación y Gestión de Sesiones1
+RF-DMS-02: Gestión de Inventario (Catálogo)1
+RF-DMS-03: Gestión de Pedidos e Importaciones1
+RF-DMS-04: Gestión de Cotizaciones / Leads (CRM)1
+RF-DMS-05: Gestión de Usuarios1
+RF-DMS-06: Gestión de Documentos1
+RF-DMS-07: Gestión de Talleres Aliados1
+RF-DMS-08: Datos de Calculadora1
+RF-DMS-09: Dashboard de Métricas (Admin)1
+RF-DMS-10: Webhooks y Notificaciones1
+RF-DMS-11: Health Check y Monitoreo1
+5. Requerimientos Funcionales — Panel de Administración1
+RF-ADMIN-01: Login y Autenticación del Panel1
+RF-ADMIN-02: Dashboard Principal1
+RF-ADMIN-03: Módulo de Inventario1
+RF-ADMIN-04: Módulo de Pedidos / Importaciones1
+RF-ADMIN-05: Módulo CRM / Cotizaciones1
+RF-ADMIN-06: Módulo de Talleres1
+RF-ADMIN-07: Módulo de Calculadora1
+RF-ADMIN-08: Gestión de Usuarios1
+6. Requerimientos No Funcionales1
+7. Referencia Completa de Endpoints1
+8. Variables de Entorno1
+9. Cronograma de Desarrollo1
+10. Criterios de Aceptación Globales1
+11. Glosario1
+12. Control de Versiones del Documento1
+1. Introducción
+1.1 Propósito del Documento
+Este documento define los requerimientos técnicos completos para el desarrollo del DMS (Dealer Management System) de Elemotor, correspondiente al Punto 1 del plan de trabajo del Ecosistema Digital. El DMS es el backend central del ecosistema: la API REST, la base de datos MySQL y el panel de administración desde donde el equipo de Elemotor gestiona toda la operación digital.
+1.2 Alcance
+El DMS comprende tres componentes: (1) API REST que expone todos los datos y operaciones del negocio a los módulos consumidores (Web Inmersiva, Chatbot WhatsApp, n8n), (2) Base de datos MySQL con el esquema relacional completo, y (3) Panel de Administración web (admin.elemotor.com.co) donde el equipo interno gestiona inventario, importaciones, leads/cotizaciones, talleres aliados, precios de calculadora y contenido.
+1.3 Relación con el Ecosistema
+Módulo
+Relación con el DMS
+Integración
+Web Inmersiva (Pto 2)
+Consume catálogo, tracking, talleres. Envía cotizaciones y registros.
+API REST (lectura/escritura)
+Chatbot WhatsApp (Pto 3)
+Consulta inventario, precios, estado de pedidos. Registra leads.
+API REST (API Key)
+Automatización n8n (Pto 4)
+Recibe webhooks de nuevos leads y cambios de estado. Dispara flujos.
+Webhooks + API REST
+Analytics (Pto 5)
+Almacena UTM params con leads para cruzar con GA4/Meta.
+Datos compartidos en MySQL
+1.4 Usuarios del Sistema
+Rol
+Descripción
+Acceso
+Super Admin
+Acceso total. Crea otros admins, configura sistema.
+Panel Admin completo
+Admin / Operaciones
+Gestiona inventario, importaciones, talleres, cotizaciones.
+Panel Admin (sin config sistema)
+Asesor Comercial
+Ve y responde cotizaciones asignadas. Métricas de sus leads.
+Panel Admin (solo CRM/Leads)
+Cliente (via Web)
+Registra cuenta, envía cotizaciones, consulta tracking, documentos.
+API REST (JWT)
+Visitante (via Web)
+Consulta catálogo, tracking público, talleres.
+API REST (público)
+Chatbot (via API)
+Consulta inventario, precios, estado pedidos. Crea leads.
+API REST (API Key)
+n8n (via Webhooks)
+Recibe notificaciones de eventos y ejecuta flujos.
+Webhooks + API REST
+2. Arquitectura Técnica
+2.1 Stack Tecnológico
+Componente
+Tecnología
+Justificación
+Framework Backend
+NestJS (Node.js + TypeScript)
+Enterprise-grade. Arquitectura modular. Inyección de dependencias. Ideal para APIs REST.
+Base de Datos
+MySQL 8.0+ (cPanel Doonge)
+Incluida en hosting. Soportada por Prisma. Relacional, madura.
+ORM
+Prisma
+Type-safe, migraciones automáticas, generación de tipos TS.
+Autenticación
+JWT + bcrypt + Passport.js
+Tokens stateless, refresh tokens, hasheo, guards por rol.
+Validación
+class-validator + class-transformer
+Validación declarativa con decoradores en DTOs.
+Documentación API
+Swagger / OpenAPI 3.0
+Autogenerada desde decoradores. Endpoint /api/docs.
+Upload de Archivos
+Multer + Cloudinary SDK
+Multer recibe, Cloudinary almacena.
+Panel Admin
+React + Ant Design (o Refine.dev)
+Framework admin rápido. CRUD, tablas, filtros, formularios.
+Hosting API
+cPanel Doonge (Node.js + Passenger)
+Hosting existente. Node.js con Phusion Passenger.
+Hosting Admin
+cPanel Doonge (subdominio)
+admin.elemotor.com.co, SPA servida estáticamente.
+CDN / Archivos
+Cloudinary
+Imágenes, 3D, documentos. 25GB gratis.
+Email
+Nodemailer + SMTP hosting
+Recuperación contraseña, notificaciones, confirmaciones.
+Testing
+Jest + Supertest
+Tests unitarios y de integración.
+2.2 Módulos NestJS
+Módulo
+Responsabilidad
+Endpoints
+AuthModule
+Registro, login, OAuth, OTP, refresh tokens, guards por rol.
+/api/auth/*
+UsersModule
+CRUD usuarios. Perfiles. Gestión roles.
+/api/users/*
+BrandsModule
+CRUD marcas de vehículos.
+/api/brands/*
+ModelsModule
+CRUD modelos. Filtros avanzados. Slug único.
+/api/models/*
+TrimsModule
+CRUD versiones por modelo.
+/api/trims/*
+SpecsModule
+CRUD especificaciones técnicas por trim.
+/api/specs/*
+ColorsModule
+CRUD colores por trim.
+/api/colors/*
+ImagesModule
+CRUD imágenes. Upload a Cloudinary.
+/api/images/*
+Models3DModule
+CRUD archivos .glB. Upload a Cloudinary.
+/api/models-3d/*
+OrdersModule
+CRUD pedidos. Tracking codes. Historial estados.
+/api/orders/*
+QuotesModule
+CRUD cotizaciones/leads. Estados, UTM.
+/api/quotes/*
+DocumentsModule
+CRUD documentos por pedido/usuario.
+/api/documents/*
+WorkshopsModule
+CRUD talleres. Búsqueda geográfica.
+/api/workshops/*
+CalculatorModule
+CRUD tarifas eléctricas y precios gasolina.
+/api/calculator/*
+DashboardModule
+Métricas agregadas para panel admin.
+/api/dashboard/*
+WebhooksModule
+Notificaciones a n8n y otros servicios.
+/api/webhooks/*
+UploadModule
+Servicio compartido de upload Cloudinary.
+/api/upload/*
+HealthModule
+Health check servidor y BD.
+/api/health
+2.3 Seguridad
+Mecanismo
+Implementación
+Detalle
+Autenticación
+JWT + Refresh Tokens
+Access token 15min + refresh token 7d. httpOnly cookies o header Authorization.
+Autorización
+Guards RBAC
+@Roles('admin') en endpoints protegidos. Guard verifica JWT + rol.
+Hasheo
+bcrypt (12 salt rounds)
+Contraseñas nunca en texto plano.
+Rate Limiting
+@nestjs/throttler
+100 req/min públicos. 5 intentos/min login.
+CORS
+Configuración estricta
+Solo origins: www.elemotor.com.co, admin.elemotor.com.co.
+Validación Input
+class-validator whitelist
+DTOs validan y rechazan campos no declarados.
+Headers
+Helmet
+CSP, HSTS, X-Frame-Options automáticos.
+API Keys
+Custom Guard
+Chatbot y n8n con X-API-Key header.
+XSS/CSRF
+Helmet + sanitize-html
+Sanitización de HTML. CSRF token en panel admin.
+SSL
+HTTPS (Let’s Encrypt)
+Todos los endpoints solo HTTPS.
+2.4 Despliegue
+Componente
+Ubicación
+Dominio
+Notas
+API NestJS
+cPanel Doonge (Passenger)
+api.elemotor.com.co
+PM2 opcional para process management.
+Panel Admin
+cPanel Doonge (static build)
+admin.elemotor.com.co
+React build servido como SPA.
+MySQL
+cPanel Doonge
+No expuesto
+Solo localhost. Backups diarios.
+CDN
+Cloudinary
+res.cloudinary.com/elemotor
+Imágenes, 3D, docs. 25GB gratis.
+3. Modelo de Datos (MySQL)
+Esquema completo de la base de datos. Prisma genera las migraciones a partir del schema.prisma. Todas las tablas usan InnoDB con charset utf8mb4.
+3.1 brands
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+name
+VARCHAR(100)
+NOT NULL, UNIQUE
+Nombre (BYD, Changan)
+slug
+VARCHAR(100)
+NOT NULL, UNIQUE
+URL-friendly
+logo_url
+VARCHAR(500)
+NULL
+Logo Cloudinary
+country
+VARCHAR(50)
+NULL
+País origen
+active
+TINYINT(1)
+DEFAULT 1
+created_at
+DATETIME
+DEFAULT NOW()
+updated_at
+DATETIME
+ON UPDATE NOW()
+3.2 models
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+brand_id
+INT
+FK brands.id, NOT NULL
+name
+VARCHAR(150)
+NOT NULL
+Seagull, Yuan UP, S07
+slug
+VARCHAR(150)
+NOT NULL, UNIQUE
+URL-friendly global
+type
+ENUM(suv,sedan,hatchback,pickup,van,coupe)
+NOT NULL
+Carrocería
+year
+INT
+NOT NULL
+Año modelo
+description
+TEXT
+NULL
+base_price
+DECIMAL(12,2)
+NOT NULL
+Precio base COP
+featured
+TINYINT(1)
+DEFAULT 0
+Destacado en home
+active
+TINYINT(1)
+DEFAULT 1
+created_at
+DATETIME
+DEFAULT NOW()
+updated_at
+DATETIME
+ON UPDATE NOW()
+3.3 trims
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+model_id
+INT
+FK models.id, NOT NULL
+name
+VARCHAR(100)
+NOT NULL
+Standard, Full, Max
+price
+DECIMAL(12,2)
+NOT NULL
+Precio COP
+available_quantity
+INT
+DEFAULT 0
+Unidades
+status
+ENUM(stock,transit,order)
+DEFAULT 'order'
+Disponibilidad
+active
+TINYINT(1)
+DEFAULT 1
+created_at
+DATETIME
+DEFAULT NOW()
+updated_at
+DATETIME
+ON UPDATE NOW()
+3.4 specs
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+trim_id
+INT
+FK trims.id, UNIQUE, NOT NULL
+1:1 con trim
+battery_kwh
+DECIMAL(5,1)
+NULL
+Batería kWh
+range_cltc_km
+INT
+NULL
+Autonomía CLTC
+range_wltp_km
+INT
+NULL
+Autonomía WLTP
+horsepower
+INT
+NULL
+HP
+torque
+INT
+NULL
+Nm
+zero_to_100
+DECIMAL(3,1)
+NULL
+Seg 0-100
+top_speed
+INT
+NULL
+km/h
+charge_time_30_80
+VARCHAR(50)
+NULL
+Tiempo carga
+trunk_liters
+INT
+NULL
+Maletero L
+length_mm
+INT
+NULL
+width_mm
+INT
+NULL
+height_mm
+INT
+NULL
+wheelbase_mm
+INT
+NULL
+curb_weight_kg
+INT
+NULL
+kwh_per_100km
+DECIMAL(4,1)
+NULL
+Consumo (calculadora)
+adas_level
+VARCHAR(50)
+NULL
+L1, L2, L2+
+screen_size
+VARCHAR(50)
+NULL
+Pulgadas
+software_version
+VARCHAR(50)
+NULL
+3.5 colors
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+trim_id
+INT
+FK trims.id, NOT NULL
+name
+VARCHAR(100)
+NOT NULL
+Azul Glaciar
+hex_code
+VARCHAR(7)
+NOT NULL
+#1A5276
+type
+ENUM(exterior,interior)
+DEFAULT exterior
+image_url
+VARCHAR(500)
+NULL
+Foto en este color
+swatch_url
+VARCHAR(500)
+NULL
+Miniatura selector
+3.6 images
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+trim_id
+INT
+FK trims.id, NOT NULL
+url
+VARCHAR(500)
+NOT NULL
+URL Cloudinary
+alt_text
+VARCHAR(255)
+NULL
+SEO
+type
+ENUM(gallery,hero,interior,exterior,360)
+DEFAULT gallery
+sort_order
+INT
+DEFAULT 0
+3.7 models_3d
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+trim_id
+INT
+FK trims.id, NOT NULL
+file_url
+VARCHAR(500)
+NOT NULL
+URL Cloudinary .glB
+file_size_mb
+DECIMAL(5,2)
+NULL
+format
+VARCHAR(10)
+DEFAULT glb
+draco_compressed
+TINYINT(1)
+DEFAULT 1
+lod_level
+ENUM(low,medium,high)
+DEFAULT high
+3.8 users
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+name
+VARCHAR(150)
+NOT NULL
+email
+VARCHAR(255)
+NOT NULL, UNIQUE
+phone
+VARCHAR(20)
+NULL
++57...
+password_hash
+VARCHAR(255)
+NULL
+NULL si OAuth
+cedula
+VARCHAR(20)
+NULL, UNIQUE
+city
+VARCHAR(100)
+NULL
+role
+ENUM(client,admin,super_admin,advisor)
+DEFAULT client
+google_id
+VARCHAR(255)
+NULL, UNIQUE
+OAuth
+avatar_url
+VARCHAR(500)
+NULL
+refresh_token
+VARCHAR(500)
+NULL
+Hasheado
+is_active
+TINYINT(1)
+DEFAULT 1
+last_login
+DATETIME
+NULL
+created_at
+DATETIME
+DEFAULT NOW()
+updated_at
+DATETIME
+ON UPDATE NOW()
+3.9 orders
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+user_id
+INT
+FK users.id, NOT NULL
+trim_id
+INT
+FK trims.id, NOT NULL
+color_id
+INT
+FK colors.id, NULL
+tracking_code
+VARCHAR(20)
+NOT NULL, UNIQUE
+ELE-2025-XXXXX
+status
+ENUM(confirmed,port_origin,transit,customs,nationalization,ready,delivered)
+DEFAULT confirmed
+estimated_delivery
+DATE
+NULL
+vin
+VARCHAR(17)
+NULL, UNIQUE
+total_price
+DECIMAL(12,2)
+NULL
+notes
+TEXT
+NULL
+Notas internas
+created_at
+DATETIME
+DEFAULT NOW()
+updated_at
+DATETIME
+ON UPDATE NOW()
+3.10 order_status_history
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+order_id
+INT
+FK orders.id, NOT NULL
+status
+ENUM(confirmed,port_origin,transit,customs,nationalization,ready,delivered)
+NOT NULL
+description
+VARCHAR(500)
+NULL
+date
+DATETIME
+DEFAULT NOW()
+updated_by
+INT
+FK users.id, NULL
+Admin que actualizó
+3.11 quotes
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+user_id
+INT
+FK users.id, NULL
+NULL si anónimo
+name
+VARCHAR(150)
+NOT NULL
+email
+VARCHAR(255)
+NOT NULL
+phone
+VARCHAR(20)
+NOT NULL
+city
+VARCHAR(100)
+NULL
+model_id
+INT
+FK models.id, NULL
+trim_id
+INT
+FK trims.id, NULL
+budget_range
+VARCHAR(100)
+NULL
+preferred_channel
+ENUM(whatsapp,call,email)
+DEFAULT whatsapp
+message
+TEXT
+NULL
+reference_code
+VARCHAR(20)
+NOT NULL, UNIQUE
+COT-2025-XXXXX
+status
+ENUM(pending,contacted,responded,negotiation,closed_won,closed_lost)
+DEFAULT pending
+assigned_to
+INT
+FK users.id, NULL
+Asesor
+source
+VARCHAR(50)
+NULL
+web, whatsapp, manual
+utm_source
+VARCHAR(100)
+NULL
+utm_medium
+VARCHAR(100)
+NULL
+utm_campaign
+VARCHAR(100)
+NULL
+notes
+TEXT
+NULL
+Notas internas
+created_at
+DATETIME
+DEFAULT NOW()
+updated_at
+DATETIME
+ON UPDATE NOW()
+3.12 documents
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+order_id
+INT
+FK orders.id, NULL
+user_id
+INT
+FK users.id, NOT NULL
+type
+ENUM(invoice,soat,import_cert,property_card,manual,contract,other)
+NOT NULL
+name
+VARCHAR(255)
+NOT NULL
+file_url
+VARCHAR(500)
+NOT NULL
+Cloudinary
+uploaded_by
+ENUM(admin,client)
+NOT NULL
+created_at
+DATETIME
+DEFAULT NOW()
+3.13 workshops
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+name
+VARCHAR(200)
+NOT NULL
+address
+VARCHAR(300)
+NOT NULL
+city
+VARCHAR(100)
+NOT NULL
+state
+VARCHAR(100)
+NOT NULL
+Departamento
+latitude
+DECIMAL(10,7)
+NOT NULL
+longitude
+DECIMAL(10,7)
+NOT NULL
+phone
+VARCHAR(20)
+NULL
+whatsapp
+VARCHAR(20)
+NULL
+email
+VARCHAR(255)
+NULL
+google_maps_url
+VARCHAR(500)
+NULL
+rating
+DECIMAL(2,1)
+NULL
+1.0-5.0
+active
+TINYINT(1)
+DEFAULT 1
+created_at
+DATETIME
+DEFAULT NOW()
+updated_at
+DATETIME
+ON UPDATE NOW()
+3.13.1 workshop_services
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+workshop_id
+INT
+FK workshops.id, NOT NULL
+service_type
+ENUM(maintenance,chargers,body_paint,electric_diagnostics,tires)
+NOT NULL
+3.13.2 workshop_hours
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+workshop_id
+INT
+FK workshops.id, NOT NULL
+day_of_week
+TINYINT
+NOT NULL
+0=Lunes, 6=Domingo
+open_time
+TIME
+NULL
+close_time
+TIME
+NULL
+is_closed
+TINYINT(1)
+DEFAULT 0
+3.13.3 workshop_images
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+workshop_id
+INT
+FK workshops.id, NOT NULL
+url
+VARCHAR(500)
+NOT NULL
+alt_text
+VARCHAR(255)
+NULL
+sort_order
+INT
+DEFAULT 0
+3.14 electricity_rates
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+city
+VARCHAR(100)
+NOT NULL
+price_per_kwh_cop
+DECIMAL(8,2)
+NOT NULL
+Precio COP/kWh
+source
+VARCHAR(200)
+NULL
+Fuente del dato
+updated_at
+DATETIME
+ON UPDATE NOW()
+3.15 fuel_prices
+Campo
+Tipo
+Constraints
+Descripción
+id
+INT
+PK, AI
+city
+VARCHAR(100)
+NOT NULL
+fuel_type
+ENUM(regular,premium)
+DEFAULT regular
+price_per_gallon_cop
+DECIMAL(10,2)
+NOT NULL
+COP/galón
+source
+VARCHAR(200)
+NULL
+updated_at
+DATETIME
+ON UPDATE NOW()
+3.16 Diagrama de Relaciones
+brands 1→N models 1→N trims 1→1 specs | trims 1→N colors, images, models_3d | users 1→N orders, quotes, documents | orders 1→N order_status_history | workshops 1→N workshop_services, workshop_hours, workshop_images
+4. Requerimientos Funcionales — API REST
+Cada requerimiento define los endpoints HTTP, método, autenticación requerida, parámetros y respuesta esperada.
+RF-DMS-01: Autenticación y Gestión de Sesiones
+Atributo
+Detalle
+ID
+RF-DMS-01
+Prioridad
+Crítica
+Endpoints
+POST /api/auth/register
+Registro con name, email, phone, password. Retorna JWT + refresh.
+POST /api/auth/login
+Login con email + password. Retorna JWT + refresh.
+POST /api/auth/google
+OAuth Google. Recibe token de Google, crea/busca usuario.
+POST /api/auth/otp/send
+Envía OTP a WhatsApp/SMS. Recibe phone.
+POST /api/auth/otp/verify
+Verifica OTP. Retorna JWT + refresh.
+POST /api/auth/refresh
+Renueva access token con refresh token.
+POST /api/auth/forgot-password
+Envía email con link de reset.
+PUT /api/auth/reset-password
+Resetea password con token del email.
+POST /api/auth/logout
+Invalida refresh token.
+Seguridad
+Rate limiting: 5 intentos/min en login
+bcrypt 12 rounds. JWT 15min. Refresh 7d.
+RF-DMS-02: Gestión de Inventario (Catálogo)
+Atributo
+Detalle
+ID
+RF-DMS-02
+Prioridad
+Crítica
+GET /api/brands
+Público. Lista marcas activas.
+GET /api/models
+Público. Lista modelos con filtros: type, min_price, max_price, min_range, max_range, brand_id, featured. Paginación: page, limit. Incluye brand, trims[0].price, trims[0].status.
+GET /api/models/:slug
+Público. Detalle completo: modelo + brand + trims + specs + colors + images + models_3d.
+Admin
+POST /api/brands
+Admin. Crear marca.
+PUT /api/brands/:id
+Admin. Editar marca.
+DELETE /api/brands/:id
+Admin. Soft delete (active=0).
+POST /api/models
+Admin. Crear modelo con relaciones.
+PUT /api/models/:id
+Admin. Editar modelo.
+DELETE /api/models/:id
+Admin. Soft delete.
+POST/PUT/DELETE /api/trims/*
+Admin. CRUD versiones.
+POST/PUT/DELETE /api/specs/*
+Admin. CRUD especificaciones.
+POST/PUT/DELETE /api/colors/*
+Admin. CRUD colores.
+POST/PUT/DELETE /api/images/*
+Admin. CRUD imágenes + upload Cloudinary.
+POST/PUT/DELETE /api/models-3d/*
+Admin. CRUD archivos 3D + upload Cloudinary.
+Validación
+DTOs con class-validator
+Slug único. Price > 0. Image types válidos.
+RF-DMS-03: Gestión de Pedidos e Importaciones
+Atributo
+Detalle
+ID
+RF-DMS-03
+Prioridad
+Crítica
+GET /api/orders/track/:code
+Público. Requiere tracking_code + (cedula o email) como query params para verificación.
+GET /api/orders/my
+Auth (cliente). Lista pedidos del usuario autenticado con último estado.
+GET /api/orders/my/:id
+Auth (cliente). Detalle de un pedido con historial completo.
+Admin
+GET /api/orders
+Admin. Lista todos los pedidos. Filtros: status, user_id, date range. Paginación.
+POST /api/orders
+Admin. Crear pedido. Autogenera tracking_code (ELE-YYYY-NNNNN).
+PUT /api/orders/:id
+Admin. Editar pedido (notas, VIN, fecha estimada).
+PUT /api/orders/:id/status
+Admin. Cambiar estado. Crea registro en order_status_history. Dispara webhook a n8n.
+Webhook
+Al cambiar estado se envía POST a n8n
+Payload: order_id, new_status, tracking_code, user_email.
+RF-DMS-04: Gestión de Cotizaciones / Leads (CRM)
+Atributo
+Detalle
+ID
+RF-DMS-04
+Prioridad
+Crítica
+POST /api/quotes
+Público. Crear cotización. Autogenera reference_code (COT-YYYY-NNNNN). Captura UTMs. Dispara webhook a n8n.
+GET /api/quotes/my
+Auth (cliente). Lista cotizaciones del usuario con estados.
+Admin
+GET /api/quotes
+Admin. Lista todas. Filtros: status, assigned_to, source, date range.
+GET /api/quotes/:id
+Admin. Detalle completo con modelo relacionado.
+PUT /api/quotes/:id
+Admin. Actualizar status, assigned_to, notes.
+GET /api/quotes/stats
+Admin. Métricas: total hoy, por status, por fuente, tasa conversión.
+Webhook
+Al crear quote se envía POST a n8n
+Payload: quote data + UTMs para envío automático de catálogo PDF.
+RF-DMS-05: Gestión de Usuarios
+Atributo
+Detalle
+ID
+RF-DMS-05
+Prioridad
+Alta
+GET /api/users/me
+Auth. Retorna perfil del usuario autenticado.
+PUT /api/users/me
+Auth. Editar nombre, phone, city, avatar.
+PUT /api/users/me/password
+Auth. Cambiar contraseña (requiere current_password).
+Admin
+GET /api/users
+Admin. Lista usuarios. Filtros: role, is_active, search.
+GET /api/users/:id
+Admin. Detalle con pedidos y cotizaciones.
+PUT /api/users/:id/role
+Super Admin. Cambiar rol.
+PUT /api/users/:id/status
+Admin. Activar/desactivar cuenta.
+RF-DMS-06: Gestión de Documentos
+Atributo
+Detalle
+ID
+RF-DMS-06
+Prioridad
+Alta
+GET /api/documents/my
+Auth (cliente). Lista documentos del usuario.
+POST /api/documents/upload
+Auth. Upload documento a Cloudinary. Asocia a order_id/user_id.
+GET /api/documents/:id/download
+Auth. Redirige a URL firmada de Cloudinary.
+Admin
+POST /api/documents/upload-for-user
+Admin. Sube documento para un usuario/pedido específico.
+DELETE /api/documents/:id
+Admin. Elimina documento.
+RF-DMS-07: Gestión de Talleres Aliados
+Atributo
+Detalle
+ID
+RF-DMS-07
+Prioridad
+Media
+GET /api/workshops
+Público. Lista talleres activos. Filtros: city, service_type. Query: lat, lng, radius para búsqueda geográfica (Haversine formula). Incluye services, hours, badge abierto/cerrado.
+GET /api/workshops/:id
+Público. Detalle completo con services, hours, images.
+Admin
+POST /api/workshops
+Admin. Crear taller con services, hours, images.
+PUT /api/workshops/:id
+Admin. Editar taller y relaciones.
+DELETE /api/workshops/:id
+Admin. Soft delete.
+Geo
+Haversine formula en MySQL
+SELECT *, (6371 * acos(...)) AS distance ORDER BY distance.
+RF-DMS-08: Datos de Calculadora
+Atributo
+Detalle
+ID
+RF-DMS-08
+Prioridad
+Media
+GET /api/calculator/rates
+Público. Retorna tarifas eléctricas y precios gasolina por ciudad.
+Admin
+POST/PUT/DELETE /api/calculator/electricity-rates/*
+Admin. CRUD tarifas eléctricas.
+POST/PUT/DELETE /api/calculator/fuel-prices/*
+Admin. CRUD precios gasolina.
+RF-DMS-09: Dashboard de Métricas (Admin)
+Atributo
+Detalle
+ID
+RF-DMS-09
+Prioridad
+Alta
+GET /api/dashboard/summary
+Admin. Retorna: total_leads_today, total_leads_week, total_leads_month, leads_by_status, leads_by_source, active_orders, vehicles_in_stock, vehicles_in_transit, conversion_rate.
+GET /api/dashboard/leads-chart
+Admin. Leads por día (últimos 30 días) para gráfico.
+GET /api/dashboard/orders-by-status
+Admin. Pedidos agrupados por estado.
+RF-DMS-10: Webhooks y Notificaciones
+Atributo
+Detalle
+ID
+RF-DMS-10
+Prioridad
+Alta
+Eventos
+quote.created
+Se dispara al crear cotización. POST a URL de n8n configurada.
+order.status_changed
+Se dispara al cambiar estado de pedido. POST a URL de n8n.
+user.registered
+Se dispara al registrar nuevo usuario.
+Config
+Variables de entorno
+WEBHOOK_N8N_URL, WEBHOOK_SECRET para firmar payloads.
+Retry
+3 intentos con backoff exponencial si falla el POST.
+RF-DMS-11: Health Check y Monitoreo
+Atributo
+Detalle
+ID
+RF-DMS-11
+Prioridad
+Media
+GET /api/health
+Público. Retorna status del servidor, BD, Cloudinary.
+GET /api/health/db
+Admin. Prueba conexión MySQL.
+Logging
+Winston logger
+Logs estructurados con niveles error, warn, info. Rotación diaria.
+5. Requerimientos Funcionales — Panel de Administración
+El panel admin es una SPA React (Ant Design o Refine.dev) desplegada en admin.elemotor.com.co. Consume la API del DMS con autenticación JWT.
+RF-ADMIN-01: Login y Autenticación del Panel
+Atributo
+Detalle
+Criterio de Aceptación
+Descripción
+Página de login con email + contraseña.
+Solo usuarios con rol admin, super_admin o advisor pueden acceder.
+Sesión
+JWT almacenado en memoria + refresh en httpOnly cookie.
+Sesión persiste al recargar. Expira tras 7 días sin actividad.
+Seguridad
+Rate limiting + CSRF.
+Máx 5 intentos/min. Bloqueo temporal tras 10 fallos.
+RF-ADMIN-02: Dashboard Principal
+Atributo
+Detalle
+Criterio de Aceptación
+KPIs
+Cards con: Leads hoy, Leads semana, Pedidos activos, Vehículos en stock.
+Datos en tiempo real desde /api/dashboard/summary.
+Gráfico
+Línea de leads por día (últimos 30 días).
+Renderizado con Recharts o Chart.js.
+Tabla
+Últimas 10 cotizaciones con estado y asesor.
+Clickeable para ir al detalle.
+Actividad
+Últimos 5 cambios de estado de pedidos.
+Timeline visual.
+RF-ADMIN-03: Módulo de Inventario
+Atributo
+Detalle
+Criterio de Aceptación
+Marcas
+Tabla con búsqueda. CRUD completo. Upload logo.
+Logo se sube a Cloudinary.
+Modelos
+Tabla con filtros por marca, tipo. CRUD. Slug autogenerado.
+Al crear modelo se puede añadir trims inline.
+Versiones
+Sub-tabla dentro de modelo. CRUD. Precio, stock, estado.
+Cambiar estado actualiza disponibilidad en la web.
+Specs
+Formulario por trim. Todos los campos numéricos con validación.
+Campos vacíos se muestran como — en la web.
+Colores
+Sub-tabla por trim. Nombre, hex (color picker), upload imagen.
+Preview del hex en la tabla.
+Imágenes
+Galería por trim. Drag & drop upload. Reordenar. Tipo por imagen.
+Múltiple upload. Preview en miniatura.
+Modelos 3D
+Upload .glB por trim. Preview tamaño archivo.
+Validar formato .glB y tamaño < 10MB.
+RF-ADMIN-04: Módulo de Pedidos / Importaciones
+Atributo
+Detalle
+Criterio de Aceptación
+Lista
+Tabla con filtros: estado, cliente, rango fechas. Búsqueda por tracking code.
+Paginación server-side.
+Crear
+Formulario: seleccionar usuario, trim, color. Tracking code autogenerado.
+Código formato ELE-YYYY-NNNNN.
+Detalle
+Card resumen + timeline de estados + historial completo.
+Timeline visual con fechas y descripciones.
+Cambiar Estado
+Botón por estado con campo de descripción.
+Al cambiar estado: crea registro en historial, actualiza order.status, dispara webhook.
+Editar
+VIN, precio total, notas, fecha estimada.
+VIN valida formato (17 chars alfanumérico).
+RF-ADMIN-05: Módulo CRM / Cotizaciones
+Atributo
+Detalle
+Criterio de Aceptación
+Lista
+Tabla con filtros: estado, asesor, fuente, fecha. Búsqueda por nombre/email.
+Paginación. Colores por estado.
+Detalle
+Datos del lead + modelo de interés + UTMs + historial de notas.
+Link al modelo en la web.
+Cambiar Estado
+Dropdown con estados del funnel.
+Registra cambio con timestamp.
+Asignar
+Dropdown de asesores.
+Solo super_admin y admin pueden reasignar.
+Notas
+Campo de texto para agregar notas internas.
+Historial de notas con fecha y autor.
+Estadísticas
+Cards: por estado, por fuente, tasa conversión, tiempo promedio respuesta.
+Datos desde /api/quotes/stats.
+RF-ADMIN-06: Módulo de Talleres
+Atributo
+Detalle
+Criterio de Aceptación
+Lista
+Tabla con filtros: ciudad, estado. Búsqueda por nombre.
+Crear/Editar
+Formulario: datos básicos + mapa picker para lat/lng + servicios (checkboxes) + horarios por día + fotos.
+Mapa interactivo para seleccionar ubicación.
+Horarios
+Grid de 7 días con open_time, close_time, cerrado.
+Validar que open < close.
+Fotos
+Upload múltiple con reordenamiento.
+Cloudinary.
+RF-ADMIN-07: Módulo de Calculadora
+Atributo
+Detalle
+Criterio de Aceptación
+Tarifas
+Tabla editable: ciudad + precio kWh COP + fuente.
+CRUD inline.
+Combustible
+Tabla editable: ciudad + tipo + precio galón COP + fuente.
+CRUD inline.
+RF-ADMIN-08: Gestión de Usuarios
+Atributo
+Detalle
+Criterio de Aceptación
+Lista
+Tabla: nombre, email, rol, estado, último login. Filtros por rol.
+Detalle
+Perfil + pedidos + cotizaciones del usuario.
+Acciones
+Cambiar rol (super_admin only), activar/desactivar.
+No se puede desactivar su propia cuenta.
+6. Requerimientos No Funcionales
+ID
+Categoría
+Descripción
+Métrica
+RNF-01
+Rendimiento
+La API debe responder rápidamente.
+Endpoints < 500ms (p95). Queries < 200ms.
+RNF-02
+Escalabilidad
+Soportar crecimiento sin rediseño.
+Soportar 10 marcas, 50 modelos, 10k usuarios, 50k quotes sin degradación.
+RNF-03
+Disponibilidad
+API siempre accesible.
+Uptime > 99.5%. Health check monitoreado.
+RNF-04
+Seguridad
+Protección de datos según ley colombiana.
+Ley 1581/2012. HTTPS. bcrypt. JWT. RBAC. Rate limiting.
+RNF-05
+Mantenibilidad
+Código limpio y documentado.
+TypeScript strict. ESLint. Swagger autogenerado. Tests > 70%.
+RNF-06
+Backup
+Respaldos de BD.
+Backup diario MySQL. Retención 30 días. Plan de recuperación.
+RNF-07
+Logging
+Trazabilidad de operaciones.
+Winston con niveles. Rotación diaria. Logs de errores + accesos.
+RNF-08
+Documentación
+API documentada para consumidores.
+Swagger /api/docs con ejemplos. README con setup local.
+RNF-09
+Testing
+Cobertura de tests.
+Jest unitarios > 70%. Supertest e2e para flujos críticos.
+RNF-10
+Migraciones
+BD versionada.
+Prisma migrations. Seed data para desarrollo. Rollback documentado.
+7. Referencia Completa de Endpoints
+Listado consolidado de todos los endpoints de la API con método, ruta, autenticación y descripción.
+Método
+Ruta
+Auth
+Descripción
+POST
+/api/auth/register
+Público
+Registro de usuario
+POST
+/api/auth/login
+Público
+Login email+password
+POST
+/api/auth/google
+Público
+OAuth Google
+POST
+/api/auth/otp/send
+Público
+Enviar OTP
+POST
+/api/auth/otp/verify
+Público
+Verificar OTP
+POST
+/api/auth/refresh
+Público
+Renovar token
+POST
+/api/auth/forgot-password
+Público
+Solicitar reset
+PUT
+/api/auth/reset-password
+Público
+Resetear password
+POST
+/api/auth/logout
+Auth
+Cerrar sesión
+GET
+/api/brands
+Público
+Listar marcas
+POST
+/api/brands
+Admin
+Crear marca
+PUT
+/api/brands/:id
+Admin
+Editar marca
+DELETE
+/api/brands/:id
+Admin
+Eliminar marca
+GET
+/api/models
+Público
+Listar modelos (filtros, paginación)
+GET
+/api/models/:slug
+Público
+Detalle modelo completo
+POST
+/api/models
+Admin
+Crear modelo
+PUT
+/api/models/:id
+Admin
+Editar modelo
+DELETE
+/api/models/:id
+Admin
+Eliminar modelo
+POST/PUT/DELETE
+/api/trims/*
+Admin
+CRUD versiones
+POST/PUT/DELETE
+/api/specs/*
+Admin
+CRUD especificaciones
+POST/PUT/DELETE
+/api/colors/*
+Admin
+CRUD colores
+POST/PUT/DELETE
+/api/images/*
+Admin
+CRUD imágenes + upload
+POST/PUT/DELETE
+/api/models-3d/*
+Admin
+CRUD archivos 3D + upload
+GET
+/api/orders/track/:code
+Público*
+Tracking público (+ verificación)
+GET
+/api/orders/my
+Auth
+Mis pedidos
+GET
+/api/orders/my/:id
+Auth
+Detalle mi pedido
+GET
+/api/orders
+Admin
+Listar todos los pedidos
+POST
+/api/orders
+Admin
+Crear pedido
+PUT
+/api/orders/:id
+Admin
+Editar pedido
+PUT
+/api/orders/:id/status
+Admin
+Cambiar estado + webhook
+POST
+/api/quotes
+Público
+Crear cotización + webhook
+GET
+/api/quotes/my
+Auth
+Mis cotizaciones
+GET
+/api/quotes
+Admin
+Listar cotizaciones
+GET
+/api/quotes/:id
+Admin
+Detalle cotización
+PUT
+/api/quotes/:id
+Admin
+Actualizar estado/asignar
+GET
+/api/quotes/stats
+Admin
+Estadísticas CRM
+GET
+/api/users/me
+Auth
+Mi perfil
+PUT
+/api/users/me
+Auth
+Editar mi perfil
+PUT
+/api/users/me/password
+Auth
+Cambiar mi contraseña
+GET
+/api/users
+Admin
+Listar usuarios
+PUT
+/api/users/:id/role
+Super Admin
+Cambiar rol
+GET
+/api/documents/my
+Auth
+Mis documentos
+POST
+/api/documents/upload
+Auth
+Subir documento
+GET
+/api/documents/:id/download
+Auth
+Descargar documento
+GET
+/api/workshops
+Público
+Listar talleres (geo search)
+GET
+/api/workshops/:id
+Público
+Detalle taller
+POST/PUT/DELETE
+/api/workshops/*
+Admin
+CRUD talleres
+GET
+/api/calculator/rates
+Público
+Tarifas y precios
+POST/PUT/DELETE
+/api/calculator/*
+Admin
+CRUD tarifas/precios
+GET
+/api/dashboard/summary
+Admin
+Métricas dashboard
+GET
+/api/dashboard/leads-chart
+Admin
+Gráfico leads
+GET
+/api/health
+Público
+Estado del servidor
+8. Variables de Entorno
+Variable
+Ejemplo
+Descripción
+DATABASE_URL
+mysql://user:pass@localhost:3306/elemotor
+Conexión MySQL (Prisma)
+JWT_SECRET
+random-string-64-chars
+Secreto para firmar JWT
+JWT_EXPIRATION
+15m
+Tiempo de vida access token
+JWT_REFRESH_EXPIRATION
+7d
+Tiempo de vida refresh token
+CLOUDINARY_CLOUD_NAME
+elemotor
+Nombre del cloud en Cloudinary
+CLOUDINARY_API_KEY
+123456789
+API Key Cloudinary
+CLOUDINARY_API_SECRET
+secret
+API Secret Cloudinary
+GOOGLE_CLIENT_ID
+xxx.apps.googleusercontent.com
+OAuth Google
+GOOGLE_CLIENT_SECRET
+secret
+OAuth Google
+SMTP_HOST
+mail.elemotor.com.co
+Servidor SMTP
+SMTP_PORT
+465
+Puerto SMTP (SSL)
+SMTP_USER
+noreply@elemotor.com.co
+Usuario SMTP
+SMTP_PASS
+password
+Contraseña SMTP
+WEBHOOK_N8N_URL
+https://n8n.elemotor.com/webhook/xxx
+URL webhook n8n
+WEBHOOK_SECRET
+random-string
+Secreto para firmar webhooks
+OTP_PROVIDER
+twilio
+Proveedor OTP (twilio, messagebird)
+OTP_API_KEY
+key
+API Key del proveedor OTP
+CORS_ORIGINS
+https://www.elemotor.com.co,https://admin.elemotor.com.co
+Orígenes permitidos
+API_KEY_CHATBOT
+random-key
+API Key para el chatbot
+API_KEY_N8N
+random-key
+API Key para n8n
+NODE_ENV
+production
+Entorno (development, production)
+PORT
+4000
+Puerto del servidor (Passenger lo asigna)
+9. Cronograma de Desarrollo
+El DMS se desarrolla en paralelo con la Web Inmersiva. Los módulos se entregan progresivamente para que la web pueda consumirlos a medida que los necesita.
+Sprint Web
+Semanas
+Módulos DMS Requeridos
+Entregables DMS
+Sprint 1
+1-2
+Setup + BD + Auth
+Proyecto NestJS configurado. Schema Prisma completo. Migraciones ejecutadas. Seed data. Endpoints de health check. Swagger base.
+Sprint 2
+3-4
+Inventario + Admin Inventario
+API CRUD completa: brands, models, trims, specs, colors, images, models_3d. Upload a Cloudinary. Panel admin módulo inventario.
+Sprint 3
+5-6
+Auth + Quotes + Orders + Admin CRM
+Endpoints auth completos (register, login, OAuth, OTP, refresh, forgot). CRUD quotes con webhooks. Panel admin módulos pedidos y CRM.
+Sprint 4
+7-8
+Tracking
+Endpoints de tracking (público + autenticado). PUT status con webhook. Historial de estados.
+Sprint 5
+9-10
+Workshops + Calculator + Admin
+API workshops con geo search. API calculator rates. Panel admin talleres y precios.
+Sprint 6
+11-12
+Dashboard + Webhooks + Optimización
+Dashboard métricas. Webhooks a n8n. Índices MySQL. Query optimization. Tests.
+Sprint 7
+13-14
+Deploy + QA
+Deploy a cPanel producción. CORS producción. SSL. Backups configurados. QA completo. Panel admin en admin.elemotor.com.co.
+10. Criterios de Aceptación Globales
+#
+Criterio
+Verificación
+1
+Todos los endpoints documentados en Swagger /api/docs con ejemplos.
+Abrir /api/docs y verificar completitud.
+2
+CRUD completo de inventario funcional desde el panel admin.
+Crear marca > modelo > trim > specs > colores > imágenes > 3D.
+3
+Flujo de cotización end-to-end: web envía > DMS recibe > webhook dispara > aparece en panel.
+Probar desde la web hasta el panel admin.
+4
+Flujo de tracking: admin cambia estado > historial se crea > webhook dispara > web muestra estado actualizado.
+Cambiar estado en admin y verificar en web.
+5
+Autenticación: registro, login, OAuth, OTP, refresh, logout funcionan.
+Probar cada flujo.
+6
+RBAC: endpoints admin no accesibles sin rol admin.
+Intentar acceder con JWT de cliente.
+7
+Rate limiting activo: login bloqueado tras 5 intentos.
+Probar con más de 5 intentos rápidos.
+8
+Upload de archivos funciona: imágenes, .glB, documentos suben a Cloudinary.
+Verificar URLs válidas en Cloudinary.
+9
+Búsqueda geográfica de talleres retorna resultados ordenados por distancia.
+Probar con coordenadas conocidas.
+10
+Webhooks disparan correctamente a n8n.
+Verificar logs de n8n.
+11
+API < 500ms (p95) en todos los endpoints.
+Medir con herramienta de carga.
+12
+Panel admin funciona en Chrome, Firefox, Safari, Edge.
+Prueba cross-browser.
+13
+Base de datos con backup diario configurado.
+Verificar cron de backup en cPanel.
+14
+Variables de entorno en producción, no hardcodeadas.
+Auditar código.
+11. Glosario
+Término
+Definición
+DMS
+Dealer Management System. Sistema central de gestión del concesionario.
+API REST
+Interfaz de programación basada en HTTP con verbos GET, POST, PUT, DELETE.
+JWT
+JSON Web Token. Estándar para autenticación stateless.
+RBAC
+Role-Based Access Control. Autorización basada en roles de usuario.
+ORM
+Object-Relational Mapping. Capa de abstracción entre código y base de datos.
+DTO
+Data Transfer Object. Clase que define la estructura de datos de entrada/salida.
+Prisma
+ORM type-safe para Node.js/TypeScript con soporte MySQL.
+NestJS
+Framework de Node.js enterprise-grade con arquitectura modular.
+Swagger
+Herramienta para documentar APIs REST automáticamente.
+Webhook
+Callback HTTP que notifica a un sistema externo cuando ocurre un evento.
+OTP
+One-Time Password. Código de verificación de un solo uso.
+Haversine
+Fórmula matemática para calcular distancia entre coordenadas GPS.
+bcrypt
+Algoritmo de hasheo para contraseñas con salt automático.
+Passenger
+Servidor de aplicaciones que integra Node.js con Apache en cPanel.
+ISR
+Incremental Static Regeneration (relevante para la web que consume la API).
+CORS
+Cross-Origin Resource Sharing. Control de qué dominios pueden acceder a la API.
+UTM
+Urchin Tracking Module. Parámetros de tracking de campañas (source, medium, campaign).
+CDN
+Content Delivery Network. Red de distribución de contenido.
+Lead
+Prospecto comercial que muestra interés en un producto.
+Funnel
+Embudo de conversión: pending > contacted > responded > negotiation > closed.
+12. Control de Versiones del Documento
+Versión
+Fecha
+Autor
+Cambios
+1.0
+Febrero 2026
+Ing. Brayan Alfonso Aparicio Duran
+Creación inicial: arquitectura técnica (NestJS + MySQL + Prisma), modelo de datos completo (15 tablas), 11 requerimientos funcionales API (RF-DMS-01 a RF-DMS-11), 8 requerimientos funcionales panel admin (RF-ADMIN-01 a RF-ADMIN-08), 10 RNF, referencia de +50 endpoints, variables de entorno, cronograma alineado con sprints de la web.
+Fin del Documento
+ELEMOTOR — Ecosistema Digital — DMS

@@ -88,6 +88,7 @@ export function Footer() {
                                 src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=1000&auto=format&fit=crop"
                                 alt="Mapa de ubicación"
                                 fill
+                                sizes="(max-width: 768px) 100vw, 25vw"
                                 className="object-cover"
                             />
                             <div className="absolute inset-0 flex items-center justify-center">
