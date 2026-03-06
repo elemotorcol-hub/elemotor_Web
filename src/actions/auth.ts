@@ -41,7 +41,7 @@ export async function registerAction(name: string, email: string, phone: string,
         name,
         email,
         password, // En la vida real haríamos hasheo aquí con bcrypt
-        role: 'CUSTOMER' as const
+        role: 'client' as const
     };
 
     mockUsersDB.push(newUser);

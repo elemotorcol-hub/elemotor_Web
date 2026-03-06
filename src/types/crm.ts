@@ -28,6 +28,7 @@ export interface Quote {
     status: QuoteStatus;
     utm: UTMData;
     notes: Note[];
+    contactPreference?: 'tel' | 'email' | 'chat';
 }
 
 // Para compatibilidad con componentes existentes que usan 'Lead'

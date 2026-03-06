@@ -23,17 +23,23 @@ export async function middleware(request: NextRequest) {
 
     // 2. Control estricto de roles
     if (session) {
-        if (isAdminRoute && session.role !== 'ADMIN') {
+        const role = session.role; // e.g. 'admin', 'super_admin', 'advisor', 'client'
+        const hasAdminAccess = ['admin', 'super_admin', 'advisor'].includes(role);
+
+        if (isAdminRoute && !hasAdminAccess) {
             return NextResponse.redirect(new URL('/dashboard', request.nextUrl));
         }
-        if (isDashboardRoute && session.role !== 'CUSTOMER') {
+        if (isDashboardRoute && role !== 'client') {
             return NextResponse.redirect(new URL('/admin/inventory', request.nextUrl));
         }
     }
 
     // 3. Evitar que logueados vuelvan a login/register
     if (isPublicRoute && session && pathname.startsWith('/auth')) {
-        if (session.role === 'ADMIN') {
+        const role = session.role;
+        const hasAdminAccess = ['admin', 'super_admin', 'advisor'].includes(role);
+
+        if (hasAdminAccess) {
             return NextResponse.redirect(new URL('/admin/inventory', request.nextUrl));
         } else {
             return NextResponse.redirect(new URL('/dashboard', request.nextUrl));
