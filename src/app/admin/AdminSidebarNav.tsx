@@ -29,6 +29,12 @@ export default function AdminSidebarNav() {
       isActive: pathname.startsWith('/admin/crm'),
     },
     {
+      name: 'Pedidos',
+      href: '/admin/orders',
+      icon: Car, // Might change icon to ShoppingBag or Package
+      isActive: pathname.startsWith('/admin/orders'),
+    },
+    {
       name: 'Ajustes',
       href: '/admin/settings',
       icon: Settings,
