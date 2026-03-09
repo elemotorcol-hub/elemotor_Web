@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X, Save, UploadCloud } from 'lucide-react';
+import Image from 'next/image';
 import { Brand } from '@/types/inventory';
 import { brandSchema, BrandFormData } from '@/schemas/inventorySchema';
 
@@ -97,7 +98,7 @@ export default function BrandSlideOver({ isOpen, onClose, mode, initialData }: B
                             <label className="text-[13px] font-bold text-slate-300">Logotipo</label>
                             <div className="w-full h-32 border-2 border-dashed border-slate-700/60 rounded-xl bg-slate-900/30 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-900/50 transition-colors group relative overflow-hidden">
                                 {watch('logo_url') && (
-                                    <img src={watch('logo_url')} className="absolute inset-0 w-full h-full object-contain p-4 opacity-50 group-hover:opacity-20 transition-opacity" alt="preview" />
+                                    <Image src={watch('logo_url') || ''} fill sizes="100vw" className="object-contain p-4 opacity-50 group-hover:opacity-20 transition-opacity" alt="preview" />
                                 )}
                                 <div className="p-2 bg-slate-800 rounded-full text-slate-400 group-hover:text-cyan-400 transition-colors z-10">
                                     <UploadCloud size={20} />

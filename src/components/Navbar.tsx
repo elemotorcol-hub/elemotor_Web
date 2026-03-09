@@ -25,7 +25,7 @@ const NAVIGATION_ITEMS: NavItem[] = [
         href: '/modelos',
         subMenu: [
             { name: 'Ver Catálogo', href: '/modelos', description: 'Explora nuestra gama exclusiva' },
-            { name: 'Comparar', href: '#comparar', description: 'Encuentra el ideal para ti' },
+            { name: 'Comparar', href: '/comparar', description: 'Encuentra el ideal para ti' },
         ],
     },
     {

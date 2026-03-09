@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { WhatsAppWidget } from '@/components/WhatsAppWidget';
+import dynamic from 'next/dynamic';
 import { SchemaScript } from '@/components/SchemaScript';
 import { getOrganizationSchema, getWebSiteSchema } from '@/lib/schema';
 import { siteConfig } from '@/config/seo';
 import { buildMetadata } from '@/lib/metadata';
+
+const WhatsAppWidget = dynamic(() => import('@/components/WhatsAppWidget').then(mod => mod.WhatsAppWidget));
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

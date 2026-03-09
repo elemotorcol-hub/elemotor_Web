@@ -5,58 +5,8 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { FeatureCard } from './FeatureCard';
 import Image from 'next/image';
+import { availableModels } from '@/mocks/comparisonData';
 
-const models = [
-    {
-        name: 'TESLA MODEL S PLAID',
-        price: '$125.000 USD',
-        specs: { range: '600 km', zeroToHundred: '2.1s', battery: '100 kWh' },
-        image: '/MODELOS/AVATR-11.avif',
-        badge: 'NUEVO',
-    },
-    {
-        name: 'LUCID AIR SAPPHIRE',
-        price: '$249.000 USD',
-        specs: { range: '687 km', zeroToHundred: '1.89s', battery: '118 kWh' },
-        image: '/MODELOS/GALAXY_E8.avif',
-        badge: 'PREMIUM',
-    },
-    {
-        name: 'PORSCHE TAYCAN TURBO S',
-        price: '$194.000 USD',
-        specs: { range: '412 km', zeroToHundred: '2.8s', battery: '93 kWh' },
-        image: '/MODELOS/BYD-SEALION7 (1).avif',
-        badge: 'LUJO',
-    },
-    {
-        name: 'RIVIAN R1S',
-        price: '$84.000 USD',
-        specs: { range: '516 km', zeroToHundred: '3.0s', battery: '135 kWh' },
-        image: '/MODELOS/BYD BAO_3.webp',
-        badge: 'AVENTURA',
-    },
-    {
-        name: 'LOTUS ELETRE',
-        price: '$107.000 USD',
-        specs: { range: '600 km', zeroToHundred: '2.95s', battery: '112 kWh' },
-        image: '/MODELOS/BYD DOLPHIN EDITION KNIGHT.avif',
-        badge: 'DEPORTIVO',
-    },
-    {
-        name: 'POLESTAR 3',
-        price: '$83.000 USD',
-        specs: { range: '482 km', zeroToHundred: '4.6s', battery: '111 kWh' },
-        image: '/MODELOS/BYD YUAN PLUS -.webp',
-        badge: 'DISEÑO',
-    },
-    {
-        name: 'RIMAC NEVERA',
-        price: '$2.100.000 USD',
-        specs: { range: '490 km', zeroToHundred: '1.81s', battery: '120 kWh' },
-        image: '/MODELOS/BMW IX1.avif',
-        badge: 'EXTREMO',
-    },
-];
 
 const BLUR_DATA_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+pNPQAIXwM9ov86OQAAAABJRU5ErkJggg==';
 
@@ -115,7 +65,7 @@ export function ModelCarousel() {
                         {/* Carousel Wrapper */}
                         <div className="embla overflow-hidden" ref={emblaRef}>
                             <div className="embla__container flex -ml-6">
-                                {models.map((model) => (
+                                {availableModels.map((model) => (
                                     <div
                                         key={model.name}
                                         className="embla__slide flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.33%] min-w-0 pl-6"
@@ -170,7 +120,7 @@ export function ModelCarousel() {
                                                         {model.price}
                                                     </span>
                                                 </div>
-                                                <button className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-[#00D4AA] hover:text-slate-900 transition-all duration-300 group/btn shadow-xl">
+                                                <button aria-label={`Ver detalles de ${model.name}`} className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-[#00D4AA] hover:text-slate-900 transition-all duration-300 group/btn shadow-xl">
                                                     <ChevronRight className="w-5 h-5 transform group-hover/btn:translate-x-1 transition-transform" />
                                                 </button>
                                             </div>

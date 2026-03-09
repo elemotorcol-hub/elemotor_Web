@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getSession } from './lib/auth';
+import { getSession, UserPayload } from './lib/auth';
 
 // Define las rutas que requieren autenticación
 const adminRoutes = ['/admin'];
@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     const isPublicRoute = publicRoutes.includes(pathname);
 
     // Obtener la sesión del usuario decodificando el JWT en la cookie
-    const session: any = await getSession();
+    const session: UserPayload | null = await getSession();
 
     // 1. Proteger rutas sin login
     if ((isAdminRoute || isDashboardRoute) && !session) {

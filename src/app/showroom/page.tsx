@@ -36,12 +36,14 @@ export default function ShowroomPage() {
                         className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/5 h-12 blur-3xl opacity-25 rounded-full transition-colors duration-700"
                         style={{ backgroundColor: activeHex }}
                     />
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                         src="/showroom-car.png"
                         alt="Elemotor GT"
+                        width={400}
+                        height={250}
                         className="w-full max-w-sm mx-auto h-auto object-contain"
                         style={{ filter: `drop-shadow(0 20px 40px ${activeHex}44)` }}
+                        priority
                     />
 
                     <div className="flex items-center justify-between mt-3 px-1">

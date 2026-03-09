@@ -1,9 +1,11 @@
+import dynamic from 'next/dynamic';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
-import { ModelCarousel } from '@/components/ModelCarousel';
-import { ValueProps } from '@/components/ValueProps';
-import { CTABanner } from '@/components/CTABanner';
-import { Footer } from '@/components/Footer';
+
+const ModelCarousel = dynamic(() => import('@/components/ModelCarousel').then(mod => mod.ModelCarousel));
+const ValueProps = dynamic(() => import('@/components/ValueProps').then(mod => mod.ValueProps));
+const CTABanner = dynamic(() => import('@/components/CTABanner').then(mod => mod.CTABanner));
+const Footer = dynamic(() => import('@/components/Footer').then(mod => mod.Footer));
 
 export default function Home() {
   return (

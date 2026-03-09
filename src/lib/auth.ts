@@ -5,8 +5,15 @@ import { NextRequest, NextResponse } from 'next/server';
 const secretKey = process.env.JWT_SECRET_KEY || 'development-fallback-secret-key-do-not-use-in-prod';
 const key = new TextEncoder().encode(secretKey);
 
-interface SessionPayload {
-    user: { id: string; name: string; email: string; role: string };
+export interface UserPayload {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+}
+
+export interface SessionPayload {
+    user: UserPayload;
     expires: Date;
     [key: string]: unknown;
 }
@@ -30,7 +37,7 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
     }
 }
 
-export async function createSession(user: { id: string, name: string, email: string, role: string }) {
+export async function createSession(user: UserPayload) {
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     const session = await encrypt({ user, expires });
 

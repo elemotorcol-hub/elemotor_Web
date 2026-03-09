@@ -3,6 +3,7 @@
 import React, { useRef } from 'react';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 import { UploadCloud, X, GripVertical } from 'lucide-react';
+import Image from 'next/image';
 import { VehicleModelFormData } from '@/schemas/inventorySchema';
 
 export default function GalleryTab() {
@@ -136,11 +137,12 @@ export default function GalleryTab() {
                                 </button>
 
                                 <div className="relative w-full sm:w-32 aspect-video rounded-lg overflow-hidden bg-slate-900 flex-shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
+                                    <Image
                                         src={field.url}
                                         alt="Uploaded preview"
-                                        className="w-full h-full object-cover"
+                                        fill
+                                        sizes="(max-width: 640px) 100vw, 128px"
+                                        className="object-cover"
                                     />
                                 </div>
 

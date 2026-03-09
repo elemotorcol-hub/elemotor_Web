@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { MessageCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export function CTABanner() {
     return (
@@ -25,18 +26,18 @@ export function CTABanner() {
                         </h2>
 
                         <div className="flex flex-col sm:flex-row items-center gap-4">
-                            <a
+                            <Link
                                 href="/cotizar"
                                 className="bg-[#00D4AA] hover:bg-[#00B38F] text-[#0A0F1C] font-black text-sm md:text-base px-8 py-4 rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(0,212,170,0.3)] hover:shadow-[0_0_30px_rgba(0,212,170,0.5)] hover:-translate-y-1 w-full sm:w-auto text-center"
                             >
                                 COTIZAR AHORA
-                            </a>
-                            <a
+                            </Link>
+                            <Link
                                 href="#modelos"
                                 className="border border-white/20 text-white hover:bg-white/10 font-bold text-sm md:text-base px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto text-center"
                             >
                                 VER SHOWROOM 3D
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 </div>

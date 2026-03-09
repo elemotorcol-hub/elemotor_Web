@@ -1,0 +1,172 @@
+﻿
+> frontend@0.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+node.exe : ÔÜá The 
+"middleware" file 
+convention is 
+deprecated. Please use 
+"proxy" instead. Learn 
+more: https://nextjs.or
+g/docs/messages/middlew
+are-to-proxy
+En C:\Program 
+Files\nodejs\npm.ps1: 
+29 Carácter: 3
++   & $NODE_EXE 
+$NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (ÔÜá The "midd   
+ le...leware-to-pro    
+xy:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build 
+failed with 1 errors:
+./src/app/layout.tsx:10
+:24
+Ecmascript file had an 
+error
+[0m [90m  8 |[39m 
+[36mimport[39m { 
+buildMetadata } 
+[36mfrom[39m [32m'@/
+lib/metadata'[39m[33m
+;[39m
+ [90m  9 |[39m
+[31m[1m>[22m[39m[9
+0m 10 |[39m 
+[36mconst[39m [33mWh
+atsAppWidget[39m 
+[33m=[39m dynamic(() 
+[33m=>[39m [36mimpor
+t[39m([32m'@/componen
+ts/WhatsAppWidget'[39m
+)[33m.[39mthen(mod 
+[33m=>[39m mod[33m.
+[39m[33mWhatsAppWidget
+[39m)[33m,[39m { 
+ssr[33m:[39m 
+[36mfalse[39m 
+})[33m;[39m
+ [90m    |[39m       
+                 [31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m
+ [90m 11 |[39m
+ [90m 12 |[39m 
+[36mconst[39m 
+geistSans [33m=[39m 
+[33mGeist[39m({
+ [90m 13 |[39m   
+variable[33m:[39m [3
+2m'--font-geist-sans'[
+39m[33m,[39m[0m
+
+`ssr: false` is not 
+allowed with 
+`next/dynamic` in 
+Server Components. 
+Please move it into a 
+Client Component.
+
+
+    at <unknown> (./src
+/app/layout.tsx:10:24)
