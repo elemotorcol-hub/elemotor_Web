@@ -6,14 +6,17 @@ const secretKey = process.env.JWT_SECRET_KEY || 'development-fallback-secret-key
 const key = new TextEncoder().encode(secretKey);
 
 export interface UserPayload {
-    id: string;
+    id: string | number;
     name: string;
     email: string;
     role: string;
+    [key: string]: any;
 }
 
 export interface SessionPayload {
     user: UserPayload;
+    accessToken: string;
+    refreshToken?: string;
     expires: Date;
     [key: string]: unknown;
 }
@@ -37,9 +40,13 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
     }
 }
 
-export async function createSession(user: UserPayload) {
+export async function createSession(
+    user: UserPayload,
+    accessToken: string,
+    refreshToken?: string
+) {
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    const session = await encrypt({ user, expires });
+    const session = await encrypt({ user, accessToken, refreshToken, expires });
 
     (await cookies()).set('elemotor_session', session, {
         expires,
@@ -55,7 +62,7 @@ export async function getSession() {
     if (!sessionCookie) return null;
     try {
         const parsed = await decrypt(sessionCookie);
-        return parsed?.user || null;
+        return parsed || null;
     } catch (error) {
         return null;
     }
