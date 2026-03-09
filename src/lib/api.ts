@@ -56,7 +56,8 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     }
 
     if (!response.ok) {
-        const errorMessage = data?.message || typeof data === 'string' ? data : response.statusText;
+        let errorMessage = typeof data === 'string' ? data : (data?.message || response.statusText);
+        if (Array.isArray(errorMessage)) errorMessage = errorMessage.join(', ');
         throw new Error(errorMessage || `API error: ${response.status}`);
     }
 

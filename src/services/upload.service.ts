@@ -2,8 +2,15 @@ import { getSession } from '../lib/auth.client';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
+export interface UploadResponse {
+    publicUrl: string;
+    publicId: string;
+    format: string;
+    size: number;
+}
+
 export const uploadService = {
-    uploadImage: async (file: File) => {
+    uploadImage: async (file: File): Promise<UploadResponse> => {
         const session = await getSession();
         const formData = new FormData();
         formData.append('file', file);
