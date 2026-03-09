@@ -5,8 +5,10 @@ import { NextRequest, NextResponse } from 'next/server';
 const secretKey = process.env.JWT_SECRET_KEY || 'development-fallback-secret-key-do-not-use-in-prod';
 const key = new TextEncoder().encode(secretKey);
 
-interface SessionPayload {
-    user: { id: string; name: string; email: string; role: string };
+export interface SessionPayload {
+    user: { id: string | number; name: string; email: string; role: string; [key: string]: any };
+    accessToken: string;
+    refreshToken?: string;
     expires: Date;
     [key: string]: unknown;
 }
@@ -30,9 +32,13 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
     }
 }
 
-export async function createSession(user: { id: string, name: string, email: string, role: string }) {
+export async function createSession(
+    user: { id: string | number; name: string; email: string; role: string; [key: string]: any },
+    accessToken: string,
+    refreshToken?: string
+) {
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    const session = await encrypt({ user, expires });
+    const session = await encrypt({ user, accessToken, refreshToken, expires });
 
     (await cookies()).set('elemotor_session', session, {
         expires,
@@ -48,7 +54,7 @@ export async function getSession() {
     if (!sessionCookie) return null;
     try {
         const parsed = await decrypt(sessionCookie);
-        return parsed?.user || null;
+        return parsed || null;
     } catch (error) {
         return null;
     }

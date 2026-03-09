@@ -75,12 +75,12 @@ cp .env.example .env.local
 Crear el archivo `.env.local` en la raíz del proyecto. Solo las variables con el prefijo `NEXT_PUBLIC_` son accesibles desde el navegador.
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:3001/api
+NEXT_PUBLIC_API_URL=http://localhost:4000/api
 ```
 
 | Variable              | Descripción                    | Ejemplo                     |
 | --------------------- | ------------------------------ | --------------------------- |
-| `NEXT_PUBLIC_API_URL` | URL base de la API del backend | `http://localhost:3001/api` |
+| `NEXT_PUBLIC_API_URL` | URL base de la API del backend | `http://localhost:4000/api` |
 
 ---
 
