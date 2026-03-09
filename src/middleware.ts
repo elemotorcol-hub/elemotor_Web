@@ -14,7 +14,8 @@ export async function middleware(request: NextRequest) {
     const isPublicRoute = publicRoutes.includes(pathname);
 
     // Obtener la sesión del usuario decodificando el JWT en la cookie
-    const session: UserPayload | null = await getSession();
+    const sessionPayload = await getSession();
+    const session = sessionPayload?.user;
 
     // 1. Proteger rutas sin login
     if ((isAdminRoute || isDashboardRoute) && !session) {

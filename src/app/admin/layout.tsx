@@ -6,7 +6,8 @@ import AdminSidebarNav from '@/app/admin/AdminSidebarNav';
 import { logoutAction } from '@/actions/authActions';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-    const session = await getSession();
+    const sessionPayload = await getSession();
+    const session = sessionPayload?.user as any;
 
     if (!session) {
         redirect('/auth/login');
@@ -30,7 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     return (
         <div className="flex min-h-screen bg-slate-950 font-sans text-slate-200">
             {/* Sidebar */}
-            <aside className="relative z-20 flex w-64 flex-shrink-0 flex-col border-r border-slate-800/60 bg-slate-950">
+            <aside className="relative z-20 flex w-64 shrink-0 flex-col border-r border-slate-800/60 bg-slate-950">
                 <div className="mt-2 mb-4 flex h-16 w-full items-center justify-center border-b border-slate-800/60 px-6">
                     <div className="relative h-10 w-40 cursor-pointer transition-opacity hover:opacity-90">
                         <Image
@@ -62,7 +63,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                             className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-800/40 hover:text-red-400"
                         >
                             <LogOut size={16} />
-                            Desconectarse
+                            Cerrar sesión
                         </button>
                     </form>
                 </div>
@@ -71,7 +72,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             {/* Main Content */}
             <main className="relative z-10 flex min-w-0 flex-1 flex-col bg-[#0f172a] shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.5)]">
                 {/* TopBar */}
-                <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-slate-800/60 bg-slate-950/40 px-8 backdrop-blur-md">
+                <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-800/60 bg-slate-950/40 px-8 backdrop-blur-md">
                     {/* TopBar Left Spacer */}
                     <div className="flex-1"></div>
 
