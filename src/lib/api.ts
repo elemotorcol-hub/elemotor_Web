@@ -1,4 +1,4 @@
-import { getSession } from './auth';
+import { getSession } from './auth.client';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -22,7 +22,16 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
         headers,
     };
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    const targetUrl = `${API_BASE_URL}${endpoint}`;
+    console.log(`[fetchApi] Executing request to: ${targetUrl}`, config);
+
+    let response;
+    try {
+        response = await fetch(targetUrl, config);
+    } catch (e: any) {
+        console.error(`[fetchApi] Network Exception targeting ${targetUrl}:`, e);
+        throw e;
+    }
 
     // Para endpoints como logout que podrían retornar 204 No Content
     if (response.status === 204) {
@@ -47,7 +56,8 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     }
 
     if (!response.ok) {
-        const errorMessage = data?.message || typeof data === 'string' ? data : response.statusText;
+        let errorMessage = typeof data === 'string' ? data : (data?.message || response.statusText);
+        if (Array.isArray(errorMessage)) errorMessage = errorMessage.join(', ');
         throw new Error(errorMessage || `API error: ${response.status}`);
     }
 

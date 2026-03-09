@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const brandSchema = z.object({
-    id: z.string().optional(),
+    id: z.union([z.string(), z.number()]).optional(),
     name: z.string().min(2, 'Min 2 caracteres'),
     slug: z.string().min(2, 'Slug requerido'),
     logo_url: z.string().optional(),
