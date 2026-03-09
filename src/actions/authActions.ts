@@ -1,6 +1,6 @@
 'use server';
 
-import { deleteSession } from '@/lib/auth';
+import { deleteSession } from '@/lib/auth.server';
 import { redirect } from 'next/navigation';
 import { authService } from '@/services/auth.service';
 
