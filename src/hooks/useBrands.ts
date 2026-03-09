@@ -17,9 +17,9 @@ export function useBrands() {
             // Revolve the PaginatedResult { data: [], meta: {} }
             let brandsList: Brand[] = [];
             if (data && Array.isArray(data.data)) {
-                brandsList = data.data; // PaginatedResult case
+                brandsList = data.data.map((b: any) => ({ ...b, logo_url: b.logoUrl || b.logo_url })); // PaginatedResult case
             } else if (Array.isArray(data)) {
-                brandsList = data; // Direct Array case
+                brandsList = data.map((b: any) => ({ ...b, logo_url: b.logoUrl || b.logo_url })); // Direct Array case
             }
             
             console.log('Extracted brandsList:', brandsList); // DEBUG

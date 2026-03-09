@@ -62,19 +62,6 @@ export default function BrandsTable() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    {/* Brand Filter Dropdown */}
-                    <div className="relative w-full sm:w-[250px]">
-                        <select
-                            value={selectedBrandFilter}
-                            onChange={handleFilterChange}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] transition-all font-medium appearance-none cursor-pointer"
-                        >
-                            <option value="all">Todas las marcas</option>
-                            {brands.map(b => (
-                                <option key={b.id} value={b.id}>{b.name}</option>
-                            ))}
-                        </select>
-                    </div>
                 </div>
 
                 {/* Add Button */}
@@ -118,7 +105,7 @@ export default function BrandsTable() {
                                                         src={brand.logo_url}
                                                         alt={brand.name}
                                                         fill
-                                                        className="object-cover p-1"
+                                                        className="object-cover"
                                                         sizes="64px"
                                                     />
                                                 ) : (
@@ -152,9 +139,12 @@ export default function BrandsTable() {
                                                 <Edit2 size={16} />
                                             </button>
                                             <button 
-                                                onClick={() => {
+                                                onClick={async () => {
                                                     if (window.confirm('¿Seguro que deseas eliminar/desactivar esta marca?')) {
-                                                        deleteBrand(brand.id);
+                                                        const res = await deleteBrand(brand.id);
+                                                        if (!res.success) {
+                                                            alert(`No se pudo desactivar: ${res.error}`);
+                                                        }
                                                     }
                                                 }}
                                                 className="p-2 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all" 
