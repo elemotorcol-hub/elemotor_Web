@@ -1,21 +1,23 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { X, Save, UploadCloud } from 'lucide-react';
-import Image from 'next/image';
+import { X, Save, UploadCloud, Loader2 } from 'lucide-react';
 import { Brand } from '@/types/inventory';
 import { brandSchema, BrandFormData } from '@/schemas/inventorySchema';
+import { useBrands } from '@/hooks/useBrands';
+import { uploadService } from '@/services/upload.service';
 
 interface BrandSlideOverProps {
     isOpen: boolean;
     onClose: () => void;
     mode: 'add' | 'edit';
     initialData?: Brand | null;
+    onSuccess?: () => void;
 }
 
-export default function BrandSlideOver({ isOpen, onClose, mode, initialData }: BrandSlideOverProps) {
+export default function BrandSlideOver({ isOpen, onClose, mode, initialData, onSuccess }: BrandSlideOverProps) {
     const {
         register,
         handleSubmit,
@@ -44,6 +46,8 @@ export default function BrandSlideOver({ isOpen, onClose, mode, initialData }: B
                 active: initialData.active,
                 logo_url: initialData.logo_url || '',
             });
+            setPreviewUrl(initialData.logo_url || null);
+            setSelectedFile(null);
         } else if (isOpen) {
             reset({
                 name: '',
@@ -52,6 +56,8 @@ export default function BrandSlideOver({ isOpen, onClose, mode, initialData }: B
                 active: true,
                 logo_url: '',
             });
+            setPreviewUrl(null);
+            setSelectedFile(null);
         }
     }, [isOpen, initialData, reset]);
 
@@ -63,10 +69,65 @@ export default function BrandSlideOver({ isOpen, onClose, mode, initialData }: B
         }
     }, [name, setValue, touchedFields.slug, mode]);
 
-    const onSubmit = (data: BrandFormData) => {
-        console.log('Brand data ready for API:', data);
-        // Dispatch to API
-        onClose();
+    const { createBrand, updateBrand, isLoading } = useBrands();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setSelectedFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
+        
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const onSubmit = async (data: BrandFormData) => {
+        try {
+            setIsUploading(true);
+            let finalLogoUrl = data.logo_url;
+
+            if (selectedFile) {
+                try {
+                    const result = await uploadService.uploadImage(selectedFile);
+                    finalLogoUrl = result.publicUrl;
+                    setValue('logo_url', finalLogoUrl || '', { shouldValidate: true });
+                } catch (error: any) {
+                    alert(`Error subiendo la imagen: ${error.message}`);
+                    setIsUploading(false);
+                    return;
+                }
+            }
+
+            const payload: any = {
+                name: data.name,
+                slug: data.slug,
+                country: data.country || undefined,
+                active: data.active,
+                logoUrl: finalLogoUrl || undefined
+            };
+
+            let res;
+            if (mode === 'add') {
+                res = await createBrand(payload);
+            } else {
+                res = await updateBrand(String(data.id), payload);
+            }
+            
+            if (res.success) {
+                if (onSuccess) onSuccess();
+                onClose();
+            } else {
+                alert(`Error: ${res.error}`);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -96,14 +157,42 @@ export default function BrandSlideOver({ isOpen, onClose, mode, initialData }: B
                         {/* Logo Upload Mockup */}
                         <div className="flex flex-col gap-2">
                             <label className="text-[13px] font-bold text-slate-300">Logotipo</label>
-                            <div className="w-full h-32 border-2 border-dashed border-slate-700/60 rounded-xl bg-slate-900/30 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-900/50 transition-colors group relative overflow-hidden">
-                                {watch('logo_url') && (
-                                    <Image src={watch('logo_url') || ''} fill sizes="100vw" className="object-contain p-4 opacity-50 group-hover:opacity-20 transition-opacity" alt="preview" />
+                            <div 
+                                onClick={() => fileInputRef.current?.click()}
+                                className={`w-full h-32 border-2 border-dashed ${errors.logo_url ? 'border-red-500' : 'border-slate-700/60'} rounded-xl bg-slate-900/30 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-900/50 transition-colors group relative overflow-hidden`}
+                            >
+                                {isUploading ? (
+                                    <div className="flex flex-col items-center gap-2 z-10">
+                                        <Loader2 className="animate-spin text-cyan-400" size={24} />
+                                        <span className="text-xs text-slate-400">Subiendo imagen...</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {previewUrl ? (
+                                            <div className="absolute inset-0 w-full h-full group/img bg-slate-900 z-20 flex items-center justify-center">
+                                                <img src={previewUrl} className="w-full h-full object-contain p-2" alt="preview" />
+                                                <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer backdrop-blur-[2px]">
+                                                    <UploadCloud size={24} className="mb-2" />
+                                                    <span className="text-xs font-bold">Cambiar logotipo</span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="p-2 bg-slate-800 rounded-full text-slate-400 group-hover:text-cyan-400 transition-colors z-10">
+                                                    <UploadCloud size={20} />
+                                                </div>
+                                                <span className="text-xs text-slate-400 font-medium z-10">Subir imagen PNG/SVG transparente</span>
+                                            </>
+                                        )}
+                                    </>
                                 )}
-                                <div className="p-2 bg-slate-800 rounded-full text-slate-400 group-hover:text-cyan-400 transition-colors z-10">
-                                    <UploadCloud size={20} />
-                                </div>
-                                <span className="text-xs text-slate-400 font-medium z-10">Subir imagen PNG/SVG transparente</span>
+                                <input 
+                                    type="file" 
+                                    className="hidden" 
+                                    ref={fileInputRef} 
+                                    accept="image/*" 
+                                    onChange={handleFileChange}
+                                />
                             </div>
                         </div>
 
@@ -166,10 +255,11 @@ export default function BrandSlideOver({ isOpen, onClose, mode, initialData }: B
                     <button
                         type="submit"
                         form="brand-form"
-                        className="flex items-center justify-center gap-2 bg-[#10B981] hover:bg-[#059669] text-[#0A110F] px-6 py-2.5 rounded-lg font-bold transition-all shadow-lg shadow-[#10B981]/20 active:scale-[0.98]"
+                        disabled={isLoading || isUploading}
+                        className="flex items-center justify-center gap-2 bg-[#10B981] hover:bg-[#059669] text-[#0A110F] px-6 py-2.5 rounded-lg font-bold transition-all shadow-lg shadow-[#10B981]/20 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                        <Save size={18} strokeWidth={2.5} />
-                        <span>Guardar Marca</span>
+                        {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} strokeWidth={2.5} />}
+                        <span>{isLoading ? 'Guardando...' : 'Guardar Marca'}</span>
                     </button>
                 </div>
             </div>

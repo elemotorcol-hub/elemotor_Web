@@ -1,6 +1,6 @@
 'use server';
 
-import { createSession, deleteSession } from '@/lib/auth';
+import { createSession, deleteSession } from '@/lib/auth.server';
 import { authService } from '@/services/auth.service';
 
 export async function loginAction(email: string, password: string) {

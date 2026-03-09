@@ -1,5 +1,5 @@
 import { Bell, LayoutDashboard, Car, Users, Settings, LogOut } from 'lucide-react';
-import { getSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth.server';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import AdminSidebarNav from '@/app/admin/AdminSidebarNav';
