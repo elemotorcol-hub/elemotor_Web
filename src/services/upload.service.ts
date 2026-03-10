@@ -10,12 +10,16 @@ export interface UploadResponse {
 }
 
 export const uploadService = {
-    uploadImage: async (file: File): Promise<UploadResponse> => {
+    uploadImage: async (file: File, folder?: string): Promise<UploadResponse> => {
         const session = await getSession();
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch(`${API_BASE_URL}/api/upload/image`, {
+        const url = folder 
+            ? `${API_BASE_URL}/api/upload/image?folder=${encodeURIComponent(folder)}`
+            : `${API_BASE_URL}/api/upload/image`;
+
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 ...(session?.accessToken && { 'Authorization': `Bearer ${session.accessToken}` })
