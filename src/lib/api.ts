@@ -36,7 +36,7 @@ export async function fetchApi(endpoint: string, options: CustomRequestInit = {}
     let response;
     try {
         response = await fetch(targetUrl, config);
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error(`[fetchApi] Network Exception targeting ${targetUrl}:`, e);
         throw e;
     }
@@ -92,7 +92,9 @@ export async function fetchApi(endpoint: string, options: CustomRequestInit = {}
     if (!response.ok) {
         let errorMessage = typeof data === 'string' ? data : (data?.message || response.statusText);
         if (Array.isArray(errorMessage)) errorMessage = errorMessage.join(', ');
-        throw new Error(errorMessage || `API error: ${response.status}`);
+        const error: any = new Error(errorMessage || `API error: ${response.status}`);
+        error.status = response.status;
+        throw error;
     }
 
     return data;
