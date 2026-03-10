@@ -94,7 +94,7 @@ export default function BrandSlideOver({ isOpen, onClose, mode, initialData, onS
 
             if (selectedFile) {
                 try {
-                    const result = await uploadService.uploadImage(selectedFile);
+                    const result = await uploadService.uploadImage(selectedFile, 'brands');
                     finalLogoUrl = result.publicUrl;
                     setValue('logo_url', finalLogoUrl || '', { shouldValidate: true });
                 } catch (error: any) {
