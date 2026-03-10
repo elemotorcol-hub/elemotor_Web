@@ -25,8 +25,9 @@ export function useBrands() {
             console.log('Extracted brandsList:', brandsList); // DEBUG
             
             setBrands(brandsList);
-        } catch (err: any) {
-            setError(err.message || 'Error al cargar las marcas.');
+        } catch (err: unknown) {
+            const errorMsg = err instanceof Error ? err.message : 'Error al cargar las marcas.';
+            setError(errorMsg);
         } finally {
             setIsLoading(false);
         }
@@ -38,8 +39,9 @@ export function useBrands() {
         try {
             const data = await brandService.getBrandById(id);
             return data;
-        } catch (err: any) {
-            setError(err.message || 'Error al cargar la marca seleccionada.');
+        } catch (err: unknown) {
+            const errorMsg = err instanceof Error ? err.message : 'Error al cargar la marca seleccionada.';
+            setError(errorMsg);
             return null;
         } finally {
             setIsLoading(false);
@@ -53,9 +55,10 @@ export function useBrands() {
             await brandService.createBrand(brandData);
             await fetchBrands(); // Refresh the list automatically
             return { success: true };
-        } catch (err: any) {
-            setError(err.message || 'Error al crear la marca.');
-            return { success: false, error: err.message };
+        } catch (err: unknown) {
+            const errorMsg = err instanceof Error ? err.message : 'Error al crear la marca.';
+            setError(errorMsg);
+            return { success: false, error: errorMsg };
         } finally {
             setIsLoading(false);
         }
@@ -68,9 +71,10 @@ export function useBrands() {
             await brandService.updateBrand(id, brandData);
             await fetchBrands(); // Refresh the list automatically
             return { success: true };
-        } catch (err: any) {
-            setError(err.message || 'Error al actualizar la marca.');
-            return { success: false, error: err.message };
+        } catch (err: unknown) {
+            const errorMsg = err instanceof Error ? err.message : 'Error al actualizar la marca.';
+            setError(errorMsg);
+            return { success: false, error: errorMsg };
         } finally {
             setIsLoading(false);
         }
@@ -83,9 +87,17 @@ export function useBrands() {
             await brandService.deleteBrand(id);
             await fetchBrands(); // Refresh the list automatically
             return { success: true };
-        } catch (err: any) {
-            setError(err.message || 'Error al desactivar la marca.');
-            return { success: false, error: err.message };
+        } catch (err: unknown) {
+            let errorMsg = err instanceof Error ? err.message : 'Error al desactivar la marca.';
+            let status;
+            if (err && typeof err === 'object' && 'status' in err) {
+                status = (err as { status: number }).status;
+                if (status === 409) {
+                    errorMsg = 'No se puede desactivar esta marca porque tiene modelos asociados activos.\n\nPrimero debes desactivar o eliminar los modelos asociados a esta marca antes de poder desactivarla.';
+                }
+            }
+            setError(errorMsg);
+            return { success: false, error: errorMsg, status };
         } finally {
             setIsLoading(false);
         }
