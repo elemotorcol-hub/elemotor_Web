@@ -1,6 +1,6 @@
 export type Status = 'Active' | 'Draft';
 export type BodyType = 'suv' | 'sedan' | 'hatchback' | 'pickup' | 'van' | 'coupe';
-export type ImageType = 'gallery' | 'hero' | 'interior' | 'exterior' | '360';
+export type ImageType = 'gallery' | 'hero' | 'interior' | 'exterior' | 'panoramic';
 export type Model3DFormat = 'glb' | 'gltf';
 
 export interface Brand {
@@ -38,8 +38,8 @@ export interface Spec {
     curb_weight_kg?: number;
     kwh_per_100km?: number;
     adas_level?: string;
-    screen_size?: string;
-    software_version?: string;
+    screen_size?: number;
+    software_version?: number;
 }
 
 export interface TrimImage {
@@ -86,4 +86,11 @@ export interface VehicleModel {
     status: Status; // Derived or mapped from active
     thumbnail: string; // Used for UI currently
     trims: Trim[];
+    brand?: {
+        id: string;
+        name: string;
+    };
+    _count?: {
+        trims: number;
+    }
 }
