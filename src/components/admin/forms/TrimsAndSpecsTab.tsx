@@ -59,7 +59,7 @@ export default function TrimsAndSpecsTab() {
                                 onClick={() => toggleTrim(index)}
                                 className="flex-1 flex items-center gap-4 p-4 text-left"
                             >
-                                <div className="w-10 h-10 rounded-full bg-cyan-950/50 text-cyan-400 flex items-center justify-center font-bold text-sm border border-cyan-900 flex-shrink-0">
+                                <div className="w-10 h-10 rounded-full bg-cyan-950/50 text-cyan-400 flex items-center justify-center font-bold text-sm border border-cyan-900 shrink-0">
                                     V{index + 1}
                                 </div>
                                 <div className="text-left flex-1 min-w-0">
@@ -133,28 +133,94 @@ export default function TrimsAndSpecsTab() {
                                     </div>
                                 </div>
 
-                                {/* Especificaciones Técnicas (abreviado por brevedad para el mockup principal) */}
-                                <div className="flex flex-col gap-4">
-                                    <h5 className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-1">Especificaciones Clave</h5>
+                                {/* Especificaciones Completas */}
+                                <div className="flex flex-col gap-6 mt-4">
+                                    <h5 className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-1 border-b border-slate-800 pb-2">Desempeño y Batería</h5>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] font-semibold text-slate-400">Rango (km)</label>
-                                            <input type="number" {...register(`trims.${index}.specs.range_cltc_km`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-cyan-500" placeholder="e.g. 520" />
-                                        </div>
-                                        <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] font-semibold text-slate-400">Aceleración 0-100 (s)</label>
-                                            <input type="number" step="0.1" {...register(`trims.${index}.specs.zero_to_100`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-cyan-500" placeholder="e.g. 3.8" />
-                                        </div>
-                                        <div className="flex flex-col gap-1.5">
                                             <label className="text-[11px] font-semibold text-slate-400">Batería (kWh)</label>
-                                            <input type="number" step="0.1" {...register(`trims.${index}.specs.battery_kwh`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-cyan-500" placeholder="e.g. 77" />
+                                            <input type="number" step="0.1" {...register(`trims.${index}.specs.battery_kwh`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 77" />
+                                            {trimError?.specs?.battery_kwh && <span className="text-red-400 text-[10px]">{trimError.specs.battery_kwh.message}</span>}
                                         </div>
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] font-semibold text-slate-400">Velocidad Max (km/h)</label>
-                                            <input type="number" {...register(`trims.${index}.specs.top_speed`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-cyan-500" placeholder="e.g. 200" />
+                                            <label className="text-[11px] font-semibold text-slate-400">Rango CLTC (km)</label>
+                                            <input type="number" {...register(`trims.${index}.specs.range_cltc_km`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 520" />
+                                            {trimError?.specs?.range_cltc_km && <span className="text-red-400 text-[10px]">{trimError.specs.range_cltc_km.message}</span>}
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Rango WLTP (km)</label>
+                                            <input type="number" {...register(`trims.${index}.specs.range_wltp_km`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 450" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Acel. 0-100 (s)</label>
+                                            <input type="number" step="0.1" {...register(`trims.${index}.specs.zero_to_100`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 3.8" />
+                                            {trimError?.specs?.zero_to_100 && <span className="text-red-400 text-[10px]">{trimError.specs.zero_to_100.message}</span>}
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Potencia (HP)</label>
+                                            <input type="number" {...register(`trims.${index}.specs.horsepower`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 300" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Torque (Nm)</label>
+                                            <input type="number" {...register(`trims.${index}.specs.torque`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 400" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Velocidad Máx (km/h)</label>
+                                            <input type="number" {...register(`trims.${index}.specs.top_speed`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 200" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Consumo (kWh/100km)</label>
+                                            <input type="number" step="0.1" {...register(`trims.${index}.specs.kwh_per_100km`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 15.5" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Carga 30-80% (mins)</label>
+                                            <input type="text" {...register(`trims.${index}.specs.charge_time_30_80`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 30" />
                                         </div>
                                     </div>
-                                    <p className="text-[11px] text-slate-500 italic">* Más especificaciones (torque, potencia, etc.) pueden agregarse en la vista detallada.</p>
+
+                                    <h5 className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-1 border-b border-slate-800 pb-2 mt-2">Dimensiones y Capacidad</h5>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Largo (mm)</label>
+                                            <input type="number" {...register(`trims.${index}.specs.length_mm`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 4750" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Ancho (mm)</label>
+                                            <input type="number" {...register(`trims.${index}.specs.width_mm`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 1920" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Alto (mm)</label>
+                                            <input type="number" {...register(`trims.${index}.specs.height_mm`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 1620" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Dist. Ejes (mm)</label>
+                                            <input type="number" {...register(`trims.${index}.specs.wheelbase_mm`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 2890" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Baúl (Litros)</label>
+                                            <input type="number" {...register(`trims.${index}.specs.trunk_liters`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 450" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Peso Vacío (kg)</label>
+                                            <input type="number" {...register(`trims.${index}.specs.curb_weight_kg`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 1950" />
+                                        </div>
+                                    </div>
+
+                                    <h5 className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-1 border-b border-slate-800 pb-2 mt-2">Tecnología</h5>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Nivel ADAS</label>
+                                            <input type="text" {...register(`trims.${index}.specs.adas_level`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. L2+" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Pantalla (Pulgadas)</label>
+                                            <input type="number" step="0.1" {...register(`trims.${index}.specs.screen_size`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 15.6" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[11px] font-semibold text-slate-400">Versión Software</label>
+                                            <input type="number" step="0.1" {...register(`trims.${index}.specs.software_version`)} className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]" placeholder="e.g. 3.0" />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Colores de la versión */}
@@ -210,7 +276,7 @@ function TrimColors({ trimIndex }: { trimIndex: number }) {
                     return (
                         <div key={field.id} className="flex flex-wrap sm:flex-nowrap items-center gap-4 bg-[#0f172a]/40 p-3 rounded-lg border border-slate-700/50">
                             {/* Color Picker */}
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden border-2 border-slate-600 relative">
+                            <div className="shrink-0 w-8 h-8 rounded-full overflow-hidden border-2 border-slate-600 relative">
                                 <input
                                     type="color"
                                     {...register(`trims.${trimIndex}.colors.${idx}.hex_code`)}
@@ -228,21 +294,40 @@ function TrimColors({ trimIndex }: { trimIndex: number }) {
                                 />
                             </div>
 
-                            {/* Mock Upload Image */}
+                            {/* Upload Image Preview */}
                             <div className="flex items-center gap-2">
+                                <input 
+                                    type="file" 
+                                    className="hidden" 
+                                    id={`color-upload-${idx}`} 
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        if (e.target.files && e.target.files.length > 0) {
+                                            const file = e.target.files[0];
+                                            const mockUrl = URL.createObjectURL(file);
+                                            register(`trims.${trimIndex}.colors.${idx}.image_url`).onChange({ target: { value: mockUrl, name: `trims.${trimIndex}.colors.${idx}.image_url` } });
+                                            // Register the raw file natively for multipart upload
+                                            control._formValues.trims[trimIndex].colors[idx].rawFile = file;
+                                        }
+                                    }}
+                                />
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        // Mock File Selection
-                                        const mockUrl = `blob:mock-image-${crypto.randomUUID()}`;
-                                        register(`trims.${trimIndex}.colors.${idx}.image_url`).onChange({ target: { value: mockUrl, name: `trims.${trimIndex}.colors.${idx}.image_url` } });
-                                    }}
-                                    className={`flex items-center justify-center w-8 h-8 rounded-md border ${colorImg ? 'border-[#10B981] text-[#10B981] bg-[#10B981]/10' : 'border-slate-600 text-slate-400 bg-slate-800 hover:text-cyan-400 hover:border-cyan-500'} transition-colors`}
+                                    onClick={() => document.getElementById(`color-upload-${idx}`)?.click()}
+                                    className={`flex items-center justify-center w-8 h-8 rounded-md border ${colorImg ? 'border-[#10B981] bg-[#10B981]/10' : 'border-slate-600 text-slate-400 bg-slate-800 hover:text-[#10B981] hover:border-[#10B981]'} transition-colors relative group overflow-hidden`}
                                     title="Subir imagen del color"
                                 >
-                                    <UploadCloud size={16} />
+                                    {colorImg ? (
+                                        <>
+                                            {/* Preview uploaded image as background cover if available */}
+                                            <img src={colorImg} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-screen" />
+                                            <svg className="w-4 h-4 text-white z-10 drop-shadow-md relative" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                        </>
+                                    ) : (
+                                        <UploadCloud size={16} />
+                                    )}
                                 </button>
-                                {colorImg && <span className="text-[10px] text-[#10B981] font-semibold">Cargado</span>}
+                                {colorImg && <span className="text-[10px] text-[#10B981] font-semibold whitespace-nowrap">✔ Lista</span>}
                             </div>
 
                             {/* Type Select */}
