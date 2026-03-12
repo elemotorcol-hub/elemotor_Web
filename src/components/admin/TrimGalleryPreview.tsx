@@ -44,6 +44,7 @@ export default function TrimGalleryPreview({
     const [activeTrimIndex, setActiveTrimIndex] = useState(0);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [error, setError] = useState<string | null>(null);
+    const [retryCount, setRetryCount] = useState(0);
 
     // Keep the callback in a ref so it's never part of any dependency array
     const onFirstImageResolvedRef = React.useRef(onFirstImageResolved);
@@ -116,9 +117,9 @@ export default function TrimGalleryPreview({
 
         // Cleanup: mark as cancelled if the effect re-runs before the fetch resolves
         return () => { cancelled = true; };
-    // Only re-run when the modal opens for a new model
+    // Only re-run when the modal opens for a new model or on retry
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen, modelId]);
+    }, [isOpen, modelId, retryCount]);
 
     // ─── Derived state ───────────────────────────────────────────────────────
     const currentTrim = trims[activeTrimIndex];
@@ -231,7 +232,7 @@ export default function TrimGalleryPreview({
                             <span className="text-3xl">⚠️</span>
                             <p className="font-semibold text-sm">{error}</p>
                             <button
-                                onClick={fetchGalleryData}
+                                onClick={() => setRetryCount((c) => c + 1)}
                                 className="mt-2 px-4 py-1.5 text-xs bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors"
                             >
                                 Reintentar

@@ -13,12 +13,14 @@ export type BrandFormData = z.infer<typeof brandSchema>;
 
 export const colorSchema = z.object({
     id: z.string(),
+    dbId: z.union([z.string(), z.number()]).optional(), // Real DB id when in edit mode
     name: z.string().min(1, 'Requerido'),
     hex_code: z.string().min(1, 'Requerido'),
     type: z.enum(['exterior', 'interior']),
     image_url: z.string().optional(),
     swatch_url: z.string().optional(),
     rawFile: z.any().optional(), // Holds native File before upload
+    _deleted: z.boolean().optional(), // Marks for deletion in edit mode
 });
 
 export const specSchema = z.object({
@@ -44,25 +46,31 @@ export const specSchema = z.object({
 
 export const trimImageSchema = z.object({
     id: z.string(),
+    dbId: z.union([z.string(), z.number()]).optional(), // Real DB id when in edit mode
     url: z.string().min(1, 'Requerida'),
     alt_text: z.string().optional(),
     type: z.enum(['gallery', 'hero', 'interior', 'exterior', 'panoramic']),
     sort_order: z.number().default(0),
     rawFile: z.any().optional(), // Holds native File before upload
+    _deleted: z.boolean().optional(), // Marks for deletion in edit mode
 });
 
 export const trimModel3DSchema = z.object({
     id: z.string(),
+    dbId: z.union([z.string(), z.number()]).optional(), // Real DB id when in edit mode
     file_url: z.string().min(1, 'Requerida'),
     file_size_mb: z.number().optional(),
     format: z.enum(['glb', 'gltf']),
     draco_compressed: z.boolean().default(true),
     lod_level: z.enum(['low', 'medium', 'high']).optional(),
     rawFile: z.any().optional(), // Holds native File before upload
+    _deleted: z.boolean().optional(), // Marks for deletion in edit mode
 });
 
 export const trimSchema = z.object({
-    id: z.string(),
+    id: z.string(), // UUID for new trims; numeric string for DB trims in edit mode
+    dbId: z.union([z.string(), z.number()]).optional(), // Real DB id when editing
+    specDbId: z.union([z.string(), z.number()]).optional(), // DB id of associated spec record
     name: z.string().min(1, 'Requerido'),
     price: z.coerce.number({ message: 'Debe ser un número' }).min(0, 'El precio no puede ser negativo').max(1000000000, 'Valor excesivamente grande'),
     available_quantity: z.coerce.number({ message: 'Debe ser un número' }).int('Debe ser número entero').min(0, 'No puede ser negativo').max(100000, 'Valor excesivamente grande'),
@@ -79,7 +87,7 @@ export const vehicleModelSchema = z.object({
     brand_id: z.string().min(1, 'Selecciona una marca'),
     name: z.string().min(2, 'Min 2 caracteres'),
     slug: z.string().min(2, 'Slug requerido').regex(/^[a-z0-9-]+$/, 'Formato inválido (solo minúsculas y guiones)'),
-    type: z.enum(['suv', 'sedan', 'hatchback', 'pickup', 'van', 'coupe']),
+    type: z.enum(['suv', 'sedan', 'hatchback', 'pickup']),
     year: z.coerce.number({ message: 'Debe ser un número' }).int('Año debe ser solo números enteros').min(1000, 'Año debe contener exactamente 4 números').max(9999, 'Año debe contener exactamente 4 números'),
     description: z.string().optional(),
     basePrice: z.coerce.number({ message: 'Debe ser un número' }).min(0, 'El precio no puede ser negativo').max(1000000000, 'Valor excesivamente grande'),
