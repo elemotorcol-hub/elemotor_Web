@@ -4,21 +4,14 @@ import { Button } from '@/components/Button';
 export function Hero() {
     return (
         <section className="relative h-screen min-h-[700px] w-full flex items-center justify-center overflow-hidden">
-            {/* Background Image - LCP Optimizada al Máximo */}
-            <Image
-                src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?q=80&w=2070&auto=format&fit=crop"
-                alt="Vehículo eléctrico de lujo en carretera al atardecer"
-                fill
-                priority={true}
-                fetchPriority="high"
-                className="object-cover transition-opacity duration-1000"
-                placeholder="blur"
-                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+pNPQAIXwM9ov86OQAAAABJRU5ErkJggg=="
-                sizes="100vw"
-            />
-
-            {/* Overlay - Gradient for better readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-900/40 to-slate-900 z-0" />
+            {/* Background Image Layer (Full Screen Width with Fixed/Parallax effect) */}
+            <div 
+                className="absolute inset-0 z-0 bg-fixed bg-cover bg-center"
+                style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1619767886558-efdc259cde1a?q=80&w=2070&auto=format&fit=crop")' }}
+            >
+                {/* Overlay - Gradient for better readability */}
+                <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-900/40 to-slate-900 z-10" />
+            </div>
 
             {/* Content */}
             <div className="container relative z-10 px-6 text-center max-w-5xl mx-auto">
