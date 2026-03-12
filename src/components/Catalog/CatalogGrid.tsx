@@ -11,7 +11,7 @@ const CATEGORIES = ['Todos', ...VehicleCategories];
 
 // Pre-calculate max values dynamically ONCE before the component mounts
 const MAX_PRICE = Math.max(...vehiclesData.map(v => v.price));
-const MAX_AUTONOMY = Math.max(...vehiclesData.map(v => v.range));
+const MAX_AUTONOMY = Math.max(...vehiclesData.map(v => v.range_wltp_km));
 
 export function CatalogGrid() {
     const [selectedCategory, setSelectedCategory] = React.useState('Todos');
@@ -29,7 +29,7 @@ export function CatalogGrid() {
         return vehiclesData.filter((vehicle) => {
             const matchesCategory = selectedCategory === 'Todos' || vehicle.category === selectedCategory;
             const matchesPrice = vehicle.price >= priceRange[0] && vehicle.price <= priceRange[1];
-            const matchesAutonomy = vehicle.range >= autonomyRange[0] && vehicle.range <= autonomyRange[1];
+            const matchesAutonomy = vehicle.range_wltp_km >= autonomyRange[0] && vehicle.range_wltp_km <= autonomyRange[1];
 
             return matchesCategory && matchesPrice && matchesAutonomy;
         });

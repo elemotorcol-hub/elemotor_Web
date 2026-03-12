@@ -2,7 +2,11 @@ export interface DashboardData {
     user: {
         name: string;
         role: string;
+        email: string;
+        phone: string;
         avatarUrl?: string; // Optional, using initials fallback
+        memberSince?: string;
+        clientId?: string;
     };
     tracking: {
         status: string; // e.g., 'En Tránsito'
@@ -33,6 +37,10 @@ export const MOCK_DASHBOARD_DATA: DashboardData = {
     user: {
         name: 'Juan Pérez',
         role: 'Cliente Premium',
+        email: 'juan.perez@example.com',
+        phone: '+57 300 000 0000',
+        memberSince: 'Enero 2024',
+        clientId: '#ELEM-104928',
     },
     tracking: {
         status: 'En Tránsito',

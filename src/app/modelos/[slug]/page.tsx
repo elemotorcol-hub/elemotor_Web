@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import { vehiclesData } from '@/data/models';
 import { VehicleHero } from '@/components/Catalog/VehicleHero';
 import { VehicleSpecs } from '@/components/Catalog/VehicleSpecs';
-import { ColorSelector } from '@/components/Catalog/ColorSelector';
 import { VehicleFeatures } from '@/components/Catalog/VehicleFeatures';
+import { VehicleDetailedSpecs } from '@/components/Catalog/VehicleDetailedSpecs';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { SchemaScript } from '@/components/SchemaScript';
@@ -76,12 +76,6 @@ export default async function VehicleDetailsPage({ params }: PageProps) {
 
     // Datos simulados (mockups) para los módulos de características adicionales
     // idealmente cargados desde un CMS o models.ts en el futuro
-    const defaultColors = [
-        { name: 'Meteor Gray', hex: '#4A5568' },
-        { name: 'Comet White', hex: '#F7FAFC' },
-        { name: 'Eclipse Black', hex: '#1A202C' },
-    ];
-
     const defaultFeatures = [
         { title: 'Pantalla 15.6" Rotatoria', desc: 'Centro de info-entretenimiento de alto rendimiento y conectividad global.' },
         { title: 'ADAS Level 2', desc: 'Asistencia de conducción autónoma inteligente, sensores y seguridad activa en toda vía.' },
@@ -109,10 +103,11 @@ export default async function VehicleDetailsPage({ params }: PageProps) {
 
                     <hr className="border-white/5 w-full max-w-lg mx-auto" />
 
-                    {/* Single Responsibility Client Component Partial Hydration */}
-                    <ColorSelector colors={defaultColors} />
-
                     <VehicleFeatures features={defaultFeatures} />
+
+                    <hr className="border-white/5 w-full max-w-lg mx-auto" />
+
+                    <VehicleDetailedSpecs vehicle={vehicle} />
                 </div>
             </main>
 

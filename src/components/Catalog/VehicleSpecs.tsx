@@ -7,26 +7,26 @@ export function VehicleSpecs({ vehicle }: { vehicle: Vehicle }) {
         {
             icon: Zap,
             title: 'PERFORMANCE',
-            value: `0-100 en ${vehicle.acceleration}s`,
-            subText: `${vehicle.power} HP Potencia`
+            value: `0-100 en ${vehicle.zero_to_100}s`,
+            subText: `${vehicle.horsepower} HP Potencia`
         },
         {
             icon: Battery,
             title: 'BATERÍA',
-            value: `${vehicle.range} km`,
-            subText: `${vehicle.battery} kWh NMC`
+            value: `${vehicle.range_wltp_km} km`,
+            subText: `${vehicle.battery_kwh} kWh NMC`
         },
         {
             icon: Expand,
             title: 'DIMENSIONES',
-            value: 'L: 4.75m',
-            subText: 'Ancho: 1.93m'
+            value: `L: ${(vehicle.length_mm / 1000).toFixed(2)}m`,
+            subText: `Ancho: ${(vehicle.width_mm / 1000).toFixed(2)}m`
         },
         {
             icon: Cpu,
             title: 'TECNOLOGÍA',
-            value: 'ADAS L2',
-            subText: 'Pantalla 15.6"'
+            value: vehicle.adas_level,
+            subText: vehicle.screen_size
         }
     ];
 
