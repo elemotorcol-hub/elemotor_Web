@@ -1,22 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { Search, Plus, Edit2, Trash2, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, Plus, Loader2, X } from 'lucide-react';
 import { Brand } from '@/types/inventory';
 import BrandSlideOver from './BrandSlideOver';
-import { useInventory } from '@/hooks/useInventory';
+import { useBrands } from '@/hooks/useBrands';
+import { BrandTableRow } from './BrandTableRow';
 
 export default function BrandsTable() {
-    const { brands } = useInventory();
+    const { brands, fetchBrands, deleteBrand, updateBrand, isLoading } = useBrands();
     const [searchTerm, setSearchTerm] = useState('');
     const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
     const [slideOverMode, setSlideOverMode] = useState<'add' | 'edit'>('add');
     const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
-    const filteredBrands = brands.filter(brand =>
-        brand.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const activeBrandsList = Array.isArray(brands) ? brands : [];
+
+    const filteredBrands = useMemo(() => {
+        return activeBrandsList.filter(brand =>
+            brand?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [activeBrandsList, searchTerm]);
 
     const handleAddBrand = () => {
         setSlideOverMode('add');
@@ -34,16 +39,18 @@ export default function BrandsTable() {
         <div className="flex flex-col gap-6">
             {/* Table Toolbar */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                {/* Search Input */}
-                <div className="relative w-full sm:max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-                    <input
-                        type="text"
-                        placeholder="Buscar marcas..."
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-medium"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                    {/* Search Input */}
+                    <div className="relative w-full sm:w-[300px]">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                        <input
+                            type="text"
+                            placeholder="Buscar marcas..."
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-medium"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                 </div>
 
                 {/* Add Button */}
@@ -55,6 +62,28 @@ export default function BrandsTable() {
                     <span>Añadir Marca</span>
                 </button>
             </div>
+
+            {/* Error Message */}
+            {deleteError && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-300 px-4 py-3 rounded-lg flex items-start justify-between gap-4">
+                    <p className="text-sm font-medium whitespace-pre-wrap leading-relaxed">{deleteError}</p>
+                    <button 
+                        onClick={() => setDeleteError(null)} 
+                        className="text-red-400 hover:text-red-300 transition-colors p-1 shrink-0 bg-red-500/10 rounded-md"
+                        title="Cerrar"
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
+
+            {/* Loading Indicator */}
+            {isLoading && (
+                <div className="flex items-center justify-center py-4">
+                    <Loader2 className="animate-spin text-[#10B981]" size={24} />
+                    <span className="ml-2 text-slate-400 text-sm">Cargando datos...</span>
+                </div>
+            )}
 
             {/* Data Table */}
             <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden backdrop-blur-sm">
@@ -70,54 +99,29 @@ export default function BrandsTable() {
                         </thead>
                         <tbody className="divide-y divide-slate-800/50 text-sm">
                             {filteredBrands.map((brand) => (
-                                <tr key={brand.id} className="hover:bg-slate-800/40 transition-colors group">
-                                    <td className="p-4 pl-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-10 w-16 bg-slate-800 rounded-lg overflow-hidden relative flex-shrink-0 border border-slate-700/50 flex items-center justify-center">
-                                                {brand.logo_url ? (
-                                                    <Image
-                                                        src={brand.logo_url}
-                                                        alt={brand.name}
-                                                        fill
-                                                        className="object-cover p-1"
-                                                        sizes="64px"
-                                                    />
-                                                ) : (
-                                                    <ImageIcon className="text-slate-500" />
-                                                )}
-                                            </div>
-                                            <div className="flex flex-col justify-center">
-                                                <div className="font-semibold text-slate-100">{brand.name}</div>
-                                                <div className="text-slate-500 text-xs mt-0.5">Slug: {brand.slug}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-slate-300">
-                                        {brand.country || 'No especificado'}
-                                    </td>
-                                    <td className="p-4">
-                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${brand.active
-                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                            : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                                            }`}>
-                                            {brand.active ? 'Activa' : 'Inactiva'}
-                                        </span>
-                                    </td>
-                                    <td className="p-4 text-right pr-6 align-middle">
-                                        <div className="flex items-center justify-end gap-2 text-slate-400">
-                                            <button
-                                                onClick={() => handleEditBrand(brand)}
-                                                className="p-2 hover:text-[#10B981] hover:bg-[#10B981]/10 rounded-md transition-all"
-                                                title="Editar Marca"
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
-                                            <button className="p-2 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all" title="Eliminar Marca">
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <BrandTableRow
+                                    key={brand.id}
+                                    brand={brand}
+                                    onEdit={handleEditBrand}
+                                    onDeactivate={async (id) => {
+                                        if (window.confirm('¿Seguro que deseas desactivar esta marca?')) {
+                                            setDeleteError(null);
+                                            const res = await deleteBrand(id);
+                                            if (!res.success) {
+                                                setDeleteError(res.error || 'Ocurrió un error inesperado al desactivar la marca.');
+                                            }
+                                        }
+                                    }}
+                                    onReactivate={async (id) => {
+                                        if (window.confirm('¿Seguro que deseas reactivar esta marca?')) {
+                                            setDeleteError(null);
+                                            const res = await updateBrand(id, { active: true });
+                                            if (!res.success) {
+                                                setDeleteError(res.error || 'Ocurrió un error inesperado al reactivar la marca.');
+                                            }
+                                        }
+                                    }}
+                                />
                             ))}
                             {filteredBrands.length === 0 && (
                                 <tr>
@@ -139,6 +143,7 @@ export default function BrandsTable() {
                 onClose={() => setIsSlideOverOpen(false)}
                 mode={slideOverMode}
                 initialData={selectedBrand}
+                onSuccess={fetchBrands}
             />
         </div>
     );
