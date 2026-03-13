@@ -38,9 +38,9 @@ const NAVIGATION_ITEMS: NavItem[] = [
     {
         name: 'Servicios',
         subMenu: [
-            { name: 'Talleres', href: '#talleres', description: 'Mantenimiento especializado' },
-            { name: 'Postventa', href: '#postventa', description: 'Soporte premium 24/7' },
-            { name: 'Cómo Cargo', href: '#carga', description: 'Guía de estaciones y carga' },
+            { name: 'Talleres', href: '/talleres', description: 'Red de servicio certificado' },
+            { name: 'Rastrear Vehículo', href: '/rastreo', description: 'Consulta el estado de importación' },
+            { name: 'Cómo Cargo', href: '/como-cargo', description: 'Guía de estaciones y carga' },
         ],
     },
     { name: 'Nosotros', href: '/nosotros' },
@@ -146,15 +146,15 @@ export function Navbar() {
                     {/* Acciones (Derecha) */}
                     <div className="hidden lg:flex items-center gap-6">
                         <div className="flex items-center gap-2 text-[14px] font-medium mr-4">
-                            <span className="text-white cursor-pointer hover:text-[#00D4AA] transition-colors">ES</span>
-                            <span className="text-gray-500">/</span>
+                            <span className="text-white font-bold cursor-pointer hover:text-[#00D4AA] transition-colors">ES</span>
+                            <span className="text-gray-500 font-bold">/</span>
                             <span className="text-gray-300 cursor-pointer hover:text-white transition-colors">EN</span>
                         </div>
 
                         <div className="h-5 w-[1px] bg-white/10 mx-1 hidden xl:block" />
 
                         <div className="flex items-center gap-6">
-                            <Link href="/auth/login" className="text-[14px] font-medium text-gray-300 hover:text-[#00D4AA] transition-colors tracking-wide drop-shadow-md">
+                            <Link href="/auth/login" className="text-[14px] font-bold text-gray-300 hover:text-[#00D4AA] transition-colors tracking-wide drop-shadow-md">
                                 Iniciar Sesión
                             </Link>
                             <Link href="/auth/register" className="text-[13px] font-bold text-white hover:text-[#0A0F1C] hover:bg-[#00D4AA] transition-all px-4 py-2 border border-white/20 rounded-full tracking-wide">
@@ -193,10 +193,19 @@ export function Navbar() {
             {/* Menú Móvil Fullscreen Overlay */}
             <div
                 className={cn(
-                    'fixed inset-0 z-[55] bg-[#0A0F1C] transition-all duration-700 ease-[cubic-bezier(0.85,0,0.15,1)] lg:hidden overflow-y-auto px-6 pt-32 pb-10',
+                    'fixed inset-0 z-[70] bg-[#0A0F1C] transition-all duration-700 ease-[cubic-bezier(0.85,0,0.15,1)] lg:hidden overflow-y-auto px-6 pt-24 pb-10',
                     mobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'
                 )}
             >
+                {/* Botón X explícito de cierre */}
+                <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="absolute top-6 right-6 text-white p-2 bg-white/5 rounded-xl border border-white/10 shadow-lg z-[80] transition-colors hover:bg-white/10 backdrop-blur-md"
+                    aria-label="Cerrar menú principal"
+                >
+                    <X className="w-6 h-6" aria-hidden="true" />
+                </button>
+
                 <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none"
                     style={{ background: 'radial-gradient(circle at 50% 50%, #00D4AA 0%, transparent 70%)' }}>
                 </div>
@@ -213,10 +222,11 @@ export function Navbar() {
                                         aria-expanded={activeAccordion === item.name}
                                     >
                                         {item.name}
-                                        <ChevronDown className={cn(
-                                            "w-6 h-6 text-[#00D4AA] transition-transform duration-500",
-                                            activeAccordion === item.name ? "rotate-180" : ""
-                                        )} aria-hidden="true" />
+                                        {activeAccordion === item.name ? (
+                                            <X className="w-6 h-6 text-[#00D4AA] transition-transform duration-500" aria-hidden="true" />
+                                        ) : (
+                                            <ChevronDown className="w-6 h-6 text-[#00D4AA] transition-transform duration-500" aria-hidden="true" />
+                                        )}
                                     </button>
                                     <div className={cn(
                                         "overflow-hidden transition-all duration-500 ease-in-out",

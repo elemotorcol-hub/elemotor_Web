@@ -22,6 +22,24 @@ export function SavingsCalculator() {
     const [selectedModelId, setSelectedModelId] = useState<string>('gt');
     const [electricityPrice, setElectricityPrice] = useState<number>(850); // COP / kWh
 
+    const handleNumberValidation = (
+        value: string,
+        setter: React.Dispatch<React.SetStateAction<number>>,
+        maxLimit: number,
+        fieldName: string
+    ) => {
+        const numValue = Number(value);
+        if (numValue < 0) {
+            alert(`El valor de ${fieldName} no puede ser negativo.`);
+            return;
+        }
+        if (numValue > maxLimit) {
+            alert(`El valor de ${fieldName} no puede ser mayor a ${new Intl.NumberFormat('es-CO').format(maxLimit)}.`);
+            return;
+        }
+        setter(numValue);
+    };
+
     const selectedModel = useMemo(() => {
         return ELEMOTOR_MODELS.find(m => m.id === selectedModelId) || ELEMOTOR_MODELS[0];
     }, [selectedModelId]);
@@ -132,8 +150,10 @@ export function SavingsCalculator() {
                                 <div className="relative">
                                     <input
                                         type="number"
+                                        min="0"
+                                        max="200"
                                         value={fuelConsumption}
-                                        onChange={(e) => setFuelConsumption(Number(e.target.value))}
+                                        onChange={(e) => handleNumberValidation(e.target.value, setFuelConsumption, 200, "Consumo")}
                                         className="w-full bg-[#15201D] border border-slate-800 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500/50 transition-colors"
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500">km/gal</span>
@@ -145,8 +165,10 @@ export function SavingsCalculator() {
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
                                     <input
                                         type="number"
+                                        min="0"
+                                        max="50000"
                                         value={fuelPrice}
-                                        onChange={(e) => setFuelPrice(Number(e.target.value))}
+                                        onChange={(e) => handleNumberValidation(e.target.value, setFuelPrice, 50000, "Precio Galón")}
                                         className="w-full bg-[#15201D] border border-slate-800 rounded-lg pl-8 pr-4 py-3 text-white text-sm focus:outline-none focus:border-red-500/50 transition-colors"
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500">COP</span>
@@ -207,8 +229,10 @@ export function SavingsCalculator() {
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
                                     <input
                                         type="number"
+                                        min="0"
+                                        max="5000"
                                         value={electricityPrice}
-                                        onChange={(e) => setElectricityPrice(Number(e.target.value))}
+                                        onChange={(e) => handleNumberValidation(e.target.value, setElectricityPrice, 5000, "Costo Electricidad")}
                                         className="w-full bg-[#15201D] border border-slate-800 rounded-lg pl-8 pr-4 py-3 text-white text-sm focus:outline-none focus:border-[#00D4AA]/50 transition-colors"
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500">/kWh</span>
@@ -291,12 +315,6 @@ export function SavingsCalculator() {
                         </div>
 
                         <div className="w-full md:w-auto flex flex-col items-center md:items-end gap-3 text-center md:text-right">
-                            <Link
-                                href="/contacto"
-                                className="w-full sm:w-auto bg-[#00D4AA] hover:bg-emerald-400 text-slate-950 font-bold px-8 py-4 rounded-xl flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(0,212,170,0.4)]"
-                            >
-                                Solicitar Test Drive <ArrowRight className="w-5 h-5" />
-                            </Link>
                             <p className="text-[10px] text-slate-500">
                                 *Cálculos estimados basados en promedios del mercado.
                             </p>
