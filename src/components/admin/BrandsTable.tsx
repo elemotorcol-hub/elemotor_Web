@@ -2,21 +2,37 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Search, Plus, Edit2, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Brand } from '@/types/inventory';
 import BrandSlideOver from './BrandSlideOver';
-import { useInventory } from '@/hooks/useInventory';
+import { useBrands } from '@/hooks/useBrands';
 
 export default function BrandsTable() {
-    const { brands } = useInventory();
+    const { brands, fetchBrands, fetchBrandById, deleteBrand, isLoading } = useBrands();
     const [searchTerm, setSearchTerm] = useState('');
     const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
     const [slideOverMode, setSlideOverMode] = useState<'add' | 'edit'>('add');
     const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+    const [selectedBrandFilter, setSelectedBrandFilter] = useState('all');
+    const [singleBrandObj, setSingleBrandObj] = useState<Brand | null>(null);
 
-    const filteredBrands = brands.filter(brand =>
-        brand.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const activeBrandsList = singleBrandObj ? [singleBrandObj] : (Array.isArray(brands) ? brands : []);
+
+    const filteredBrands = activeBrandsList.filter(brand =>
+        brand && brand.name && brand.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const handleFilterChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const val = e.target.value;
+        setSelectedBrandFilter(val);
+        if (val === 'all') {
+            setSingleBrandObj(null);
+            fetchBrands();
+        } else {
+            const res = await fetchBrandById(val);
+            setSingleBrandObj(res?.data || res || null);
+        }
+    };
 
     const handleAddBrand = () => {
         setSlideOverMode('add');
@@ -34,16 +50,18 @@ export default function BrandsTable() {
         <div className="flex flex-col gap-6">
             {/* Table Toolbar */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                {/* Search Input */}
-                <div className="relative w-full sm:max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-                    <input
-                        type="text"
-                        placeholder="Buscar marcas..."
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-medium"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                    {/* Search Input */}
+                    <div className="relative w-full sm:w-[300px]">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                        <input
+                            type="text"
+                            placeholder="Buscar marcas..."
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-medium"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                 </div>
 
                 {/* Add Button */}
@@ -55,6 +73,14 @@ export default function BrandsTable() {
                     <span>Añadir Marca</span>
                 </button>
             </div>
+
+            {/* Loading Indicator */}
+            {isLoading && (
+                <div className="flex items-center justify-center py-4">
+                    <Loader2 className="animate-spin text-[#10B981]" size={24} />
+                    <span className="ml-2 text-slate-400 text-sm">Cargando datos...</span>
+                </div>
+            )}
 
             {/* Data Table */}
             <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden backdrop-blur-sm">
@@ -73,13 +99,13 @@ export default function BrandsTable() {
                                 <tr key={brand.id} className="hover:bg-slate-800/40 transition-colors group">
                                     <td className="p-4 pl-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-10 w-16 bg-slate-800 rounded-lg overflow-hidden relative flex-shrink-0 border border-slate-700/50 flex items-center justify-center">
+                                            <div className="h-10 w-16 bg-slate-800 rounded-lg overflow-hidden relative shrink-0 border border-slate-700/50 flex items-center justify-center">
                                                 {brand.logo_url ? (
                                                     <Image
                                                         src={brand.logo_url}
                                                         alt={brand.name}
                                                         fill
-                                                        className="object-cover p-1"
+                                                        className="object-cover"
                                                         sizes="64px"
                                                     />
                                                 ) : (
@@ -112,7 +138,18 @@ export default function BrandsTable() {
                                             >
                                                 <Edit2 size={16} />
                                             </button>
-                                            <button className="p-2 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all" title="Eliminar Marca">
+                                            <button 
+                                                onClick={async () => {
+                                                    if (window.confirm('¿Seguro que deseas eliminar/desactivar esta marca?')) {
+                                                        const res = await deleteBrand(brand.id);
+                                                        if (!res.success) {
+                                                            alert(`No se pudo desactivar: ${res.error}`);
+                                                        }
+                                                    }
+                                                }}
+                                                className="p-2 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all" 
+                                                title="Eliminar Marca"
+                                            >
                                                 <Trash2 size={16} />
                                             </button>
                                         </div>
@@ -139,6 +176,7 @@ export default function BrandsTable() {
                 onClose={() => setIsSlideOverOpen(false)}
                 mode={slideOverMode}
                 initialData={selectedBrand}
+                onSuccess={fetchBrands}
             />
         </div>
     );

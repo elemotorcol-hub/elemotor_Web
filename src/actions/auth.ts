@@ -1,6 +1,6 @@
 'use server';
 
-import { createSession, deleteSession } from '@/lib/auth';
+import { createSession, deleteSession, getSession } from '@/lib/auth.server';
 import { authService } from '@/services/auth.service';
 
 export async function loginAction(email: string, password: string) {
@@ -127,5 +127,35 @@ export async function resetPasswordAction(token: string, newPassword: string) {
         return { success: true };
     } catch (error: any) {
         return { error: error.message || 'Error al restablecer contraseña' };
+    }
+}
+
+export async function refreshSessionAction() {
+    try {
+        const session = await getSession();
+        if (!session?.refreshToken) {
+            return { error: 'No refresh token available' };
+        }
+
+        const response = await authService.refreshToken({ refreshToken: session.refreshToken });
+        
+        const accessToken = response.accessToken || response.data?.accessToken;
+        const refreshToken = response.refreshToken || response.data?.refreshToken || session.refreshToken;
+        const user = response.user || response.data?.user || session.user;
+
+        if (!accessToken) {
+            return { error: 'Invalid refresh response' };
+        }
+
+        await createSession({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+        }, accessToken, refreshToken);
+
+        return { success: true, accessToken };
+    } catch (error: any) {
+        return { error: error.message || 'Error refreshing token' };
     }
 }

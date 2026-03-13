@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getSession, UserPayload } from './lib/auth';
+import { getSession } from './lib/auth.server';
 
 // Define las rutas que requieren autenticación
 const adminRoutes = ['/admin'];
