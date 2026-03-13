@@ -54,21 +54,21 @@ export function ModelCard({ vehicle, priority = false }: ModelCardProps) {
                     <div className="flex-1 bg-slate-900/40 border border-white/5 rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 backdrop-blur-sm">
                         <BatteryCharging className="w-5 h-5 text-[#00D4AA]" />
                         <span className="text-white font-medium text-xs md:text-sm">
-                            {vehicle.battery} <span className="text-slate-400 text-xs">kWh</span>
+                            {vehicle.battery_kwh} <span className="text-slate-400 text-xs">kWh</span>
                         </span>
                     </div>
                     {/* Autonomía */}
                     <div className="flex-1 bg-slate-900/40 border border-white/5 rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 backdrop-blur-sm">
                         <Navigation className="w-5 h-5 text-[#00D4AA]" />
                         <span className="text-white font-medium text-xs md:text-sm">
-                            {vehicle.range} <span className="text-slate-400 text-xs">km</span>
+                            {vehicle.range_wltp_km} <span className="text-slate-400 text-xs">km</span>
                         </span>
                     </div>
                     {/* Aceleración */}
                     <div className="flex-1 bg-slate-900/40 border border-white/5 rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 backdrop-blur-sm">
                         <Timer className="w-5 h-5 text-[#00D4AA]" />
                         <span className="text-white font-medium text-xs md:text-sm">
-                            {vehicle.acceleration}<span className="text-slate-400 text-xs">s</span>
+                            {vehicle.zero_to_100}<span className="text-slate-400 text-xs">s</span>
                         </span>
                     </div>
                 </div>

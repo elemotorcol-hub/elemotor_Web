@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Car, Users, Settings, LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Car, Users, Settings, LucideIcon, Wrench } from 'lucide-react';
 
 export default function AdminSidebarNav() {
   const pathname = usePathname();
@@ -33,6 +33,12 @@ export default function AdminSidebarNav() {
       href: '/admin/orders',
       icon: Car, // Might change icon to ShoppingBag or Package
       isActive: pathname.startsWith('/admin/orders'),
+    },
+    {
+      name: 'Talleres',
+      href: '/admin/workshops',
+      icon: Wrench,
+      isActive: pathname.startsWith('/admin/workshops'),
     },
     {
       name: 'Ajustes',
