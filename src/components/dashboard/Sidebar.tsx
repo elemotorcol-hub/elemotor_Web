@@ -3,15 +3,16 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Car, Map, FileText, Settings, User, Headset, LucideIcon, LogOut } from 'lucide-react';
+import { LayoutDashboard, Car, Map, FileText, Settings, User, Headset, LucideIcon, LogOut, Wrench, FolderOpen } from 'lucide-react';
 import { logoutAction } from '@/actions/authActions';
 
 const MENU_ITEMS = [
     { name: 'Resumen', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Mi Vehículo', href: '/dashboard/vehiculo', icon: Car },
+    { name: 'Mantenimiento', href: '/dashboard/mantenimiento', icon: Wrench },
     { name: 'Rastrear Pedido', href: '/dashboard/rastreo', icon: Map },
     { name: 'Mis Cotizaciones', href: '/dashboard/cotizaciones', icon: FileText },
-    { name: 'Documentos', href: '/dashboard/documentos', icon: FileText },
+    { name: 'Documentos', href: '/dashboard/documentos', icon: FolderOpen },
 ];
 
 const BOTTOM_MENU_ITEMS = [
