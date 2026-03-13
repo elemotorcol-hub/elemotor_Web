@@ -1,38 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { Search, Plus, Edit2, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, Plus, Loader2, X } from 'lucide-react';
 import { Brand } from '@/types/inventory';
 import BrandSlideOver from './BrandSlideOver';
 import { useBrands } from '@/hooks/useBrands';
+import { BrandTableRow } from './BrandTableRow';
 
 export default function BrandsTable() {
-    const { brands, fetchBrands, fetchBrandById, deleteBrand, isLoading } = useBrands();
+    const { brands, fetchBrands, deleteBrand, updateBrand, isLoading } = useBrands();
     const [searchTerm, setSearchTerm] = useState('');
     const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
     const [slideOverMode, setSlideOverMode] = useState<'add' | 'edit'>('add');
     const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
-    const [selectedBrandFilter, setSelectedBrandFilter] = useState('all');
-    const [singleBrandObj, setSingleBrandObj] = useState<Brand | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
-    const activeBrandsList = singleBrandObj ? [singleBrandObj] : (Array.isArray(brands) ? brands : []);
+    const activeBrandsList = Array.isArray(brands) ? brands : [];
 
-    const filteredBrands = activeBrandsList.filter(brand =>
-        brand && brand.name && brand.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const handleFilterChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const val = e.target.value;
-        setSelectedBrandFilter(val);
-        if (val === 'all') {
-            setSingleBrandObj(null);
-            fetchBrands();
-        } else {
-            const res = await fetchBrandById(val);
-            setSingleBrandObj(res?.data || res || null);
-        }
-    };
+    const filteredBrands = useMemo(() => {
+        return activeBrandsList.filter(brand =>
+            brand?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [activeBrandsList, searchTerm]);
 
     const handleAddBrand = () => {
         setSlideOverMode('add');
@@ -74,6 +63,20 @@ export default function BrandsTable() {
                 </button>
             </div>
 
+            {/* Error Message */}
+            {deleteError && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-300 px-4 py-3 rounded-lg flex items-start justify-between gap-4">
+                    <p className="text-sm font-medium whitespace-pre-wrap leading-relaxed">{deleteError}</p>
+                    <button 
+                        onClick={() => setDeleteError(null)} 
+                        className="text-red-400 hover:text-red-300 transition-colors p-1 shrink-0 bg-red-500/10 rounded-md"
+                        title="Cerrar"
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
+
             {/* Loading Indicator */}
             {isLoading && (
                 <div className="flex items-center justify-center py-4">
@@ -96,65 +99,29 @@ export default function BrandsTable() {
                         </thead>
                         <tbody className="divide-y divide-slate-800/50 text-sm">
                             {filteredBrands.map((brand) => (
-                                <tr key={brand.id} className="hover:bg-slate-800/40 transition-colors group">
-                                    <td className="p-4 pl-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-10 w-16 bg-slate-800 rounded-lg overflow-hidden relative shrink-0 border border-slate-700/50 flex items-center justify-center">
-                                                {brand.logo_url ? (
-                                                    <Image
-                                                        src={brand.logo_url}
-                                                        alt={brand.name}
-                                                        fill
-                                                        className="object-cover"
-                                                        sizes="64px"
-                                                    />
-                                                ) : (
-                                                    <ImageIcon className="text-slate-500" />
-                                                )}
-                                            </div>
-                                            <div className="flex flex-col justify-center">
-                                                <div className="font-semibold text-slate-100">{brand.name}</div>
-                                                <div className="text-slate-500 text-xs mt-0.5">Slug: {brand.slug}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-slate-300">
-                                        {brand.country || 'No especificado'}
-                                    </td>
-                                    <td className="p-4">
-                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${brand.active
-                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                            : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                                            }`}>
-                                            {brand.active ? 'Activa' : 'Inactiva'}
-                                        </span>
-                                    </td>
-                                    <td className="p-4 text-right pr-6 align-middle">
-                                        <div className="flex items-center justify-end gap-2 text-slate-400">
-                                            <button
-                                                onClick={() => handleEditBrand(brand)}
-                                                className="p-2 hover:text-[#10B981] hover:bg-[#10B981]/10 rounded-md transition-all"
-                                                title="Editar Marca"
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
-                                            <button 
-                                                onClick={async () => {
-                                                    if (window.confirm('¿Seguro que deseas eliminar/desactivar esta marca?')) {
-                                                        const res = await deleteBrand(brand.id);
-                                                        if (!res.success) {
-                                                            alert(`No se pudo desactivar: ${res.error}`);
-                                                        }
-                                                    }
-                                                }}
-                                                className="p-2 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all" 
-                                                title="Eliminar Marca"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <BrandTableRow
+                                    key={brand.id}
+                                    brand={brand}
+                                    onEdit={handleEditBrand}
+                                    onDeactivate={async (id) => {
+                                        if (window.confirm('¿Seguro que deseas desactivar esta marca?')) {
+                                            setDeleteError(null);
+                                            const res = await deleteBrand(id);
+                                            if (!res.success) {
+                                                setDeleteError(res.error || 'Ocurrió un error inesperado al desactivar la marca.');
+                                            }
+                                        }
+                                    }}
+                                    onReactivate={async (id) => {
+                                        if (window.confirm('¿Seguro que deseas reactivar esta marca?')) {
+                                            setDeleteError(null);
+                                            const res = await updateBrand(id, { active: true });
+                                            if (!res.success) {
+                                                setDeleteError(res.error || 'Ocurrió un error inesperado al reactivar la marca.');
+                                            }
+                                        }
+                                    }}
+                                />
                             ))}
                             {filteredBrands.length === 0 && (
                                 <tr>

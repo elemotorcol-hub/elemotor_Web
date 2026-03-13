@@ -1,4 +1,5 @@
-import { getSession } from '@/lib/auth';
+import { Bell, LayoutDashboard, Car, Users, Settings, LogOut } from 'lucide-react';
+import { getSession } from '@/lib/auth.server';
 import { redirect } from 'next/navigation';
 import AdminLayoutWrapper from '@/components/admin/AdminLayoutWrapper';
 
