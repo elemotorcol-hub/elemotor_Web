@@ -2,43 +2,23 @@
 
 import React, { useRef } from 'react';
 import { useFormContext, useFieldArray } from 'react-hook-form';
-import { UploadCloud, X, Trash2, AlertCircle } from 'lucide-react';
+import { UploadCloud, X, GripVertical } from 'lucide-react';
 import Image from 'next/image';
 import { VehicleModelFormData } from '@/schemas/inventorySchema';
 
-export default function GalleryTab({ mode }: { mode?: 'add' | 'edit' }) {
-    const { watch } = useFormContext<VehicleModelFormData>();
-    const trims = watch('trims') || [];
-
-    if (trims.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center py-20 bg-slate-900/30 rounded-xl border border-dashed border-slate-700 text-center px-6">
-                <UploadCloud size={48} className="text-slate-600 mb-4" />
-                <h3 className="text-lg font-semibold text-slate-300 mb-2">Galería de Imágenes</h3>
-                <p className="text-sm text-slate-500">Debes crear al menos una versión en la pestaña "Versiones y Especificaciones" antes de poder subir imágenes o un modelo 3D.</p>
-            </div>
-        );
-    }
-
-    return (
-        <div className="flex flex-col gap-8">
-            <h3 className="text-sm font-bold text-slate-200 border-b border-slate-800 pb-2">Galerías y Modelos 3D por Versión</h3>
-            {trims.map((trim: any, idx: number) => (
-                <TrimGallerySection key={trim.id || idx} trimIndex={idx} trimName={trim.name} mode={mode} />
-            ))}
-        </div>
-    );
-}
-
-function TrimGallerySection({ trimIndex, trimName, mode }: { trimIndex: number, trimName: string, mode?: 'add' | 'edit' }) {
+export default function GalleryTab() {
     const { control, register, setValue, watch } = useFormContext<VehicleModelFormData>();
 
-    const model3D = watch(`trims.${trimIndex}.model_3d`);
+    const model3D = watch('trims.0.model_3d');
     const file3dInputRef = useRef<HTMLInputElement>(null);
 
-    const { fields, append, update } = useFieldArray({
+    // Instead of a global gallery, we'll map these to the first trim for now, 
+    // or as a general model thumbnail if there are no trims.
+    // For a fully robust system, each Trim has its own images, but for the mockup's
+    // generic "Gallery Tab", we can bind it to trims.0.images
+    const { fields, append, remove, move } = useFieldArray({
         control,
-        name: `trims.${trimIndex}.images`
+        name: 'trims.0.images'
     });
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +32,7 @@ function TrimGallerySection({ trimIndex, trimName, mode }: { trimIndex: number, 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         e.stopPropagation();
+
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             processFiles(Array.from(e.dataTransfer.files));
         }
@@ -62,19 +43,17 @@ function TrimGallerySection({ trimIndex, trimName, mode }: { trimIndex: number, 
         e.stopPropagation();
     };
 
-    // Count non-deleted images
-    const activeFieldCount = fields.filter((f: any) => !f._deleted).length;
-
     const processFiles = (files: File[]) => {
         const validFiles = files.filter(file => file.type.startsWith('image/'));
-        const toAdd = Math.min(validFiles.length, 20 - activeFieldCount);
-        validFiles.slice(0, toAdd).forEach((file, idx) => {
+        const newImagesCount = Math.min(validFiles.length, 20 - fields.length);
+        const filesToAdd = validFiles.slice(0, newImagesCount);
+
+        filesToAdd.forEach((file, idx) => {
             append({
                 id: crypto.randomUUID(),
-                url: URL.createObjectURL(file),
+                url: URL.createObjectURL(file), // Storing object URL temporarily
                 type: 'gallery',
-                sort_order: activeFieldCount + idx,
-                rawFile: file
+                sort_order: fields.length + idx
             });
         });
     };
@@ -83,30 +62,15 @@ function TrimGallerySection({ trimIndex, trimName, mode }: { trimIndex: number, 
         fileInputRef.current?.click();
     };
 
-    /**
-     * Marks an image for deletion (edit mode = soft delete, create mode = hard remove).
-     */
-    const handleRemoveImage = (index: number, field: any) => {
-        if (mode === 'edit' && field.dbId) {
-            // Soft delete: mark as _deleted, do not remove from array
-            update(index, { ...field, _deleted: true });
-        } else {
-            // Hard remove from array (new image with no DB id)
-            // We use update to mark _deleted so form array indices stay stable
-            update(index, { ...field, _deleted: true });
-        }
-    };
-
     const handle3DFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files[0];
-            setValue(`trims.${trimIndex}.model_3d` as any, {
+            setValue('trims.0.model_3d', {
                 id: crypto.randomUUID(),
-                file_url: URL.createObjectURL(file),
+                file_url: URL.createObjectURL(file), // Mocking local URL
                 file_size_mb: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
                 format: file.name.toLowerCase().endsWith('.gltf') ? 'gltf' : 'glb',
                 draco_compressed: true,
-                rawFile: file
             }, { shouldValidate: true });
         }
     };
@@ -116,181 +80,162 @@ function TrimGallerySection({ trimIndex, trimName, mode }: { trimIndex: number, 
     };
 
     const remove3DModel = () => {
-        if (mode === 'edit' && model3D?.dbId) {
-            // Soft delete — mark as deleted so submit handler calls DELETE /api/models-3d/:id
-            setValue(`trims.${trimIndex}.model_3d` as any, {
-                ...model3D,
-                _deleted: true,
-            }, { shouldValidate: true });
-        } else {
-            // @ts-ignore
-            setValue(`trims.${trimIndex}.model_3d`, undefined, { shouldValidate: true });
-        }
+        setValue('trims.0.model_3d', undefined, { shouldValidate: true });
     };
 
-    const visibleImages = fields.filter((f: any) => !f._deleted);
-    const isModel3DDeleted = model3D && (model3D as any)._deleted;
+    // Note: URL.revokeObjectURL normally happens on unmount or remove
+    // but in this mock form setup, we keep it simple.
 
     return (
-        <div className="bg-[#1e293b]/30 p-5 rounded-xl border border-slate-700/50 flex flex-col gap-6">
-            <div className="flex items-center justify-between border-b -mx-5 px-5 pb-3 border-slate-800">
-                <h4 className="text-[13px] font-bold text-cyan-400">Versión: <span className="text-white">{trimName || `V${trimIndex + 1}`}</span></h4>
-                <span className="text-[11px] text-slate-500">{visibleImages.length} imagen{visibleImages.length !== 1 ? 'es' : ''}</span>
+        <div className="flex flex-col gap-6">
+
+            {/* Upload Dropzone */}
+            <div
+                className="w-full border-2 border-dashed border-slate-700/60 rounded-xl bg-slate-900/30 hover:bg-slate-900/50 transition-colors flex flex-col items-center justify-center py-16 gap-3 cursor-pointer group relative"
+                onClick={triggerFileInput}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+            >
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    multiple
+                    accept="image/png, image/jpeg, image/jpg, image/webp"
+                    onChange={handleFileChange}
+                />
+
+                <div className="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-cyan-400 group-hover:bg-slate-800 transition-all shadow-md">
+                    <UploadCloud size={28} />
+                </div>
+                <div className="text-center mt-2 pointer-events-none">
+                    <p className="text-base font-semibold text-slate-200">Arrastra y suelta imágenes del vehículo</p>
+                    <p className="text-xs text-slate-500 mt-1">PNG, JPG, WEBP hasta 10MB c/u &middot; Max 20 imágenes</p>
+                </div>
+                <button
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        triggerFileInput();
+                    }}
+                    className="mt-2 px-5 py-2.5 bg-[#10B981] hover:bg-[#059669] text-[#0A110F] text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-[#10B981]/10 z-10"
+                >
+                    Examinar Archivos
+                </button>
             </div>
 
-            {/* Image Upload Area */}
-            <div className="flex flex-col gap-4">
-                <div
-                    className="w-full border-2 border-dashed border-slate-700/60 rounded-xl bg-slate-900/40 hover:bg-slate-900/70 transition-colors flex flex-col items-center justify-center py-10 gap-3 cursor-pointer group"
-                    onClick={triggerFileInput}
-                    onDrop={handleDrop}
-                    onDragOver={handleDragOver}
-                >
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        multiple
-                        accept="image/png, image/jpeg, image/jpg, image/webp"
-                        onChange={handleFileChange}
-                    />
-                    <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-cyan-400 group-hover:bg-slate-800 shadow-md">
-                        <UploadCloud size={24} />
+            {/* Image Preview List */}
+            {fields.length > 0 && (
+                <div className="flex flex-col gap-3 mt-2">
+                    <h3 className="text-sm font-semibold text-slate-300 mb-2">Imágenes Subidas ({fields.length})</h3>
+                    <div className="flex flex-col gap-3">
+                        {fields.map((field, index) => (
+                            <div key={field.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50 group">
+
+                                <button className="cursor-grab hover:text-cyan-400 text-slate-600 hidden sm:block">
+                                    <GripVertical size={20} />
+                                </button>
+
+                                <div className="relative w-full sm:w-32 aspect-video rounded-lg overflow-hidden bg-slate-900 flex-shrink-0">
+                                    <Image
+                                        src={field.url}
+                                        alt="Uploaded preview"
+                                        fill
+                                        sizes="(max-width: 640px) 100vw, 128px"
+                                        className="object-cover"
+                                    />
+                                </div>
+
+                                <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[11px] font-semibold text-slate-400 uppercase">Tipo de Imagen</label>
+                                        <select
+                                            {...register(`trims.0.images.${index}.type`)}
+                                            className="w-full bg-[#0f172a]/60 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors appearance-none"
+                                        >
+                                            <option value="gallery">Galería General</option>
+                                            <option value="hero">Hero (Principal)</option>
+                                            <option value="exterior">Exterior</option>
+                                            <option value="interior">Interior</option>
+                                            <option value="360">Vista 360°</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[11px] font-semibold text-slate-400 uppercase">Texto Alternativo (Alt)</label>
+                                        <input
+                                            type="text"
+                                            {...register(`trims.0.images.${index}.alt_text`)}
+                                            placeholder="Ej. Vista lateral del modelo"
+                                            className="w-full bg-[#0f172a]/60 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => remove(index)}
+                                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors flex-shrink-0 self-end sm:self-center w-full sm:w-auto mt-2 sm:mt-0"
+                                    title="Eliminar imagen"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        ))}
                     </div>
-                    <div className="text-center mt-1 pointer-events-none">
-                        <p className="text-sm font-semibold text-slate-300">Arrastra imágenes o haz clic aquí</p>
-                        <p className="text-[11px] text-slate-500 mt-1">PNG, JPG, WEBP hasta 5MB c/u &middot; Max 20 imágenes</p>
+                </div>
+            )}
+
+            {/* 3D Model Upload */}
+            <div className="mt-6 border-t border-slate-800 pt-8 flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="text-sm font-semibold text-slate-200">Modelo 3D (.glb, .gltf)</h3>
+                        <p className="text-xs text-slate-500 mt-1">Sube el modelo 3D para el visor interactivo.</p>
                     </div>
                 </div>
 
-                {/* Image List */}
-                {visibleImages.length > 0 && (
-                    <div className="flex flex-col gap-3 mt-2">
-                        <h5 className="text-xs font-semibold text-slate-400">
-                            {mode === 'edit' ? 'Imágenes' : 'Subidas'} ({visibleImages.length}/20)
-                        </h5>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {fields.map((field: any, index: number) => {
-                                if (field._deleted) return null; // Hidden, not rendered
-                                const isExisting = !!field.dbId;
-
-                                return (
-                                    <div key={field.id} className={`flex gap-4 bg-slate-900/50 p-3 rounded-lg border ${isExisting ? 'border-cyan-900/30' : 'border-slate-700/50'}`}>
-                                        <div className="relative w-24 h-20 rounded-md overflow-hidden bg-slate-950 shrink-0">
-                                            <Image
-                                                src={field.url}
-                                                alt="Preview"
-                                                fill
-                                                sizes="(max-width: 640px) 100px, 100px"
-                                                className="object-cover"
-                                                unoptimized={field.url?.startsWith('blob:')}
-                                            />
-                                            {isExisting && (
-                                                <div className="absolute top-1 left-1 bg-cyan-500/80 text-white text-[8px] font-bold px-1 rounded">
-                                                    DB
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex-1 flex flex-col justify-center gap-2">
-                                            <select
-                                                {...register(`trims.${trimIndex}.images.${index}.type`)}
-                                                className="w-full bg-[#0f172a]/60 border border-slate-700 rounded-md px-2 py-1 text-xs text-white focus:outline-none focus:border-cyan-500 appearance-none"
-                                            >
-                                                <option value="gallery">Galería</option>
-                                                <option value="hero">Hero (Principal)</option>
-                                                <option value="exterior">Exterior</option>
-                                                <option value="interior">Interior</option>
-                                                <option value="panoramic">Vista 360°</option>
-                                            </select>
-                                            <input
-                                                type="text"
-                                                {...register(`trims.${trimIndex}.images.${index}.alt_text`)}
-                                                placeholder="Texto Alt (Opcional)"
-                                                className="w-full bg-[#0f172a]/60 border border-slate-700 rounded-md px-2 py-1 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500"
-                                            />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveImage(index, field)}
-                                            className="text-slate-500 hover:text-red-400 self-center transition-colors px-1"
-                                            title={isExisting ? 'Eliminar imagen de la base de datos' : 'Quitar imagen'}
-                                        >
-                                            {isExisting ? <Trash2 size={16} /> : <X size={18} />}
-                                        </button>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* 3D Model */}
-            <div className="border-t border-slate-800 pt-5 mt-2">
-                <h5 className="text-xs font-semibold text-slate-400 mb-3">Modelo 3D Tridimensional</h5>
-                {model3D && !isModel3DDeleted ? (
-                    <div className="flex items-center justify-between bg-emerald-950/20 border border-emerald-900/50 rounded-lg p-3">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-emerald-500/10 text-emerald-400 p-2 rounded-md font-bold text-[10px] uppercase">
-                                {model3D.format}
+                {model3D ? (
+                    <div className="flex items-center justify-between bg-[#1e293b]/40 border border-cyan-900/50 rounded-xl p-4">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-lg bg-cyan-950/50 flex items-center justify-center text-cyan-400">
+                                <span className="text-xs font-bold uppercase">{model3D.format}</span>
                             </div>
-                            <div className="flex flex-col">
-                                <span className="text-xs font-semibold text-emerald-400">
-                                    {model3D.dbId ? 'Modelo 3D desde base de datos' : 'Archivo Creado e Integrado'}
-                                </span>
-                                <span className="text-[10px] text-emerald-500/70">
-                                    {model3D.file_size_mb ? `${model3D.file_size_mb} MB · ` : ''}Optimizador Activo
-                                </span>
+                            <div>
+                                <h4 className="text-sm font-semibold text-slate-200 truncate max-w-[200px]">modelo_3d.{model3D.format}</h4>
+                                <p className="text-xs text-slate-400">{model3D.file_size_mb} MB &middot; {model3D.draco_compressed ? 'Compresión Draco' : 'Sin comprimir'}</p>
                             </div>
                         </div>
                         <button
                             type="button"
                             onClick={remove3DModel}
-                            className="text-slate-500 hover:text-red-400 px-2 transition-colors"
-                            title="Eliminar 3D"
+                            className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                            title="Eliminar modelo 3D"
                         >
-                            <X size={18} />
+                            <X size={20} />
                         </button>
-                    </div>
-                ) : isModel3DDeleted ? (
-                    <div className="flex items-center gap-3 bg-amber-950/20 border border-amber-900/40 rounded-lg p-3">
-                        <AlertCircle size={16} className="text-amber-400 shrink-0" />
-                        <p className="text-xs text-amber-400">El modelo 3D será eliminado al guardar. Puedes subir uno nuevo.</p>
-                        <button
-                            type="button"
-                            onClick={trigger3DFileInput}
-                            className="ml-auto text-xs text-cyan-400 hover:text-cyan-300 font-semibold"
-                        >
-                            Subir nuevo
-                        </button>
-                        <input
-                            type="file"
-                            ref={file3dInputRef}
-                            className="hidden"
-                            accept=".glb"
-                            onChange={handle3DFileChange}
-                        />
                     </div>
                 ) : (
                     <div
-                        className="w-full border border-dashed border-slate-700 hover:border-cyan-700/50 rounded-lg bg-slate-900/20 hover:bg-slate-900/40 py-5 text-center transition-colors cursor-pointer"
+                        className="w-full border border-dashed border-slate-700 hover:border-cyan-700/50 rounded-xl bg-slate-900/20 hover:bg-slate-900/40 py-8 px-6 text-center transition-colors cursor-pointer"
                         onClick={trigger3DFileInput}
                     >
                         <input
                             type="file"
                             ref={file3dInputRef}
                             className="hidden"
-                            accept=".glb"
+                            accept=".glb,.gltf"
                             onChange={handle3DFileChange}
                         />
-                        <span className="text-xs font-semibold text-slate-300 border border-slate-600 px-3 py-1.5 rounded-md hover:bg-slate-800 pointer-events-none">
-                            Seleccionar Archivo .GLB
-                        </span>
-                        <p className="text-[10px] text-slate-500 mt-2">El tamaño máximo admitido es 15MB. Solo formato .glb</p>
+                        <button
+                            type="button"
+                            className="text-xs font-semibold bg-slate-800 text-slate-300 px-4 py-2 rounded-lg pointer-events-none border border-slate-600"
+                        >
+                            Seleccionar Archivo 3D
+                        </button>
+                        <p className="text-[11px] text-slate-500 mt-3">* El analizador 3D validará polígonos y texturas antes de guardar.</p>
                     </div>
                 )}
             </div>
-            
+
         </div>
     );
 }

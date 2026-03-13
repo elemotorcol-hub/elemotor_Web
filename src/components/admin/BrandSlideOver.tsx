@@ -85,8 +85,6 @@ export default function BrandSlideOver({ isOpen, onClose, mode, initialData, onS
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
-
-
     const onSubmit = async (data: BrandFormData) => {
         try {
             setIsUploading(true);
@@ -94,7 +92,7 @@ export default function BrandSlideOver({ isOpen, onClose, mode, initialData, onS
 
             if (selectedFile) {
                 try {
-                    const result = await uploadService.uploadImage(selectedFile, 'brands');
+                    const result = await uploadService.uploadImage(selectedFile);
                     finalLogoUrl = result.publicUrl;
                     setValue('logo_url', finalLogoUrl || '', { shouldValidate: true });
                 } catch (error: any) {
@@ -228,6 +226,19 @@ export default function BrandSlideOver({ isOpen, onClose, mode, initialData, onS
                                 placeholder="e.g. China"
                                 className={`w-full bg-[#0f172a]/40 border ${errors.country ? 'border-red-500' : 'border-[#1e293b]'} rounded-lg px-4 py-3 text-[14px] font-medium text-white placeholder-slate-600 focus:outline-none focus:border-[#10B981] transition-all`}
                             />
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <label className="text-[13px] font-bold text-slate-300">Estado</label>
+                            <div className="relative">
+                                <select
+                                    {...register('active', { setValueAs: v => String(v) === 'true' })}
+                                    className={`w-full bg-[#0f172a]/40 border border-[#1e293b] rounded-lg pl-4 pr-10 py-3 text-[14px] font-medium text-white focus:outline-none focus:border-[#10B981] transition-all appearance-none cursor-pointer`}
+                                >
+                                    <option value="true">Activa</option>
+                                    <option value="false">Inactiva</option>
+                                </select>
+                            </div>
                         </div>
 
                     </form>

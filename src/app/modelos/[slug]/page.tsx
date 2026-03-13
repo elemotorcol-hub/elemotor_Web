@@ -1,129 +1,93 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { vehiclesData } from '@/data/models';
+import { VehicleHero } from '@/components/Catalog/VehicleHero';
+import { VehicleSpecs } from '@/components/Catalog/VehicleSpecs';
+import { VehicleFeatures } from '@/components/Catalog/VehicleFeatures';
+import { VehicleDetailedSpecs } from '@/components/Catalog/VehicleDetailedSpecs';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { SchemaScript } from '@/components/SchemaScript';
 import { buildMetadata } from '@/lib/metadata';
+import { getVehicleSchema } from '@/lib/schema';
 import { siteConfig } from '@/config/seo';
-import { fetchModelBySlug, fetchActiveCatalogModels } from '@/services/catalogModels.service';
-import { VehicleDetailClient } from '@/components/Catalog/VehicleDetailClient';
 
-// Allow Next.js to handle slugs added after build time via on-demand ISR
+// SSG estricto: forzar comportamiento de "falla si la ruta no existe previamente generada" (DynamicParams)
+// O puede dejarse true si se quieren agregar autos en Runtime usando revalidate
 export const dynamicParams = true;
 
 interface PageProps {
-    params: Promise<{ slug: string }>;
+    params: Promise<{
+        slug: string;
+    }>;
 }
 
-// ── generateStaticParams ──────────────────────────────────────────────────────
-// Pre-renders pages for all active models at build time (or first request with ISR)
+// 1. generateStaticParams: Compila (Build Time) todas las rutas HTML en base al inventario para rating 100
 export async function generateStaticParams() {
-    try {
-        const models = await fetchActiveCatalogModels();
-        return models.map((m) => ({ slug: m.slug }));
-    } catch {
-        // If the API is unavailable at build time, skip pre-rendering gracefully
-        return [];
-    }
+    return vehiclesData.map((vehicle) => ({
+        slug: vehicle.id,
+    }));
 }
 
-// ── generateMetadata ──────────────────────────────────────────────────────────
+// 2. generateMetadata: Dynamic SEO Automático para Redes Sociales
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const { slug } = await params;
+    const resolvedParams = await params;
+    const vehicle = vehiclesData.find((v) => v.id === resolvedParams.slug);
 
-    try {
-        const model = await fetchModelBySlug(slug);
-        const firstTrim = model.trims[0];
-        const firstImage = firstTrim?.images[0]?.url ?? null;
-
-        const resolvedOgImage = firstImage
-            ? firstImage
-            : `${siteConfig.url}/og-default.jpg`;
-
-        const range = firstTrim?.spec?.rangeCltcKm ?? firstTrim?.spec?.rangeWltpKm;
-        const accel = firstTrim?.spec?.zeroTo100
-            ? parseFloat(firstTrim.spec.zeroTo100).toFixed(1)
-            : null;
-
-        return buildMetadata({
-            title: `${model.brand.name} ${model.name} ${model.year} – Especificaciones y Precio`,
-            description:
-                `Descubre el ${model.brand.name} ${model.name} ${model.year}. ` +
-                (range ? `Autonomía de ${range} km. ` : '') +
-                (accel ? `Aceleración 0-100 en ${accel}s. ` : '') +
-                'Especialistas en movilidad eléctrica de lujo en Colombia.',
-            path: `/modelos/${model.slug}`,
-            ogImageUrl: resolvedOgImage,
-            ogImageAlt: `Fotografía oficial del ${model.brand.name} ${model.name}`,
-            keywords: [
-                model.brand.name,
-                model.name,
-                `${model.brand.name} Colombia`,
-                `${model.type} eléctrico`,
-                `${model.name} ${model.year}`,
-            ],
-        });
-    } catch {
+    if (!vehicle) {
         return buildMetadata({
             title: 'Vehículo no encontrado',
             description: 'El vehículo solicitado no existe en nuestro catálogo.',
             path: '/modelos',
         });
     }
+
+    // La imagen puede ser una ruta relativa o una URL absoluta
+    const resolvedOgImage = vehicle.image.startsWith('http')
+        ? vehicle.image
+        : `${siteConfig.url}${vehicle.image}`;
+
+    return buildMetadata({
+        title: `${vehicle.brand} ${vehicle.model} – Especificaciones y Precio`,
+        description: `Descubre todo sobre el ${vehicle.brand} ${vehicle.model}. `
+            + `Autonomía de ${vehicle.range} km, aceleración de 0 a 100 en ${vehicle.acceleration}s. `
+            + `Especialistas en movilidad eléctrica de lujo en Colombia.`,
+        path: `/modelos/${vehicle.id}`,
+        ogImageUrl: resolvedOgImage,
+        ogImageAlt: `Fotografía oficial del ${vehicle.brand} ${vehicle.model}`,
+        keywords: [
+            vehicle.brand,
+            vehicle.model,
+            `${vehicle.brand} Colombia`,
+            `${vehicle.category} eléctrico`,
+        ],
+    });
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// 3. Server Component Principal
 export default async function VehicleDetailsPage({ params }: PageProps) {
-    const { slug } = await params;
+    const resolvedParams = await params;
+    const vehicle = vehiclesData.find((v) => v.id === resolvedParams.slug);
 
-    let model;
-    try {
-        model = await fetchModelBySlug(slug);
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : '';
-        if (message.startsWith('MODEL_NOT_FOUND')) {
-            notFound();
-        }
-        throw error; // Unexpected error — let Next.js error boundary handle it
-    }
-
-    // Guard: model must have at least one active trim to render correctly
-    if (!model.trims || model.trims.length === 0) {
+    // Early return defensivo y limpieza UX si no existe
+    if (!vehicle) {
         notFound();
     }
 
-    const firstTrim = model.trims[0];
-    const firstImage = firstTrim.images[0]?.url ?? null;
-
-    // JSON-LD structured data for SEO
-    const productSchema = {
-        '@context': 'https://schema.org',
-        '@type': 'Product',
-        name: `${model.brand.name} ${model.name}`,
-        description: model.description ??
-            `Vehículo 100% eléctrico ${model.brand.name} ${model.name} ${model.year}.`,
-        image: firstImage ?? `${siteConfig.url}/og-default.jpg`,
-        url: `${siteConfig.url}/modelos/${model.slug}`,
-        brand: { '@type': 'Brand', name: model.brand.name },
-        offers: model.trims.map((trim) => ({
-            '@type': 'Offer',
-            priceCurrency: 'USD',
-            price: trim.price ? parseFloat(trim.price) : null,
-            availability:
-                trim.status === 'stock'
-                    ? 'https://schema.org/InStock'
-                    : trim.status === 'transit'
-                        ? 'https://schema.org/PreOrder'
-                        : 'https://schema.org/BackOrder',
-            seller: { '@type': 'Organization', name: siteConfig.name, url: siteConfig.url },
-        })),
-    };
+    // Datos simulados (mockups) para los módulos de características adicionales
+    // idealmente cargados desde un CMS o models.ts en el futuro
+    const defaultFeatures = [
+        { title: 'Pantalla 15.6" Rotatoria', desc: 'Centro de info-entretenimiento de alto rendimiento y conectividad global.' },
+        { title: 'ADAS Level 2', desc: 'Asistencia de conducción autónoma inteligente, sensores y seguridad activa en toda vía.' },
+        { title: 'Techo Panorámico', desc: 'Sky-view resistente con protección solar UV, ofreciendo máxima amplitud en cabina.' },
+    ];
 
     return (
         <div className="bg-slate-900 selection:bg-[#00D4AA] selection:text-slate-900 overflow-x-hidden min-h-screen flex flex-col">
+            {/* Schema de Producto específico para este vehículo */}
             <SchemaScript
-                schema={productSchema}
-                id={`schema-vehicle-${model.slug}`}
+                schema={getVehicleSchema(vehicle)}
+                id={`schema-vehicle-${vehicle.id}`}
             />
 
             <header>
@@ -131,16 +95,24 @@ export default async function VehicleDetailsPage({ params }: PageProps) {
             </header>
 
             <main className="grow pt-20">
-                {/*
-                  VehicleDetailClient is a 'use client' component that owns the trim
-                  selection state. It renders VehicleHero, TrimSelector, VehicleSpecs,
-                  ColorSelector, and VehicleFeatures — all driven by the selected trim.
-                  No additional API calls are made after this initial server-side fetch.
-                */}
-                <VehicleDetailClient model={model} />
+                {/* SSR + SSG Puros: LCP Optimizado en la Hero Image principal y Tipografías */}
+                <VehicleHero vehicle={vehicle} />
+
+                <div className="container mx-auto px-6 max-w-5xl flex flex-col gap-16 md:gap-24 mb-16">
+                    <VehicleSpecs vehicle={vehicle} />
+
+                    <hr className="border-white/5 w-full max-w-lg mx-auto" />
+
+                    <VehicleFeatures features={defaultFeatures} />
+
+                    <hr className="border-white/5 w-full max-w-lg mx-auto" />
+
+                    <VehicleDetailedSpecs vehicle={vehicle} />
+                </div>
             </main>
 
             <Footer />
         </div>
     );
 }
+
