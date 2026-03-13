@@ -7,7 +7,7 @@ export const MOCK_VEHICLE_DATA: ClientVehicleData = {
     modelName: 'Elemotor Model X',
     vin: '5YJ3E1EA...892',
     exteriorColor: { name: 'Midnight Silver', hex: '#64748b' },
-    purchaseDate: 'Oct 24, 2023',
+    purchaseDate: '2023-10-24',
     telemetry: {
         battery: {
             percentage: 85,

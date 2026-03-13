@@ -13,6 +13,15 @@ export interface VehicleTelemetry {
     };
 }
 
+export interface MaintenanceHistoryItem {
+    id: string;
+    title: string;
+    date: string;
+    mileage?: string;
+    status: 'completed' | 'scheduled' | 'overdue';
+    description: string;
+}
+
 export interface VehicleMaintenance {
     nextService: {
         name: string;
@@ -20,6 +29,7 @@ export interface VehicleMaintenance {
     };
     batteryHealth: string;
     tirePressure: string;
+    history?: MaintenanceHistoryItem[];
 }
 
 export interface VehicleWarranty {
