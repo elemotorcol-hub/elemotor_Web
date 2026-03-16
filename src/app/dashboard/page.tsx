@@ -18,7 +18,7 @@ export default function DashboardPage() {
             {/* Content Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 {/* Primary Column: Quick Actions */}
-                <div className="lg:col-span-8 flex flex-col gap-10">
+                <div className="lg:col-span-12 flex flex-col gap-10">
                     <div className="space-y-4">
                         <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] px-2 outline-none">
                             Acciones Rápidas
@@ -27,7 +27,8 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Secondary Column: Vehicle Info */}
+                {/* Secondary Column: Vehicle Info - HIDDEN AS REQUESTED */}
+                {/* 
                 <div className="lg:col-span-4 flex flex-col h-full">
                     <div className="space-y-4 h-full">
                         <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] px-2 outline-none">
@@ -38,6 +39,7 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
+                */}
             </div>
         </div>
     );
