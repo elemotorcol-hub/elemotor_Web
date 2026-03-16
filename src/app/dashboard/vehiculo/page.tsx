@@ -3,7 +3,7 @@
 import React from 'react';
 import {
     BatteryCharging, Map, Gauge, Wrench, ShieldCheck, FileText,
-    Calendar, ArrowRight, Download, ExternalLink
+    Calendar, Download, ExternalLink
 } from 'lucide-react';
 import { MOCK_VEHICLE_DATA as mockData } from '@/mocks/clientPortalData';
 
@@ -16,15 +16,6 @@ export default function MiVehiculoPage() {
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Mi Vehículo</h1>
                     <p className="text-slate-400 text-sm md:text-base">Gestione los detalles y el estado de su vehículo.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#15201D] border border-white/5 text-xs font-semibold text-slate-300">
-                        <span className="w-2 h-2 rounded-full bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                        {mockData.status}
-                    </div>
-                    <div className="px-3 py-1.5 rounded-full bg-[#15201D] border border-white/5 text-xs font-medium text-[#10B981]">
-                        Actualizado: {mockData.lastUpdated}
-                    </div>
                 </div>
             </div>
 
@@ -67,11 +58,6 @@ export default function MiVehiculoPage() {
                             </div>
                         </div>
                     </div>
-
-                    <button className="w-full bg-[#10B981] hover:bg-[#059669] text-[#0A110F] font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors duration-300 shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:shadow-[0_0_25px_rgba(16,185,129,0.3)]">
-                        Ver Detalles del Modelo
-                        <ArrowRight className="w-4 h-4" />
-                    </button>
                 </div>
             </div>
 
