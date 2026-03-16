@@ -145,14 +145,7 @@ export function Navbar() {
 
                     {/* Acciones (Derecha) */}
                     <div className="hidden lg:flex items-center gap-6">
-                        <div className="flex items-center gap-2 text-[14px] font-medium mr-4">
-                            <span className="text-white font-bold cursor-pointer hover:text-[#00D4AA] transition-colors">ES</span>
-                            <span className="text-gray-500 font-bold">/</span>
-                            <span className="text-gray-300 cursor-pointer hover:text-white transition-colors">EN</span>
-                        </div>
-
-                        <div className="h-5 w-[1px] bg-white/10 mx-1 hidden xl:block" />
-
+                        
                         <div className="flex items-center gap-6">
                             <Link href="/auth/login" className="text-[14px] font-bold text-gray-300 hover:text-[#00D4AA] transition-colors tracking-wide drop-shadow-md">
                                 Iniciar Sesión
