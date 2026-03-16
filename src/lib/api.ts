@@ -42,7 +42,7 @@ export async function fetchApi(endpoint: string, options: CustomRequestInit = {}
     }
 
     // Interceptor: Si es 401, no es un reintento, y no es el endpoint de refresh en sí ni logout
-    if (response.status === 401 && !options._retry && !['/api/auth/refresh', '/api/auth/logout'].includes(endpoint)) {
+    if (response.status === 401 && !options._retry && !['/api/auth/login', '/api/auth/refresh', '/api/auth/logout'].includes(endpoint)) {
         console.log(`[fetchApi] 401 Unauthorized for ${endpoint}. Intentando refrescar token...`);
         
         if (!refreshPromise) {

@@ -22,6 +22,9 @@ export async function loginAction(email: string, password: string) {
 
         return { success: true, role: user.role };
     } catch (error: any) {
+        if (error.status === 401) {
+            return { error: 'Email o contraseña incorrectos' };
+        }
         return { error: error.message || 'Error al iniciar sesión' };
     }
 }

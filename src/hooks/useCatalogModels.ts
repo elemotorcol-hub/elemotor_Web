@@ -39,8 +39,8 @@ const TRIM_STATUS_MAP: Record<string, Vehicle['stockStatus']> = {
 };
 
 function adaptModelToVehicle(model: CatalogModel): Vehicle {
-    const firstTrim = model.trims[0] ?? null;
-    const firstImage = firstTrim?.images[0] ?? null;
+    const firstTrim = model.trims?.[0] ?? null;
+    const firstImage = firstTrim?.images?.[0] ?? null;
     const spec = firstTrim?.spec ?? null;
 
     // Prisma returns Decimal fields as strings via JSON serialization
