@@ -19,6 +19,7 @@ interface ModelSlideOverProps {
     onClose: () => void;
     mode: 'add' | 'edit';
     initialData?: VehicleModel | null;
+    onSave?: (data: VehicleModelFormData) => void;
 }
 
 type TabType = 'general' | 'trims' | 'gallery';
@@ -122,7 +123,7 @@ const EMPTY_FORM: VehicleModelFormData = {
     trims: []
 };
 
-export default function ModelSlideOver({ isOpen, onClose, mode, initialData }: ModelSlideOverProps) {
+export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onSave }: ModelSlideOverProps) {
     const [activeTab, setActiveTab] = useState<TabType>('general');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(false);
@@ -458,10 +459,15 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData }: M
         setIsSubmitting(true);
         setErrorMsg(null);
         try {
-            if (mode === 'add') {
-                await handleCreate(data);
+            if (onSave) {
+                await new Promise(resolve => setTimeout(resolve, 800)); // Simulación de carga local
+                onSave(data);
             } else {
-                await handleEdit(data);
+                if (mode === 'add') {
+                    await handleCreate(data);
+                } else {
+                    await handleEdit(data);
+                }
             }
             onClose();
         } catch (error: any) {

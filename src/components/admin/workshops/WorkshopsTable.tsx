@@ -245,6 +245,33 @@ export default function WorkshopsTable() {
                     isOpen={isSlideOverOpen}
                     onClose={() => setIsSlideOverOpen(false)}
                     workshopToEdit={selectedWorkshop}
+                    onSave={(data) => {
+                        if (selectedWorkshop) {
+                            // Edit mode
+                            setWorkshops(workshops.map(w => 
+                                w.id === selectedWorkshop.id ? { 
+                                    ...w, 
+                                    ...data,
+                                    images: data.images.length > 0 ? data.images : w.images 
+                                } as Workshop : w
+                            ));
+                        } else {
+                            // Add mode
+                            const newWorkshop: Workshop = {
+                                ...data,
+                                id: Math.random().toString(36).substring(2, 9),
+                                rating: 0,
+                                reviewsCount: 0,
+                                services: data.services.map(sid => ({ id: sid, name: sid })),
+                                schedule: {
+                                    lunesViernes: data.schedule.find(s => s.day === 'lunes')?.openTime + ' - ' + data.schedule.find(s => s.day === 'lunes')?.closeTime,
+                                    sabado: data.schedule.find(s => s.day === 'sabado')?.openTime + ' - ' + data.schedule.find(s => s.day === 'sabado')?.closeTime,
+                                    domingo: data.schedule.find(s => s.day === 'domingo')?.openTime + ' - ' + data.schedule.find(s => s.day === 'domingo')?.closeTime,
+                                }
+                            } as unknown as Workshop;
+                            setWorkshops([newWorkshop, ...workshops]);
+                        }
+                    }}
                 />
             )}
         </div>

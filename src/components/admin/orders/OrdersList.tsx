@@ -229,8 +229,24 @@ export default function OrdersList() {
                     initialData={selectedOrderForEdit}
                     onClose={() => setIsSlideOverOpen(false)}
                     onSave={(data: Partial<Order>) => {
-                        console.log('Saved order data:', data);
-                        // Implement save logic here later
+                        if (slideOverMode === 'add') {
+                            const newOrder: Order = {
+                                ...data,
+                                id: Math.random().toString(36).substring(2, 9),
+                                history: [
+                                    { 
+                                        status: (data.status as OrderStatus) || 'Fabricación', 
+                                        date: new Date().toISOString().split('T')[0], 
+                                        description: 'Pedido creado manualmente en panel admin' 
+                                    }
+                                ]
+                            } as Order;
+                            setOrders([newOrder, ...orders]);
+                        } else if (slideOverMode === 'edit' && selectedOrderForEdit) {
+                            setOrders(orders.map(o => 
+                                o.id === selectedOrderForEdit.id ? { ...o, ...data } as Order : o
+                            ));
+                        }
                         setIsSlideOverOpen(false);
                     }}
                 />

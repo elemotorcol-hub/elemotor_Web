@@ -76,6 +76,7 @@ export interface QuoteData {
     statusCode: 'approved' | 'pending' | 'expired';
     amount: string;
     validUntil: string;
+    imageUrl?: string;
 }
 
 export interface ClientDocument {
@@ -85,6 +86,7 @@ export interface ClientDocument {
     uploadDate: string;
     iconType: 'receipt' | 'shield-check' | 'id-card' | 'shield-alert' | 'book';
     colorTheme: string;
+    category: 'Legales' | 'Mantenimiento' | 'Facturas';
     isActive?: boolean;
     warningMessage?: string;
 }

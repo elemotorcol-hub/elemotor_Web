@@ -22,12 +22,12 @@ export default function AdminSidebarNav() {
       icon: Car,
       isActive: pathname.startsWith('/admin/inventory'),
     },
-    {
+    /* {
       name: 'CRM',
       href: '/admin/crm',
       icon: Users,
       isActive: pathname.startsWith('/admin/crm'),
-    },
+    }, */
     {
       name: 'Pedidos',
       href: '/admin/orders',

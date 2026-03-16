@@ -1,6 +1,4 @@
-import * as React from 'react';
-import { Settings, ShieldCheck, Mail, Phone, CalendarDays } from 'lucide-react';
-import Link from 'next/link';
+import { Settings, Mail, Phone, CalendarDays } from 'lucide-react';
 
 interface UserProfileBannerProps {
     user: {
@@ -10,10 +8,11 @@ interface UserProfileBannerProps {
         phone?: string;
         memberSince?: string;
         clientId?: string;
-    }
+    },
+    onEditClick?: () => void;
 }
 
-export function UserProfileBanner({ user }: UserProfileBannerProps) {
+export function UserProfileBanner({ user, onEditClick }: UserProfileBannerProps) {
     // Generate initials safely
     const generateInitials = (name: string) => {
         const parts = name.split(' ');
@@ -46,7 +45,6 @@ export function UserProfileBanner({ user }: UserProfileBannerProps) {
                         <h2 className="text-3xl font-black text-white tracking-tight">{user.name}</h2>
                         
                         <span className="inline-flex items-center justify-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-full self-center">
-                            <ShieldCheck className="w-3.5 h-3.5" />
                             {user.role}
                         </span>
                     </div>
@@ -65,10 +63,13 @@ export function UserProfileBanner({ user }: UserProfileBannerProps) {
 
                 {/* Edit Button */}
                 <div className="shrink-0 self-center md:self-start md:pt-4">
-                    <Link href="/dashboard/configuracion" className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-[#10B981]/10 border border-white/10 hover:border-[#10B981] text-slate-300 hover:text-white rounded-full font-bold text-xs uppercase tracking-widest transition-all">
+                    <button 
+                        onClick={onEditClick}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-[#10B981]/10 border border-white/10 hover:border-[#10B981] text-slate-300 hover:text-white rounded-full font-bold text-xs uppercase tracking-widest transition-all"
+                    >
                         <Settings className="w-4 h-4" />
                         Editar Perfil
-                    </Link>
+                    </button>
                 </div>
 
             </div>
