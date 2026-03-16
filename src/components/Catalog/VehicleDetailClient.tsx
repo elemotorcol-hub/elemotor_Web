@@ -4,19 +4,11 @@ import * as React from 'react';
 import { TrimSelector } from '@/components/Catalog/TrimSelector';
 import { VehicleHero } from '@/components/Catalog/VehicleHero';
 import { VehicleSpecs } from '@/components/Catalog/VehicleSpecs';
-import { ColorSelector } from '@/components/Catalog/ColorSelector';
 import { VehicleFeatures } from '@/components/Catalog/VehicleFeatures';
 import type { DetailModel, DetailTrim } from '@/services/catalogModels.service';
 
 interface VehicleDetailClientProps {
     model: DetailModel;
-}
-
-// Map exterior colors to ColorSelector shape
-function toColorOptions(trim: DetailTrim) {
-    const exteriorColors = trim.colors.filter((c) => c.type === 'exterior');
-    const allColors = exteriorColors.length > 0 ? exteriorColors : trim.colors;
-    return allColors.map((c) => ({ name: c.name, hex: `#${c.hexCode}` }));
 }
 
 // Derive feature cards from spec fields that contain meaningful info
@@ -64,7 +56,6 @@ function toFeatures(trim: DetailTrim) {
 export function VehicleDetailClient({ model }: VehicleDetailClientProps) {
     const [activeTrim, setActiveTrim] = React.useState<DetailTrim>(model.trims[0]);
 
-    const colorOptions = React.useMemo(() => toColorOptions(activeTrim), [activeTrim]);
     const features = React.useMemo(() => toFeatures(activeTrim), [activeTrim]);
 
     return (
@@ -93,10 +84,6 @@ export function VehicleDetailClient({ model }: VehicleDetailClientProps) {
                 />
 
                 <hr className="border-white/5 w-full max-w-lg mx-auto" />
-
-                {colorOptions.length > 0 && (
-                    <ColorSelector colors={colorOptions} />
-                )}
 
                 <VehicleFeatures features={features} />
             </div>

@@ -37,9 +37,8 @@ export function ColorSelector({ colors }: ColorSelectorProps) {
                                 }`}
                             style={{ backgroundColor: color.hex }}
                         >
-                            {/* Anillo exterior cuando está seleccionado */}
                             {isSelected && (
-                                <span className="absolute -inset-2 rounded-full border-2 border-[var(--color-ring,#00D4AA)] pointer-events-none transition-colors" style={{ '--color-ring': color.hex } as any} />
+                                <span className="absolute -inset-2 rounded-full border-2 border-(--color-ring,#00D4AA) pointer-events-none transition-colors" style={{ '--color-ring': color.hex } as React.CSSProperties} />
                             )}
                         </button>
                     );
