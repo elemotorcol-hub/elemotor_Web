@@ -60,34 +60,37 @@ export const MOCK_VEHICLE_DATA: ClientVehicleData = {
 
 export const MOCK_QUOTES_DATA: QuoteData[] = [
     {
-        id: 'COT-2023-010',
-        model: 'Deepal S07 MAX',
-        date: 'OCT 12, 2023',
+        id: 'COT-2024-104',
+        model: 'AVATR 11 Luxury Edition',
+        date: '12 MAR, 2024',
         status: 'Aprobada',
         statusCode: 'approved',
         statusColor: 'bg-[#10B981]',
-        amount: '$165,000,000 COP',
-        validUntil: 'Nov 12, 2023'
+        amount: '$245,000,000 COP',
+        validUntil: '12 ABR, 2024',
+        imageUrl: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=400&auto=format&fit=crop'
     },
     {
-        id: 'COT-2023-008',
-        model: 'Avatr 11 Long Range',
-        date: 'SEP 05, 2023',
-        status: 'En Revisión',
+        id: 'COT-2024-098',
+        model: 'Deepal S07 MAX',
+        date: '08 MAR, 2024',
+        status: 'Pendiente',
         statusCode: 'pending',
         statusColor: 'bg-blue-500',
-        amount: 'Pendiente',
-        validUntil: '-'
+        amount: '$165,000,000 COP',
+        validUntil: '-',
+        imageUrl: '/deepal-s07.avif'
     },
     {
-        id: 'COT-2023-005',
+        id: 'COT-2023-085',
         model: 'Neta GT Performance',
-        date: 'JUL 21, 2023',
+        date: '21 DIC, 2023',
         status: 'Expirada',
         statusCode: 'expired',
         statusColor: 'bg-slate-500',
         amount: '$190,000,000 COP',
-        validUntil: 'Ago 21, 2023'
+        validUntil: '21 ENE, 2024',
+        imageUrl: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=400&auto=format&fit=crop'
     }
 ];
 
@@ -98,7 +101,8 @@ export const MOCK_DOCUMENTS_DATA: ClientDocument[] = [
         subtitle: 'Ref: #FAC-2023-001',
         uploadDate: '12 Oct, 2023',
         iconType: 'receipt',
-        colorTheme: 'text-blue-400 bg-blue-400/10'
+        colorTheme: 'text-blue-400 bg-blue-400/10',
+        category: 'Facturas'
     },
     {
         id: '2',
@@ -107,7 +111,8 @@ export const MOCK_DOCUMENTS_DATA: ClientDocument[] = [
         uploadDate: '01 Ene, 2024',
         iconType: 'shield-check',
         colorTheme: 'text-[#10B981] bg-[#10B981]/10',
-        isActive: true
+        isActive: true,
+        category: 'Legales'
     },
     {
         id: '3',
@@ -115,7 +120,8 @@ export const MOCK_DOCUMENTS_DATA: ClientDocument[] = [
         subtitle: 'Placa: XYZ-123',
         uploadDate: '15 Feb, 2023',
         iconType: 'id-card',
-        colorTheme: 'text-purple-400 bg-purple-400/10'
+        colorTheme: 'text-purple-400 bg-purple-400/10',
+        category: 'Legales'
     },
     {
         id: '4',
@@ -124,7 +130,8 @@ export const MOCK_DOCUMENTS_DATA: ClientDocument[] = [
         uploadDate: '20 Mar, 2024',
         iconType: 'shield-alert',
         colorTheme: 'text-yellow-500 bg-yellow-500/10',
-        warningMessage: 'Renovar pronto'
+        warningMessage: 'Renovar pronto',
+        category: 'Legales'
     },
     {
         id: '5',
@@ -132,6 +139,7 @@ export const MOCK_DOCUMENTS_DATA: ClientDocument[] = [
         subtitle: 'PDF - 12MB',
         uploadDate: '12 Oct, 2023',
         iconType: 'book',
-        colorTheme: 'text-slate-400 bg-slate-400/10'
+        colorTheme: 'text-slate-400 bg-slate-400/10',
+        category: 'Mantenimiento'
     }
 ];

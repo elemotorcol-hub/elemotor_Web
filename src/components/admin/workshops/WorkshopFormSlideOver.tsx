@@ -45,9 +45,10 @@ interface WorkshopFormSlideOverProps {
     isOpen: boolean;
     onClose: () => void;
     workshopToEdit: Workshop | null;
+    onSave: (data: WorkshopDTO) => void;
 }
 
-export default function WorkshopFormSlideOver({ isOpen, onClose, workshopToEdit }: WorkshopFormSlideOverProps) {
+export default function WorkshopFormSlideOver({ isOpen, onClose, workshopToEdit, onSave }: WorkshopFormSlideOverProps) {
     const isEditing = !!workshopToEdit;
     const [activeTab, setActiveTab] = useState<'info' | 'location' | 'schedule' | 'services' | 'images'>('info');
     const [isSaving, setIsSaving] = useState(false);
@@ -127,14 +128,15 @@ export default function WorkshopFormSlideOver({ isOpen, onClose, workshopToEdit 
 
     const onSubmit = (data: WorkshopDTO) => {
         setIsSaving(true);
-        console.log("Datos validados a enviar al Backend:", data);
+        
         setTimeout(() => {
+            onSave(data);
             setIsSaving(false);
             setSaveSuccess(true);
             setTimeout(() => {
                 onClose();
-            }, 1000);
-        }, 1500);
+            }, 800);
+        }, 1000);
     };
 
     const tabs = [
