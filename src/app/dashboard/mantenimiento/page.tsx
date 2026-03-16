@@ -1,12 +1,15 @@
 'use client';
 
-import { useMemo } from 'react';
-import { Activity, Calendar, ShieldCheck } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Activity, Calendar, ShieldCheck, Plus } from 'lucide-react';
 import { MOCK_VEHICLE_DATA } from '@/mocks/clientPortalData';
 import { calculateMaintenanceHistory, getNextMaintenance } from '@/lib/maintenanceUtils';
 import { MaintenanceHistoryList } from '@/components/dashboard/maintenance/MaintenanceHistoryList';
+import { ScheduleMaintenanceModal } from '@/components/dashboard/maintenance/ScheduleMaintenanceModal';
 
 export default function MantenimientoPage() {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     // Generate data based on mock vehicle purchase date
     const history = useMemo(() => 
         calculateMaintenanceHistory(MOCK_VEHICLE_DATA.purchaseDate), 
@@ -26,6 +29,13 @@ export default function MantenimientoPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => setIsModalOpen(true)}
+                        className="px-5 py-2.5 bg-white/5 hover:bg-[#10B981]/10 border border-white/10 hover:border-[#10B981] text-slate-300 hover:text-white rounded-full font-bold text-xs uppercase tracking-widest transition-all flex items-center gap-2"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Agendar Cita
+                    </button>
                     <div className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-2 text-sm font-bold">
                         <ShieldCheck className="w-4 h-4" />
                         Garantía Activa
@@ -35,6 +45,7 @@ export default function MantenimientoPage() {
 
             {/* Next Milestone Hero */}
             <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-[32px] p-8 md:p-10 text-white relative overflow-hidden shadow-2xl">
+                {/* ... existing content ... */}
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
                     <div className="text-center md:text-left">
                         <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] uppercase font-black tracking-widest mb-4 inline-block">Próximo Servicio</span>
@@ -65,6 +76,11 @@ export default function MantenimientoPage() {
             {/* History List */}
             <MaintenanceHistoryList history={history} />
             
+            {/* Modal */}
+            <ScheduleMaintenanceModal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+            />
         </div>
     );
 }

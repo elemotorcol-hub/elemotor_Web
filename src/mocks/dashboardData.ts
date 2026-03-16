@@ -23,6 +23,8 @@ export interface DashboardData {
         horsepower: string;
         range: string;
         imageUrl: string;
+        year: string;
+        vin: string;
     };
     recentActivities: Array<{
         id: string;
@@ -56,7 +58,9 @@ export const MOCK_DASHBOARD_DATA: DashboardData = {
         color: 'Negro Cósmico',
         horsepower: '258 HP',
         range: '620 km',
-        imageUrl: '/deepal-s07.avif' // Reusing existing assert
+        imageUrl: '/deepal-s07.avif',
+        year: '2025',
+        vin: 'TDP-S07-M2025-AX1'
     },
     recentActivities: [
         {
