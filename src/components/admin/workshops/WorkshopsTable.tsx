@@ -253,7 +253,7 @@ export default function WorkshopsTable() {
                                     ...w, 
                                     ...data,
                                     images: data.images.length > 0 ? data.images : w.images 
-                                } as Workshop : w
+                                } as unknown as Workshop : w
                             ));
                         } else {
                             // Add mode

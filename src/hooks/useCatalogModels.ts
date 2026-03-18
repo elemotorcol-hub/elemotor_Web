@@ -64,11 +64,25 @@ function adaptModelToVehicle(model: CatalogModel): Vehicle {
         model: model.name.toUpperCase(),
         category: MODEL_TYPE_MAP[model.type] ?? 'SUV',
         price,
-        battery,
-        range,
-        acceleration,
-        topSpeed,
-        power: spec?.horsepower ?? 0,
+        battery_kwh: battery,
+        range_cltc_km: range,
+        range_wltp_km: range,
+        zero_to_100: acceleration,
+        top_speed: topSpeed,
+        horsepower: spec?.horsepower ?? 0,
+        torque: 0,
+        charge_time_30_80: '',
+        trunk_liters: 0,
+        length_mm: 0,
+        width_mm: 0,
+        height_mm: 0,
+        wheelbase_mm: 0,
+        curb_weight_kg: 0,
+        software_version: '',
+        adas_level: '',
+        screen_size: '',
+        kwh_per_100km: 0,
+        trim_id: String(firstTrim?.id ?? ''),
         image: firstImage?.url ?? '/placeholder-car.svg',
         stockStatus: TRIM_STATUS_MAP[firstTrim?.status ?? 'stock'] ?? 'EN STOCK',
     };
@@ -120,7 +134,7 @@ export function useCatalogModels(): UseCatalogModelsResult {
     );
 
     const maxAutonomy = React.useMemo(
-        () => (vehicles.length > 0 ? Math.max(...vehicles.map((v) => v.range)) : 700),
+        () => (vehicles.length > 0 ? Math.max(...vehicles.map((v) => v.range_wltp_km)) : 700),
         [vehicles],
     );
 

@@ -69,6 +69,7 @@ function mapApiToFormData(apiModel: any): VehicleModelFormData {
                 id: String(img.id),
                 dbId: img.id,
                 url: img.publicUrl || img.url || '',
+                public_id: img.publicId || 'legacy',
                 alt_text: img.altText || img.alt_text || '',
                 type: img.type || 'gallery',
                 sort_order: img.sortOrder ?? img.sort_order ?? 0,
@@ -77,6 +78,7 @@ function mapApiToFormData(apiModel: any): VehicleModelFormData {
                 id: String(trim.model3d.id),
                 dbId: trim.model3d.id,
                 file_url: trim.model3d.fileUrl || trim.model3d.file_url || '',
+                public_id: trim.model3d.publicId || 'legacy',
                 format: (trim.model3d.format || 'glb').toLowerCase() as any,
                 draco_compressed: trim.model3d.dracoCompressed ?? true,
             } : undefined,
@@ -130,7 +132,7 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const methods = useForm<VehicleModelFormData>({
-        // @ts-ignore
+        // @ts-expect-error Zod coerce infers unknown in this version, causing RHF Resolver mismatch
         resolver: zodResolver(vehicleModelSchema),
         mode: 'onChange',
         defaultValues: EMPTY_FORM,
@@ -166,17 +168,17 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
                             mediaService.getModel3dByTrim(trim.id),
                         ]);
 
+                        // Anti Data-Loss check: if any of the dependencies failed, throw an error
+                        // so we don't present an incomplete form to the user.
+                        if (colorsRes.status === 'rejected' || imagesRes.status === 'rejected' || model3dRes.status === 'rejected') {
+                            throw new Error(`Error cargando media para la versión ${trim.name}. Intente de nuevo.`);
+                        }
+
                         return {
                             ...trim,
-                            colors: colorsRes.status === 'fulfilled' 
-                                ? (colorsRes.value?.data || colorsRes.value || []) 
-                                : [],
-                            images: imagesRes.status === 'fulfilled' 
-                                ? (imagesRes.value?.data || imagesRes.value || []) 
-                                : [],
-                            model3d: model3dRes.status === 'fulfilled' && model3dRes.value
-                                ? (model3dRes.value?.data || model3dRes.value)
-                                : null,
+                            colors: colorsRes.value?.data || colorsRes.value || [],
+                            images: imagesRes.value?.data || imagesRes.value || [],
+                            model3d: model3dRes.value ? (model3dRes.value.data || model3dRes.value) : null,
                         };
                     });
 
@@ -219,163 +221,68 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
         );
     };
 
-    // ─── CREATE flow ────────────────────────────────────────────────
-    const handleCreate = async (data: VehicleModelFormData) => {
-        const modelPayload = {
-            brandId: Number(data.brand_id),
-            name: data.name,
-            slug: data.slug,
-            type: formatModelType(data.type),
-            year: Number(data.year),
-            description: data.description || undefined,
-            basePrice: Number(data.basePrice) || 0,
-            featured: data.featured,
-            active: data.status === 'Active'
-        };
+    // ─── HELPER: concurrent media uploads ───────────────────────────────────────
+    const processUploads = async (trims: any[]) => {
+        const uploadPromises: Promise<void>[] = [];
 
-        const createdModel = await modelService.createModel(modelPayload);
-        const modelId = createdModel.id;
-
-        for (const trim of data.trims) {
-            const trimPayload = {
-                modelId,
-                name: trim.name,
-                price: Number(trim.price),
-                availableQuantity: Number(trim.available_quantity),
-                status: trim.status,
-                active: trim.active
-            };
-            const createdTrim = await trimService.createTrim(trimPayload);
-            const trimId = createdTrim.id;
-
-            // Specs
-            const specPayload: any = {
-                trimId,
-                batteryKwh: Number(trim.specs.battery_kwh) || undefined,
-                rangeCltcKm: Number(trim.specs.range_cltc_km) || undefined,
-                rangeWltpKm: Number(trim.specs.range_wltp_km) || undefined,
-                horsepower: Number(trim.specs.horsepower) || undefined,
-                torque: Number(trim.specs.torque) || undefined,
-                zeroTo100: Number(trim.specs.zero_to_100) || undefined,
-                topSpeed: Number(trim.specs.top_speed) || undefined,
-                chargeTime3080: trim.specs.charge_time_30_80 || undefined,
-                trunkLiters: Number(trim.specs.trunk_liters) || undefined,
-                lengthMm: Number(trim.specs.length_mm) || undefined,
-                widthMm: Number(trim.specs.width_mm) || undefined,
-                heightMm: Number(trim.specs.height_mm) || undefined,
-                wheelbaseMm: Number(trim.specs.wheelbase_mm) || undefined,
-                curbWeightKg: Number(trim.specs.curb_weight_kg) || undefined,
-                kwhPer100km: Number(trim.specs.kwh_per_100km) || undefined,
-                adasLevel: Number(trim.specs.adas_level) || undefined,
-                screenSize: Number(trim.specs.screen_size) || undefined,
-                softwareVersion: Number(trim.specs.software_version) || undefined,
-            };
-            Object.keys(specPayload).forEach(k => specPayload[k] === undefined && delete specPayload[k]);
-            await trimService.createSpec(specPayload);
-
-            // Colors
-            for (const color of trim.colors) {
-                let imageUrl = color.image_url;
+        trims.forEach(trim => {
+            trim.colors?.forEach((color: any) => {
                 if (color.rawFile) {
-                    const uploadRes = await uploadService.uploadImage(color.rawFile, 'elemotor/colors');
-                    imageUrl = uploadRes.publicUrl;
+                    const p = uploadService.uploadImage(color.rawFile, 'elemotor/colors')
+                        .then(res => {
+                            color.image_url = res.publicUrl;
+                            color.public_id = res.publicId;
+                            delete color.rawFile;
+                        });
+                    uploadPromises.push(p);
                 }
-                await trimService.createColor({
-                    trimId,
-                    name: color.name,
-                    hexCode: color.hex_code.startsWith('#') ? color.hex_code : `#${color.hex_code}`,
-                    type: color.type,
-                    imageUrl: imageUrl && !imageUrl.startsWith('blob:') ? imageUrl : undefined
-                });
-            }
+            });
 
-            // Images
-            if (trim.images && trim.images.length > 0) {
-                for (const img of trim.images) {
-                    if (img.rawFile) {
-                        await uploadService.uploadTrimImages([img.rawFile], trimId, img.type, img.alt_text, img.sort_order);
-                    }
+            trim.images?.forEach((img: any) => {
+                if (img.rawFile) {
+                    const p = uploadService.uploadImage(img.rawFile, 'elemotor/vehicles')
+                        .then(res => {
+                            img.url = res.publicUrl;
+                            img.public_id = res.publicId;
+                            delete img.rawFile;
+                        });
+                    uploadPromises.push(p);
                 }
-            }
+            });
 
-            // 3D Model
             if (trim.model_3d?.rawFile) {
-                await uploadService.uploadModel3d(trim.model_3d.rawFile, trimId);
+                const p = uploadService.uploadFile(trim.model_3d.rawFile, 'model3d')
+                    .then(res => {
+                        trim.model_3d.file_url = res.publicUrl;
+                        trim.model_3d.public_id = res.publicId;
+                        trim.model_3d.file_size_mb = res.size ? res.size / (1024 * 1024) : 0;
+                        delete trim.model_3d.rawFile;
+                    });
+                uploadPromises.push(p);
             }
-        }
+        });
+
+        await Promise.all(uploadPromises);
     };
 
-    // ─── EDIT flow ──────────────────────────────────────────────────
-    const handleEdit = async (data: VehicleModelFormData) => {
-        const modelId = Number(initialData!.id);
+    // ─── CREATE flow ────────────────────────────────────────────────
+    const handleCreate = async (data: VehicleModelFormData) => {
+        // First, upload all media files concurrently
+        await processUploads(data.trims);
 
-        // 1. Update model — only send defined fields
-        const modelPayload = stripUndefined({
+        const modelPayload = {
+            ...data,
             brandId: Number(data.brand_id),
-            name: data.name,
-            slug: data.slug,
             type: formatModelType(data.type),
             year: Number(data.year),
-            description: data.description || undefined,
-            basePrice: data.basePrice != null ? Number(data.basePrice) : undefined,
-            featured: data.featured,
-        });
-        await modelService.updateModel(modelId, modelPayload);
-
-        // 2. For each trim in the form
-        for (const trim of data.trims) {
-            const isExistingTrim = !!trim.dbId;
-            let trimId: number;
-
-            if (isExistingTrim) {
-                // Update existing trim
-                trimId = Number(trim.dbId);
-                await trimService.updateTrim(trimId, {
-                    name: trim.name,
-                    price: Number(trim.price),
-                    availableQuantity: Number(trim.available_quantity),
-                    status: trim.status,
-                });
-
-                // Update specs
-                if (trim.specDbId) {
-                    const specPayload: any = {
-                        batteryKwh: Number(trim.specs.battery_kwh) || undefined,
-                        rangeCltcKm: Number(trim.specs.range_cltc_km) || undefined,
-                        rangeWltpKm: Number(trim.specs.range_wltp_km) || undefined,
-                        horsepower: Number(trim.specs.horsepower) || undefined,
-                        torque: Number(trim.specs.torque) || undefined,
-                        zeroTo100: Number(trim.specs.zero_to_100) || undefined,
-                        topSpeed: Number(trim.specs.top_speed) || undefined,
-                        chargeTime3080: trim.specs.charge_time_30_80 || undefined,
-                        trunkLiters: Number(trim.specs.trunk_liters) || undefined,
-                        lengthMm: Number(trim.specs.length_mm) || undefined,
-                        widthMm: Number(trim.specs.width_mm) || undefined,
-                        heightMm: Number(trim.specs.height_mm) || undefined,
-                        wheelbaseMm: Number(trim.specs.wheelbase_mm) || undefined,
-                        curbWeightKg: Number(trim.specs.curb_weight_kg) || undefined,
-                        kwhPer100km: Number(trim.specs.kwh_per_100km) || undefined,
-                        adasLevel: Number(trim.specs.adas_level) || undefined,
-                        screenSize: Number(trim.specs.screen_size) || undefined,
-                        softwareVersion: Number(trim.specs.software_version) || undefined,
-                    };
-                    Object.keys(specPayload).forEach(k => specPayload[k] === undefined && delete specPayload[k]);
-                    await mediaService.updateSpec(trim.specDbId, specPayload);
-                }
-            } else {
-                // New trim — create it
-                const createdTrim = await trimService.createTrim({
-                    modelId,
-                    name: trim.name,
-                    price: Number(trim.price),
-                    availableQuantity: Number(trim.available_quantity),
-                    status: trim.status,
-                    active: trim.active
-                });
-                trimId = createdTrim.id;
-
-                const specPayload: any = {
-                    trimId,
+            basePrice: Number(data.basePrice),
+            active: data.status === 'Active',
+            trims: data.trims.map(trim => ({
+                ...trim,
+                price: Number(trim.price),
+                available_quantity: Number(trim.available_quantity),
+                specs: trim.specs ? {
+                    ...trim.specs,
                     batteryKwh: Number(trim.specs.battery_kwh) || undefined,
                     rangeCltcKm: Number(trim.specs.range_cltc_km) || undefined,
                     rangeWltpKm: Number(trim.specs.range_wltp_km) || undefined,
@@ -383,7 +290,6 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
                     torque: Number(trim.specs.torque) || undefined,
                     zeroTo100: Number(trim.specs.zero_to_100) || undefined,
                     topSpeed: Number(trim.specs.top_speed) || undefined,
-                    chargeTime3080: trim.specs.charge_time_30_80 || undefined,
                     trunkLiters: Number(trim.specs.trunk_liters) || undefined,
                     lengthMm: Number(trim.specs.length_mm) || undefined,
                     widthMm: Number(trim.specs.width_mm) || undefined,
@@ -394,64 +300,114 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
                     adasLevel: Number(trim.specs.adas_level) || undefined,
                     screenSize: Number(trim.specs.screen_size) || undefined,
                     softwareVersion: Number(trim.specs.software_version) || undefined,
-                };
-                Object.keys(specPayload).forEach(k => specPayload[k] === undefined && delete specPayload[k]);
-                await trimService.createSpec(specPayload);
-            }
+                    chargeTime3080: trim.specs.charge_time_30_80 || undefined,
+                } : undefined,
+                colors: trim.colors?.map(c => ({
+                    name: c.name,
+                    hex_code: c.hex_code.startsWith('#') ? c.hex_code : `#${c.hex_code}`,
+                    type: c.type,
+                    image_url: c.image_url,
+                    publicId: c.public_id || 'legacy',
+                })),
+                images: trim.images?.map(img => ({
+                    url: img.url,
+                    publicId: img.public_id || 'legacy',
+                    alt_text: img.alt_text,
+                    type: img.type,
+                    sort_order: Number(img.sort_order),
+                })),
+                model_3d: trim.model_3d && trim.model_3d.file_url ? {
+                    file_url: trim.model_3d.file_url,
+                    publicId: trim.model_3d.public_id || 'legacy',
+                    file_size_mb: trim.model_3d.file_size_mb,
+                    format: trim.model_3d.format,
+                    draco_compressed: trim.model_3d.draco_compressed,
+                    lod_level: trim.model_3d.lod_level,
+                } : undefined,
+            })),
+        };
 
-            // Handle colors
-            for (const color of trim.colors) {
-                if ((color as any)._deleted) {
-                    if (color.dbId) await mediaService.deleteImage(color.dbId);
-                    continue;
-                }
-                if (color.dbId) {
-                    // Update existing color (name, hex, type)
-                    await mediaService.updateColor(color.dbId, {
-                        name: color.name,
-                        hexCode: color.hex_code.startsWith('#') ? color.hex_code : `#${color.hex_code}`,
-                        type: color.type,
-                    });
-                } else {
-                    // New color
-                    let imageUrl = color.image_url;
-                    if (color.rawFile) {
-                        const uploadRes = await uploadService.uploadImage(color.rawFile, 'elemotor/colors');
-                        imageUrl = uploadRes.publicUrl;
-                    }
-                    await trimService.createColor({
-                        trimId,
-                        name: color.name,
-                        hexCode: color.hex_code.startsWith('#') ? color.hex_code : `#${color.hex_code}`,
-                        type: color.type,
-                        imageUrl: imageUrl && !imageUrl.startsWith('blob:') ? imageUrl : undefined
-                    });
-                }
-            }
+        await modelService.createModel(modelPayload);
+    };
 
-            // Handle images
-            for (const img of trim.images) {
-                if ((img as any)._deleted) {
-                    if (img.dbId) await mediaService.deleteImage(img.dbId);
-                    continue;
-                }
-                if (!img.dbId && img.rawFile) {
-                    // New image to upload
-                    await uploadService.uploadTrimImages([img.rawFile], trimId, img.type, img.alt_text, img.sort_order);
-                }
-                // Existing images without rawFile → no change needed
-            }
+    // ─── EDIT flow ──────────────────────────────────────────────────
+    const handleEdit = async (data: VehicleModelFormData) => {
+        const modelId = Number(initialData!.id);
 
-            // Handle 3D model
-            if (trim.model_3d) {
-                if ((trim.model_3d as any)._deleted && trim.model_3d.dbId) {
-                    await mediaService.deleteModel3d(trim.model_3d.dbId);
-                } else if (!trim.model_3d.dbId && trim.model_3d.rawFile) {
-                    // New 3D model
-                    await uploadService.uploadModel3d(trim.model_3d.rawFile, trimId);
-                }
-            }
-        }
+        // Upload media files concurrently
+        await processUploads(data.trims);
+
+        const modelPayload = {
+            brandId: Number(data.brand_id),
+            name: data.name,
+            slug: data.slug,
+            type: formatModelType(data.type),
+            year: Number(data.year),
+            description: data.description || undefined,
+            basePrice: Number(data.basePrice),
+            featured: data.featured,
+            active: data.status === 'Active',
+            trims: data.trims.map(trim => ({
+                dbId: trim.dbId ? Number(trim.dbId) : undefined,
+                _deleted: (trim as any)._deleted,
+                name: trim.name,
+                price: Number(trim.price),
+                available_quantity: Number(trim.available_quantity),
+                status: trim.status,
+                active: trim.active,
+                specs: trim.specs ? {
+                    dbId: trim.specDbId ? Number(trim.specDbId) : undefined,
+                    batteryKwh: Number(trim.specs.battery_kwh) || undefined,
+                    rangeCltcKm: Number(trim.specs.range_cltc_km) || undefined,
+                    rangeWltpKm: Number(trim.specs.range_wltp_km) || undefined,
+                    horsepower: Number(trim.specs.horsepower) || undefined,
+                    torque: Number(trim.specs.torque) || undefined,
+                    zeroTo100: Number(trim.specs.zero_to_100) || undefined,
+                    topSpeed: Number(trim.specs.top_speed) || undefined,
+                    trunkLiters: Number(trim.specs.trunk_liters) || undefined,
+                    lengthMm: Number(trim.specs.length_mm) || undefined,
+                    widthMm: Number(trim.specs.width_mm) || undefined,
+                    heightMm: Number(trim.specs.height_mm) || undefined,
+                    wheelbaseMm: Number(trim.specs.wheelbase_mm) || undefined,
+                    curbWeightKg: Number(trim.specs.curb_weight_kg) || undefined,
+                    kwhPer100km: Number(trim.specs.kwh_per_100km) || undefined,
+                    adasLevel: Number(trim.specs.adas_level) || undefined,
+                    screenSize: Number(trim.specs.screen_size) || undefined,
+                    softwareVersion: Number(trim.specs.software_version) || undefined,
+                    chargeTime3080: trim.specs.charge_time_30_80 || undefined,
+                } : undefined,
+                colors: trim.colors?.map(c => ({
+                    dbId: c.dbId ? Number(c.dbId) : undefined,
+                    _deleted: c._deleted,
+                    name: c.name,
+                    hex_code: c.hex_code.startsWith('#') ? c.hex_code : `#${c.hex_code}`,
+                    type: c.type,
+                    image_url: c.image_url,
+                    publicId: c.public_id || 'legacy',
+                })),
+                images: trim.images?.map(img => ({
+                    dbId: img.dbId ? Number(img.dbId) : undefined,
+                    _deleted: img._deleted,
+                    url: img.url,
+                    publicId: img.public_id || 'legacy',
+                    alt_text: img.alt_text,
+                    type: img.type,
+                    sort_order: Number(img.sort_order),
+                })),
+                model_3d: trim.model_3d && trim.model_3d.file_url ? {
+                    dbId: trim.model_3d.dbId ? Number(trim.model_3d.dbId) : undefined,
+                    _deleted: trim.model_3d._deleted,
+                    file_url: trim.model_3d.file_url,
+                    publicId: trim.model_3d.public_id || 'legacy',
+                    file_size_mb: trim.model_3d.file_size_mb,
+                    format: trim.model_3d.format,
+                    draco_compressed: trim.model_3d.draco_compressed,
+                    lod_level: trim.model_3d.lod_level,
+                } : undefined,
+            })),
+        };
+
+        await modelService.updateModel(modelId, modelPayload);
     };
 
     // ─── Submit orchestrator ─────────────────────────────────────────

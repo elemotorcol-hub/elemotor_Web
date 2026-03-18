@@ -85,8 +85,8 @@ export function getVehicleSchema(vehicle: Vehicle) {
     '@type': 'Product',
     name: `${vehicle.brand} ${vehicle.model}`,
     description: `Vehículo 100% eléctrico ${vehicle.brand} ${vehicle.model}. `
-      + `Autonomía: ${vehicle.range} km, aceleración 0-100 en ${vehicle.acceleration}s, `
-      + `potencia: ${vehicle.power} Hp, batería: ${vehicle.battery} kWh.`,
+      + `Autonomía: ${vehicle.range_wltp_km} km, aceleración 0-100 en ${vehicle.zero_to_100}s, `
+      + `potencia: ${vehicle.horsepower} Hp, batería: ${vehicle.battery_kwh} kWh.`,
     image: imageUrl,
     url: vehicleUrl,
     brand: {
@@ -110,11 +110,11 @@ export function getVehicleSchema(vehicle: Vehicle) {
       },
     },
     additionalProperty: [
-      { '@type': 'PropertyValue', name: 'Autonomía', value: `${vehicle.range} km` },
-      { '@type': 'PropertyValue', name: 'Aceleración 0-100', value: `${vehicle.acceleration}s` },
-      { '@type': 'PropertyValue', name: 'Potencia', value: `${vehicle.power} Hp` },
-      { '@type': 'PropertyValue', name: 'Batería', value: `${vehicle.battery} kWh` },
-      { '@type': 'PropertyValue', name: 'Velocidad máxima', value: `${vehicle.topSpeed} km/h` },
+      { '@type': 'PropertyValue', name: 'Autonomía', value: `${vehicle.range_wltp_km} km` },
+      { '@type': 'PropertyValue', name: 'Aceleración 0-100', value: `${vehicle.zero_to_100}s` },
+      { '@type': 'PropertyValue', name: 'Potencia', value: `${vehicle.horsepower} Hp` },
+      { '@type': 'PropertyValue', name: 'Batería', value: `${vehicle.battery_kwh} kWh` },
+      { '@type': 'PropertyValue', name: 'Velocidad máxima', value: `${vehicle.top_speed} km/h` },
       { '@type': 'PropertyValue', name: 'Categoría', value: vehicle.category },
     ],
   };
