@@ -87,5 +87,26 @@ export const uploadService = {
         }
 
         return response.json();
+    },
+
+    uploadFile: async (file: File, type: 'model3d' | 'document'): Promise<UploadResponse> => {
+        const session = await getSession();
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`${API_BASE_URL}/api/upload/file?type=${type}`, {
+            method: 'POST',
+            headers: {
+                ...(session?.accessToken && { 'Authorization': `Bearer ${session.accessToken}` })
+            },
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`File upload failed: ${errorText}`);
+        }
+
+        return response.json();
     }
 };

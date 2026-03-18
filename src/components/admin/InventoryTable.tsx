@@ -20,38 +20,8 @@ export default function InventoryTable() {
     const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
     const [slideOverMode, setSlideOverMode] = useState<'add' | 'edit'>('add');
     const [selectedModel, setSelectedModel] = useState<VehicleModel | null>(null);
-    const [localModels, setLocalModels] = useState<VehicleModel[]>([]);
-
-    // Sincronizar con el hook (carga inicial y filtros)
-    React.useEffect(() => {
-        setLocalModels(models);
-    }, [models]);
-
-    const handleSaveModel = (formData: any) => {
-        if (slideOverMode === 'add') {
-            const newModel: VehicleModel = {
-                id: Math.random().toString(36).substring(2, 9),
-                name: formData.name,
-                year: Number(formData.year),
-                basePrice: Number(formData.basePrice),
-                active: formData.status === 'Active',
-                status: formData.status,
-                brand_id: formData.brand_id,
-                brand: brands.find(b => b.id === formData.brand_id),
-                type: formData.type,
-                slug: formData.slug,
-                featured: false,
-                thumbnail: '',
-                trims: [],
-                _count: { trims: 0 }
-            } as unknown as VehicleModel;
-            setLocalModels([newModel, ...localModels]);
-        } else if (slideOverMode === 'edit' && selectedModel) {
-            setLocalModels(localModels.map(m => 
-                m.id === selectedModel.id ? { ...m, ...formData, basePrice: Number(formData.basePrice) } : m
-            ));
-        }
-    };
+    // localModels removed — table uses models from useInventory directly;
+    // refreshModels() is called on slide-over close to reload from the API.
 
     const [previewModelId, setPreviewModelId] = useState<number | null>(null);
     const [previewModelName, setPreviewModelName] = useState<string>('');
@@ -196,7 +166,7 @@ export default function InventoryTable() {
                                         </div>
                                     </td>
                                 </tr>
-                            ) : localModels.map((model: any) => (
+                            ) : models.map((model: any) => (
                                 <tr key={model.id} className={`hover:bg-slate-800/40 transition-colors group ${model.active === false ? 'opacity-60' : ''}`}>
                                     <td className="p-4 pl-6">
                                         <div className="flex items-center gap-4">
@@ -295,7 +265,7 @@ export default function InventoryTable() {
                                     </td>
                                 </tr>
                             ))}
-                            {models.length === 0 && (
+                            {!isLoading && models.length === 0 && (
                                 <tr>
                                     <td colSpan={4} className="p-12 text-center text-slate-500">
                                         <div className="flex flex-col items-center justify-center gap-2 text-slate-600">
@@ -313,7 +283,7 @@ export default function InventoryTable() {
                 {!isLoading && models.length > 0 && (
                     <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800 bg-slate-900/40">
                         <div className="text-sm text-slate-400">
-                            Mostrando <span className="font-semibold text-slate-200">{localModels.length}</span> resultados de <span className="font-semibold text-slate-200">{localModels.length}</span>
+                            Mostrando <span className="font-semibold text-slate-200">{models.length}</span> resultados de <span className="font-semibold text-slate-200">{totalItems}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
@@ -347,7 +317,6 @@ export default function InventoryTable() {
                 }}
                 mode={slideOverMode}
                 initialData={selectedModel}
-                onSave={handleSaveModel}
             />
 
             <TrimGalleryPreview 
