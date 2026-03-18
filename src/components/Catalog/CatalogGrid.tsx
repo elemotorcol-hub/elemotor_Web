@@ -77,7 +77,7 @@ export function CatalogGrid() {
             const matchesPrice =
                 vehicle.price >= priceRange[0] && vehicle.price <= priceRange[1];
             const matchesAutonomy =
-                vehicle.range >= autonomyRange[0] && vehicle.range <= autonomyRange[1];
+                vehicle.range_wltp_km >= autonomyRange[0] && vehicle.range_wltp_km <= autonomyRange[1];
             return matchesCategory && matchesPrice && matchesAutonomy;
         });
     }, [vehicles, selectedCategory, priceRange, autonomyRange]);
