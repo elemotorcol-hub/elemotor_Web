@@ -18,6 +18,7 @@ export const colorSchema = z.object({
     hex_code: z.string().min(1, 'Requerido'),
     type: z.enum(['exterior', 'interior']),
     image_url: z.string().optional(),
+    public_id: z.string().optional(),
     swatch_url: z.string().optional(),
     rawFile: z.any().optional(), // Holds native File before upload
     _deleted: z.boolean().optional(), // Marks for deletion in edit mode
@@ -48,6 +49,7 @@ export const trimImageSchema = z.object({
     id: z.string(),
     dbId: z.union([z.string(), z.number()]).optional(), // Real DB id when in edit mode
     url: z.string().min(1, 'Requerida'),
+    public_id: z.string().optional(),
     alt_text: z.string().optional(),
     type: z.enum(['gallery', 'hero', 'interior', 'exterior', 'panoramic']),
     sort_order: z.number().default(0),
@@ -59,6 +61,7 @@ export const trimModel3DSchema = z.object({
     id: z.string(),
     dbId: z.union([z.string(), z.number()]).optional(), // Real DB id when in edit mode
     file_url: z.string().min(1, 'Requerida'),
+    public_id: z.string().optional(),
     file_size_mb: z.number().optional(),
     format: z.enum(['glb', 'gltf']),
     draco_compressed: z.boolean().default(true),
