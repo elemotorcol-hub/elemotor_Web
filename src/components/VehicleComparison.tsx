@@ -54,10 +54,10 @@ export function VehicleComparison() {
                         </p>
                     </div>
 
-                    <button className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors">
+                    {/* <button className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors">
                         <Share2 className="w-4 h-4" />
                         <span className="text-sm font-medium">Compartir Comparación</span>
-                    </button>
+                    </button> */}
                 </div>
 
                 {/* Main Comparison Area */}
