@@ -304,10 +304,9 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
                 } : undefined,
                 colors: trim.colors?.map(c => ({
                     name: c.name,
-                    hex_code: c.hex_code.startsWith('#') ? c.hex_code : `#${c.hex_code}`,
+                    hex_code: c.hex_code.replace('#', ''),
                     type: c.type,
                     image_url: c.image_url,
-                    publicId: c.public_id || 'legacy',
                 })),
                 images: trim.images?.map(img => ({
                     url: img.url,
@@ -380,10 +379,9 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
                     dbId: c.dbId ? Number(c.dbId) : undefined,
                     _deleted: c._deleted,
                     name: c.name,
-                    hex_code: c.hex_code.startsWith('#') ? c.hex_code : `#${c.hex_code}`,
+                    hex_code: c.hex_code.replace('#', ''),
                     type: c.type,
                     image_url: c.image_url,
-                    publicId: c.public_id || 'legacy',
                 })),
                 images: trim.images?.map(img => ({
                     dbId: img.dbId ? Number(img.dbId) : undefined,
