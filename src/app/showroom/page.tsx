@@ -14,7 +14,7 @@
 
 import dynamic from 'next/dynamic';
 import { useRef, useState, useCallback } from 'react';
-import { HelpCircle, Share2, RefreshCw } from 'lucide-react';
+import { HelpCircle, Share2, RefreshCw, Sun, Moon } from 'lucide-react';
 
 import { Navbar } from '@/components/Navbar';
 import { ModelSelector, TrimSelector, ExteriorColorSelector, InteriorColorSelector } from '@/components/showroom/ShowroomSelectors';
@@ -24,6 +24,7 @@ import { ViewerLoader } from '@/components/showroom/ViewerLoader';
 import { BottomSheet } from '@/components/showroom/BottomSheet';
 import { useShowroomData } from '@/components/showroom/useShowroomData';
 import type { ThreeViewerHandle } from '@/components/showroom/ThreeViewer';
+import type { LightMode } from '@/components/showroom/ThreeViewer';
 
 // ─── Lazy-load Three.js viewer (client-only, no SSR) ─────────────────────────
 
@@ -49,6 +50,9 @@ export default function ShowroomPage() {
     const [modelLoaded, setModelLoaded] = useState(false);
     const [viewerReady, setViewerReady] = useState(false);
 
+    // Lighting controls
+    const [lightMode, setLightMode] = useState<LightMode>('day');
+
     // Showroom data & state
     const {
         models,
@@ -73,6 +77,12 @@ export default function ShowroomPage() {
 
     // Derived accent color (from selected exterior color or fallback to emerald)
     const accentColor = selectedExtColor?.hexCode ?? '#10B981';
+    const bodyColor = selectedExtColor?.hexCode ?? null;
+
+    // ── Lighting toggle handlers ────────────────────────────────────────────────
+    const handleToggleLightMode = useCallback(() => {
+        setLightMode((prev) => (prev === 'day' ? 'night' : 'day'));
+    }, []);
 
     // ── 3D model load handlers ─────────────────────────────────────────────────
     const handleProgress = useCallback((pct: number) => {
@@ -105,6 +115,23 @@ export default function ShowroomPage() {
     // Show loader when: loading models initially, or a 3D model is being fetched/rendered
     const showLoader = isLoadingModels || isLoading3d || (!!model3dUrl && !modelLoaded);
     const loaderProgress = isLoadingModels ? 15 : isLoading3d ? 40 : loadProgress;
+
+    // ── Lighting control buttons (shared between mobile and desktop) ───────────
+    const LightingControls = (
+        <>
+            <button
+                onClick={handleToggleLightMode}
+                aria-label={lightMode === 'day' ? 'Cambiar a modo noche' : 'Cambiar a modo día'}
+                title={lightMode === 'day' ? 'Modo noche' : 'Modo día'}
+                className="w-10 h-10 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+            >
+                {lightMode === 'day'
+                    ? <Moon className="w-4 h-4" />
+                    : <Sun className="w-4 h-4 text-amber-400" />
+                }
+            </button>
+        </>
+    );
 
     // ── Shared configurator content (used in both desktop panel & mobile sheet) ─
     const ConfiguratorContent = (
@@ -189,19 +216,31 @@ export default function ShowroomPage() {
                         onLoadProgress={handleProgress}
                         onLoaded={handleLoaded}
                         accentColor={accentColor}
+                        lightMode={lightMode}
+                        bodyColor={bodyColor}
                     />
 
                     {/* Loading overlay */}
                     <ViewerLoader progress={loaderProgress} visible={showLoader} />
 
-                    {/* Reset camera button */}
-                    <div className="absolute bottom-4 right-4 z-20 flex gap-2">
+                    {/* Controls — bottom right (reset + lighting) */}
+                    <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
                         <button
                             onClick={handleResetCamera}
                             aria-label="Resetear cámara"
                             className="w-9 h-9 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all"
                         >
                             <RefreshCw className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                            onClick={handleToggleLightMode}
+                            aria-label={lightMode === 'day' ? 'Modo noche' : 'Modo día'}
+                            className="w-9 h-9 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all"
+                        >
+                            {lightMode === 'day'
+                                ? <Moon className="w-3.5 h-3.5" />
+                                : <Sun className="w-3.5 h-3.5 text-amber-400" />
+                            }
                         </button>
                         <button aria-label="Ayuda" className="w-9 h-9 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all">
                             <HelpCircle className="w-3.5 h-3.5" />
@@ -278,6 +317,8 @@ export default function ShowroomPage() {
                             onLoadProgress={handleProgress}
                             onLoaded={handleLoaded}
                             accentColor={accentColor}
+                            lightMode={lightMode}
+                            bodyColor={bodyColor}
                         />
                         <ViewerLoader progress={loaderProgress} visible={showLoader} />
                     </div>
@@ -302,6 +343,7 @@ export default function ShowroomPage() {
                         >
                             <RefreshCw className="w-4 h-4" />
                         </button>
+                        {LightingControls}
                         <button aria-label="Ayuda" className="w-10 h-10 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
                             <HelpCircle className="w-4 h-4" />
                         </button>
@@ -320,9 +362,9 @@ export default function ShowroomPage() {
                 </div>
 
                 {/* RIGHT — Configurator Panel (30%) */}
-                <div className="flex-[3] h-[100dvh] flex flex-col bg-[#0A110F] border-l border-white/5 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-20 overflow-hidden">
+                <div className="flex-[3] h-full flex flex-col bg-[#0A110F] border-l border-white/5 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-20 overflow-hidden">
                     {/* Title Bar - Fixed */}
-                    <div className="shrink-0 p-6 border-b border-white/5 bg-[#0f172a]/20 backdrop-blur-md">
+                    <div className="shrink-0 px-6 py-5 border-b border-white/5 bg-[#0f172a]/20 backdrop-blur-md">
                         <p className="text-[10px] font-bold tracking-[0.25em] text-emerald-500/80 mb-2">
                             CONFIGURADOR VIRTUAL
                         </p>
@@ -347,7 +389,7 @@ export default function ShowroomPage() {
                     </div>
 
                     {/* Scrollable content */}
-                    <div className="flex-1 overflow-y-auto px-8 py-6 space-y-7">
+                    <div className="flex-1 overflow-y-auto min-h-0 px-6 py-6 space-y-7">
                         <ModelSelector
                             models={models}
                             selectedModel={selectedModel}
@@ -372,8 +414,10 @@ export default function ShowroomPage() {
                         />
                     </div>
 
-                    {/* CTA Footer */}
-                    <CTAFooter quoteParams={getQuoteParams()} trim={selectedTrim} />
+                    {/* CTA Footer — always visible, never cut off */}
+                    <div className="shrink-0 px-6 pb-6 border-t border-white/5 bg-[#0A110F]">
+                        <CTAFooter quoteParams={getQuoteParams()} trim={selectedTrim} />
+                    </div>
                 </div>
             </div>
         </>

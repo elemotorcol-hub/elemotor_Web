@@ -105,7 +105,7 @@ export function CTAFooter({ quoteParams, trim }: CTAFooterProps) {
     const cotizarHref = `/cotizar?${quoteParams.toString()}`;
 
     return (
-            <div className="shrink-0 pt-6 mt-4 border-t border-white/5 space-y-4">
+        <div className="space-y-4 pt-5">
             <div className="flex items-end justify-between">
                 <div>
                     <p className="text-[9px] tracking-[0.2em] text-slate-500 font-semibold">

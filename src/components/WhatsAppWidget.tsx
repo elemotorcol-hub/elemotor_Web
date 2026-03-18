@@ -6,8 +6,8 @@ import { usePathname } from 'next/navigation';
 export function WhatsAppWidget() {
     const pathname = usePathname();
 
-    // No mostrar el widget en las rutas de admin
-    if (pathname?.startsWith('/admin')) {
+    // No mostrar el widget en admin ni en el showroom 3D
+    if (pathname?.startsWith('/admin') || pathname?.startsWith('/showroom')) {
         return null;
     }
 

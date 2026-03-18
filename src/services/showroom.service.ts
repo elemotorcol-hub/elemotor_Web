@@ -65,7 +65,24 @@ export async function fetchShowroomModelBySlug(slug: string, options?: { signal?
         throw new Error(`Failed to fetch model "${slug}": ${res.status} ${res.statusText}`);
     }
 
-    return res.json() as Promise<ShowroomModel>;
+    const model: ShowroomModel = await res.json();
+
+    // Normalize hexCode: backend stores colors without '#' (e.g. "ff0000").
+    // Immutable approach: Avoid mutating the raw fetch response for safety.
+    const normalizedModel: ShowroomModel = {
+        ...model,
+        trims: model.trims?.map(trim => ({
+            ...trim,
+            colors: trim.colors?.map(color => {
+                if (color.hexCode && !color.hexCode.startsWith('#')) {
+                    return { ...color, hexCode: `#${color.hexCode}` };
+                }
+                return color;
+            })
+        }))
+    };
+
+    return normalizedModel;
 }
 
 // ─── Fetch 3D model by trimId ─────────────────────────────────────────────────
