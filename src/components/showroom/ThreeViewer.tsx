@@ -152,6 +152,48 @@ function normalizeAndPlaceModel(model: THREE.Object3D): {
 // Si color es null (usuario deselecciona), se restaura al gris neutro original.
 const BODY_CAR_ORIGINAL_COLOR = new THREE.Color(0x888888); // gris neutro como fallback
 
+// Patrones de nombres de materiales que corresponden a la carrocería.
+// Soporta múltiples convenciones de artistas 3D distintos.
+// Se chequea tanto el nombre completo como el último segmento (después de ':'),
+// ya que algunos modelos usan namespaces tipo "model:model:CP.006".
+const BODY_MATERIAL_PREFIXES = ['carpaint', 'body_car', 'body', 'paint', 'carbody', 'car_paint', 'cp'];
+
+function isBodyMaterial(name: string): boolean {
+    // Chequea si un segmento de nombre coincide con algún prefijo conocido
+    const matchesPrefix = (segment: string) => {
+        const lower = segment.toLowerCase();
+        return BODY_MATERIAL_PREFIXES.some(prefix =>
+            lower === prefix || lower.startsWith(prefix + '.') || lower.startsWith(prefix + '_')
+        );
+    };
+
+    // Chequea el nombre completo y también el último segmento tras ':'
+    const lastSegment = name.includes(':') ? name.split(':').pop()! : name;
+    return matchesPrefix(name) || matchesPrefix(lastSegment);
+}
+
+/** Imprime en consola los materiales del modelo y cuáles se detectaron como carrocería */
+function debugMaterials(root: THREE.Object3D): void {
+    const all: string[] = [];
+    const body: string[] = [];
+    root.traverse((child) => {
+        const mesh = child as THREE.Mesh;
+        if (!mesh.isMesh || !mesh.material) return;
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        mats.forEach(m => {
+            if (!m?.name || all.includes(m.name)) return;
+            all.push(m.name);
+            if (isBodyMaterial(m.name)) body.push(m.name);
+        });
+    });
+    console.log('[ThreeViewer] Todos los materiales:', all);
+    if (body.length > 0) {
+        console.log('[ThreeViewer] ✅ Carrocería detectada:', body);
+    } else {
+        console.warn('[ThreeViewer] ⚠️ No se detectó material de carrocería. Agrega el nombre a BODY_MATERIAL_PREFIXES.');
+    }
+}
+
 function applyBodyColor(root: THREE.Object3D, color: string | null): void {
     root.traverse((child) => {
         const mesh = child as THREE.Mesh;
@@ -159,18 +201,17 @@ function applyBodyColor(root: THREE.Object3D, color: string | null): void {
 
         const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
 
-        // Solo actuamos en los meshes que tienen el material BODY_CAR
-        const hasBodyCar = mats.some(m => m && m.name === 'BODY_CAR');
-        if (!hasBodyCar) return;
+        const hasBodyMat = mats.some(m => m && isBodyMaterial(m.name));
+        if (!hasBodyMat) return;
 
         const updated = mats.map((mat) => {
-            if (!mat || mat.name !== 'BODY_CAR') return mat;
+            if (!mat || !isBodyMaterial(mat.name)) return mat;
 
             // Opción PRO: crear material nuevo con propiedades PBR de pintura automotriz.
             // Esto garantiza que el color HEX sea fiel y no quede distorsionado por
             // las propiedades originales del artista 3D.
             const paintMat = new THREE.MeshStandardMaterial({
-                name:             'BODY_CAR',
+                name:             mat.name,
                 color:            color ? new THREE.Color(color) : BODY_CAR_ORIGINAL_COLOR,
                 metalness:        0.35,   // ligero brillo lacado — no cromado, no mate
                 roughness:        0.30,   // superficie suavemente reflectante
@@ -483,6 +524,8 @@ const ThreeViewer = forwardRef<ThreeViewerHandle, ThreeViewerProps>(
                     group.add(model);
                     scene.add(group);
                     modelGroupRef.current = group;
+
+                    debugMaterials(model);
 
                     // Apply body color if already set when model loads
                     if (bodyColor) {
