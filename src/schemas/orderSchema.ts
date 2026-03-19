@@ -1,11 +1,13 @@
 import { z } from 'zod';
 
 export const orderStatusSchema = z.enum([
-    'Fabricación',
-    'En Puerto',
-    'En Tránsito',
-    'Aduanas',
-    'Listo para Entrega'
+    'confirmed',
+    'port_origin',
+    'transit',
+    'customs',
+    'nationalization',
+    'ready',
+    'delivered'
 ]);
 
 export const orderHistorySchema = z.object({
@@ -26,7 +28,7 @@ export const orderSchema = z.object({
     estimatedDelivery: z.string().optional(),
     vin: z.string().optional(),
     notes: z.string().optional(),
-    history: z.array(orderHistorySchema).optional()
+    statusHistory: z.array(orderHistorySchema).optional()
 });
 
 export type OrderFormValues = z.infer<typeof orderSchema>;

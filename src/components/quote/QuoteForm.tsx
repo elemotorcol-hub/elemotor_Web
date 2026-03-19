@@ -1,18 +1,15 @@
-'use client';
-
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Lock, ArrowRight, MessageCircle, Phone, Mail } from 'lucide-react';
-import { VehicleInfo } from '@/mocks/vehiclesData';
-
-import { submitQuoteAction } from '../../actions/quote'; // Server action para enviar leads
+import { VehicleModel } from '@/types/inventory';
+import { submitQuoteAction } from '../../actions/quote';
 
 const quoteSchema = z.object({
     fullName: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
     email: z.string().email('Ingresa un correo válido').min(1, 'Requerido'),
-    phone: z.string().regex(/^\d{10,}$/, 'Debe contener solo números (mínimo 10 dígitos)'),
+    phone: z.string().regex(/^\d{7,}$/, 'Debe contener al menos 7 números'),
     city: z.string().min(1, 'Selecciona una ciudad'),
     model_id: z.string().min(1, 'Selecciona un modelo'),
     budget_range: z.string().min(1, 'Selecciona un presupuesto'),
@@ -26,7 +23,7 @@ const inputClasses = "w-full bg-[#121c19] border border-white/5 rounded-xl px-4 
 const labelClasses = "text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block";
 
 interface Props {
-    vehicles: VehicleInfo[];
+    vehicles: VehicleModel[];
     onModelChange: (modelId: string) => void;
 }
 
@@ -54,22 +51,42 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
 
     const onSubmit = async (data: QuoteFormValues) => {
         try {
-            const formData = new FormData();
-            Object.entries(data).forEach(([key, value]) => {
-                if (value !== undefined) formData.append(key, value as string);
-            });
+            // Mapping frontend fields to backend DTO
+            const BUDGET_MAPPING: Record<string, number> = {
+                '100-150': 150000000,
+                '150-200': 200000000,
+                '200-250': 250000000,
+                '250+': 300000000
+            };
 
-            const result = await submitQuoteAction(formData);
+            const modelId = parseInt(data.model_id);
+            const budgetRangeValue = BUDGET_MAPPING[data.budget_range];
+
+            const backendData: any = {
+                name: data.fullName,
+                email: data.email,
+                phone: data.phone ? `+57${data.phone}` : undefined,
+                city: data.city || undefined,
+                preferredChannel: data.preferred_channel,
+                message: data.message || undefined,
+                source: 'web'
+            };
+
+            // Only add optional numeric fields if they are valid
+            if (!isNaN(modelId)) backendData.modelId = modelId;
+            if (budgetRangeValue) backendData.budgetRange = budgetRangeValue;
+
+            const result = await submitQuoteAction(backendData);
 
             if (result.success) {
-                alert('¡Cotización enviada con éxito! Un asesor te contactará.');
-                // Aquí se podría usar un router.push('/thank-you') o limpiar form
+                alert('¡Cotización enviada con éxito! Un asesor te contactará pronto.');
+                // En un caso real aquí se podría redirigir o limpiar el formulario
             } else {
                 alert(result.error || 'Ocurrió un error al enviar tu cotización.');
             }
         } catch (error) {
-            console.error(error);
-            alert('Error inesperado de red.');
+            console.error('Error submitting quote:', error);
+            alert('Error inesperado de red al conectar con el servidor.');
         }
     };
 
@@ -141,10 +158,10 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
                         <div className="relative">
                             <select {...register('budget_range')} className={`${inputClasses} appearance-none cursor-pointer`}>
                                 <option value="" disabled>Selecciona tu presupuesto</option>
-                                <option value="100-150">100M - 150M COP</option>
-                                <option value="150-200">150M - 200M COP</option>
-                                <option value="200-250">200M - 250M COP</option>
-                                <option value="250+">Más de 250M COP</option>
+                                <option value="125000000">100M - 150M COP</option>
+                                <option value="175000000">150M - 200M COP</option>
+                                <option value="225000000">200M - 250M COP</option>
+                                <option value="300000000">Más de 250M COP</option>
                             </select>
                             <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>

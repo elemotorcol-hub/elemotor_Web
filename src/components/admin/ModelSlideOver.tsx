@@ -13,6 +13,8 @@ import { mediaService } from '@/services/media.service';
 import GeneralTab from './forms/GeneralTab';
 import TrimsAndSpecsTab from './forms/TrimsAndSpecsTab';
 import GalleryTab from './forms/GalleryTab';
+import { sanitizeObject } from '@/lib/utils/sanitizationUtils';
+import { HoneyPot } from '@/components/common/HoneyPot';
 
 interface ModelSlideOverProps {
     isOpen: boolean;
@@ -412,15 +414,19 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
     const onSubmit = async (data: VehicleModelFormData) => {
         setIsSubmitting(true);
         setErrorMsg(null);
+        
         try {
+            // Level 2 Security: Sanitization
+            const sanitizedData = sanitizeObject(data);
+
             if (onSave) {
-                await new Promise(resolve => setTimeout(resolve, 800)); // Simulación de carga local
-                onSave(data);
+                await new Promise(resolve => setTimeout(resolve, 800));
+                onSave(sanitizedData);
             } else {
                 if (mode === 'add') {
-                    await handleCreate(data);
+                    await handleCreate(sanitizedData);
                 } else {
-                    await handleEdit(data);
+                    await handleEdit(sanitizedData);
                 }
             }
             onClose();
@@ -465,6 +471,7 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
             {/* Slide-over Panel */}
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit(onSubmit as any, onError)} className="fixed inset-y-0 right-0 z-50 w-full md:w-[65vw] max-w-[1200px] bg-[#0A110F] shadow-2xl border-l border-slate-800/60 flex flex-col transform transition-transform duration-300 ease-in-out translate-x-0">
+                    <HoneyPot />
 
                     {/* Header */}
                     <div className="shrink-0 px-8 py-6 border-b border-white/5 bg-[#0A110F] flex items-center justify-between">

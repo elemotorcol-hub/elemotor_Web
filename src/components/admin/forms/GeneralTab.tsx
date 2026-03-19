@@ -99,8 +99,11 @@ export default function GeneralTab({ mode }: { mode?: 'add' | 'edit' }) {
                     <label className="text-[13px] font-bold text-slate-300">Año</label>
                     <input
                         type="number"
-                        {...register('year')}
+                        {...register('year', { valueAsNumber: true })}
                         placeholder="2025"
+                        onKeyDown={(e) => {
+                            if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+                        }}
                         className={`w-full bg-[#0f172a]/40 border ${errors.year ? 'border-red-500' : 'border-[#1e293b]'} rounded-lg px-4 py-3 text-[14px] font-medium text-white placeholder-slate-600 focus:outline-none focus:border-[#10B981] transition-all`}
                     />
                     {errors.year && <span className="text-red-500 text-xs mt-1">{errors.year.message}</span>}
@@ -112,8 +115,11 @@ export default function GeneralTab({ mode }: { mode?: 'add' | 'edit' }) {
                     <label className="text-[13px] font-bold text-[#10B981]">Precio Base (USD)</label>
                     <input
                         type="number"
-                        {...register('basePrice')}
+                        {...register('basePrice', { valueAsNumber: true })}
                         placeholder="e.g. 45000"
+                        onKeyDown={(e) => {
+                            if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+                        }}
                         className={`w-full bg-[#0f172a]/40 border ${errors.basePrice ? 'border-red-500' : 'border-[#1e293b]'} rounded-lg px-4 py-3 text-[14px] font-medium text-white placeholder-slate-600 focus:outline-none focus:border-[#10B981] transition-all`}
                     />
                     {errors.basePrice && <span className="text-red-500 text-xs mt-1">{errors.basePrice.message}</span>}
