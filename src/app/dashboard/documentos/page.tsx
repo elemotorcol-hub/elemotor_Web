@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
     Search, Plus, FileText, Shield, 
     CreditCard, BookOpen, MoreVertical, 
@@ -10,23 +10,93 @@ import {
 } from 'lucide-react';
 
 import { ClientDocument } from '@/types/dashboard';
-import { MOCK_DOCUMENTS_DATA as mockDocuments } from '@/mocks/clientPortalData';
 import { useRouter } from 'next/navigation';
+import { documentService, DocumentType, Document as ApiDocument } from '@/services/document.service';
+import { orderService } from '@/services/order.service';
 
 const TABS = ['Todos', 'Legales', 'Mantenimiento', 'Facturas'] as const;
 type TabType = typeof TABS[number];
+
+/**
+ * Mapping backend types to frontend categories/icons
+ */
+const mapApiDocToClientDoc = (doc: ApiDocument): ClientDocument => {
+    let category: ClientDocument['category'] = 'Facturas';
+    let iconType: ClientDocument['iconType'] = 'receipt';
+    let colorTheme = 'text-emerald-400 bg-emerald-400/10';
+
+    if (['soat', 'import_cert', 'property_card'].includes(doc.type)) {
+        category = 'Legales';
+        iconType = 'shield-check';
+        colorTheme = 'text-blue-400 bg-blue-400/10';
+    } else if (doc.type === 'manual') {
+        category = 'Mantenimiento';
+        iconType = 'book';
+        colorTheme = 'text-amber-400 bg-amber-400/10';
+    } else if (doc.type === 'invoice') {
+        category = 'Facturas';
+        iconType = 'receipt';
+        colorTheme = 'text-emerald-400 bg-emerald-400/10';
+    }
+
+    return {
+        id: doc.id.toString(),
+        title: doc.name,
+        subtitle: doc.type.toUpperCase().replace('_', ' '),
+        uploadDate: new Date(doc.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+        iconType,
+        colorTheme,
+        category,
+        isActive: true,
+        fileUrl: doc.fileUrl
+    };
+};
 
 export default function DocumentosPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<TabType>('Todos');
-    const [documents, setDocuments] = useState<ClientDocument[]>(mockDocuments);
+    const [documents, setDocuments] = useState<ClientDocument[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [myOrders, setMyOrders] = useState<any[]>([]);
     
     // Upload Modal State
     const [isUploadOpen, setIsUploadOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [uploadType, setUploadType] = useState<DocumentType>(DocumentType.OTHER);
+    const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+    
+    // Preview Modal State
+    const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string } | null>(null);
+
+    // Initial Data Fetch
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                setIsLoading(true);
+                const [docsData, ordersData] = await Promise.all([
+                    documentService.fetchMyDocuments(),
+                    orderService.fetchMyOrders()
+                ]);
+
+                setDocuments(docsData.map(mapApiDocToClientDoc));
+                setMyOrders(ordersData.data || []);
+                
+                // Pre-select first order if exists
+                if (ordersData.data?.length > 0) {
+                    setSelectedOrderId(ordersData.data[0].id);
+                }
+            } catch (err) {
+                console.error("Error loading documents page data:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadData();
+    }, []);
 
     const filteredDocuments = useMemo(() => {
         return documents.filter(doc => {
@@ -56,39 +126,87 @@ export default function DocumentosPage() {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setSelectedFile(e.target.files[0]);
+            const file = e.target.files[0];
+            if (file.type !== 'application/pdf') {
+                alert("Por favor, selecciona solo archivos en formato PDF.");
+                return;
+            }
+            setSelectedFile(file);
         }
     };
 
-    const handleUpload = (e: React.FormEvent) => {
+    const handlePreview = async (docId: string, title: string, fileUrl?: string) => {
+        if (fileUrl) {
+            setPreviewDoc({ url: fileUrl, title });
+            return;
+        }
+
+        try {
+            const { url } = await documentService.getDownloadUrl(docId);
+            setPreviewDoc({ url, title });
+        } catch (err) {
+            console.error("Error getting preview URL:", err);
+            alert("Error al intentar previsualizar el documento.");
+        }
+    };
+
+    const handleDownload = async (docId: string, fileUrl?: string) => {
+        try {
+            const url = fileUrl || (await documentService.getDownloadUrl(docId)).url;
+            
+            // Create a temporary link to force download
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', '');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (err) {
+            console.error("Error getting download URL:", err);
+            alert("Error al intentar descargar el documento.");
+        }
+    };
+
+    const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedFile) return;
 
+        // Fallback: Si por alguna razón selectedOrderId es null pero tenemos pedidos, tomamos el primero
+        let finalOrderId = selectedOrderId;
+        if (!finalOrderId && myOrders.length > 0) {
+            finalOrderId = myOrders[0].id;
+        }
+
+        if (!finalOrderId) {
+            alert("Para poder subir un documento, es necesario que tengas al menos un vehículo o pedido registrado en tu cuenta.");
+            return;
+        }
+
         setIsUploading(true);
         
-        // Simulating upload process
-        setTimeout(() => {
-            const newDoc: ClientDocument = {
-                id: Math.random().toString(36).substr(2, 9),
-                title: selectedFile.name.split('.')[0],
-                subtitle: `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB - ${selectedFile.type.split('/')[1].toUpperCase()}`,
-                uploadDate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
-                iconType: 'receipt',
-                colorTheme: 'text-emerald-400 bg-emerald-400/10',
-                category: 'Facturas', // Default category for new uploads
-                isActive: true
-            };
+        try {
+            const newApiDoc = await documentService.uploadDocument({
+                file: selectedFile,
+                orderId: finalOrderId,
+                type: uploadType,
+                name: selectedFile.name.split('.')[0]
+            });
 
+            const newDoc = mapApiDocToClientDoc(newApiDoc);
             setDocuments(prev => [newDoc, ...prev]);
-            setIsUploading(false);
             setUploadSuccess(true);
             setSelectedFile(null);
 
             setTimeout(() => {
                 setIsUploadOpen(false);
                 setUploadSuccess(false);
-            }, 2000);
-        }, 2000);
+            }, 1500);
+        } catch (err: any) {
+            console.error("Error uploading document:", err);
+            alert(`Error al subir documento: ${err.message}`);
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     return (
@@ -152,89 +270,96 @@ export default function DocumentosPage() {
             </div>
 
             {/* Grid de Documentos */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                
-                {/* Upload Card */}
-                <button 
-                    onClick={() => setIsUploadOpen(true)}
-                    className="h-[280px] rounded-[32px] border-2 border-dashed border-[#10B981]/20 bg-[#10B981]/[0.02] hover:bg-[#10B981]/[0.05] hover:border-[#10B981]/40 transition-all duration-500 flex flex-col items-center justify-center gap-6 group relative overflow-hidden"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative">
-                        <div className="w-16 h-16 rounded-full bg-[#10B981] flex items-center justify-center text-[#0A110F] shadow-[0_10px_30px_rgba(16,185,129,0.3)] group-hover:scale-110 group-hover:rotate-90 transition-all duration-500">
-                            <Plus className="w-8 h-8" />
-                        </div>
-                    </div>
-                    <div className="text-center relative z-10">
-                        <h4 className="text-white font-black text-sm mb-1 uppercase tracking-widest">Subir Documento</h4>
-                        <p className="text-slate-500 text-[10px] font-bold px-8">EXPEDIENTES DIGITALES (PDF, JPG, PNG)</p>
-                    </div>
-                </button>
-
-                {/* Document Cards */}
-                {filteredDocuments.map((doc) => (
-                    <div 
-                        key={doc.id} 
-                        className="h-[280px] bg-[#15201D] border border-white/5 rounded-[32px] p-8 flex flex-col hover:border-[#10B981]/30 hover:bg-white/[0.01] transition-all duration-500 group relative overflow-hidden shadow-xl"
+            {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="h-[280px] bg-[#15201D] border border-white/5 rounded-[32px] animate-pulse" />
+                    ))}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    
+                    {/* Upload Card */}
+                    <button 
+                        onClick={() => setIsUploadOpen(true)}
+                        className="h-[280px] rounded-[32px] border-2 border-dashed border-[#10B981]/20 bg-[#10B981]/[0.02] hover:bg-[#10B981]/[0.05] hover:border-[#10B981]/40 transition-all duration-500 flex flex-col items-center justify-center gap-6 group relative overflow-hidden"
                     >
-                        {/* Decorative Background */}
-                        <div className={`absolute -top-10 -right-10 w-32 h-32 blur-[60px] opacity-20 group-hover:opacity-40 transition-opacity ${doc.colorTheme.split(' ')[0]}`} />
-
-                        {/* Card Header */}
-                        <div className="flex items-start justify-between mb-8 relative z-10">
-                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${doc.colorTheme}`}>
-                                {renderIcon(doc.iconType, doc.colorTheme)}
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative">
+                            <div className="w-16 h-16 rounded-full bg-[#10B981] flex items-center justify-center text-[#0A110F] shadow-[0_10px_30px_rgba(16,185,129,0.3)] group-hover:scale-110 group-hover:rotate-90 transition-all duration-500">
+                                <Plus className="w-8 h-8" />
                             </div>
-                            <button className="text-slate-700 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
-                                <MoreVertical className="w-5 h-5" />
-                            </button>
                         </div>
+                        <div className="text-center relative z-10">
+                            <h4 className="text-white font-black text-sm mb-1 uppercase tracking-widest">Subir Documento</h4>
+                            <p className="text-slate-500 text-[10px] font-bold px-8 uppercase">Expedientes PDF</p>
+                        </div>
+                    </button>
 
-                        {/* Card Body */}
-                        <div className="flex-1 relative z-10">
-                            <h4 className="text-xl font-black text-white mb-2 tracking-tighter group-hover:text-[#10B981] transition-colors">
-                                {doc.title}
-                            </h4>
-                            <div className="flex items-center gap-2">
-                                {doc.isActive && (
-                                    <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-[#10B981] text-[9px] font-black uppercase tracking-widest">
-                                        <Check className="w-2.5 h-2.5" />
-                                        Vigente
-                                    </span>
-                                )}
-                                {doc.warningMessage ? (
-                                    <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-[9px] font-black uppercase tracking-widest">
-                                        <AlertCircle className="w-2.5 h-2.5" />
-                                        {doc.warningMessage}
-                                    </span>
-                                ) : (
+                    {/* Document Cards */}
+                    {filteredDocuments.map((doc) => (
+                        <div 
+                            key={doc.id} 
+                            className="h-[280px] bg-[#15201D] border border-white/5 rounded-[32px] p-8 flex flex-col hover:border-[#10B981]/30 hover:bg-white/[0.01] transition-all duration-500 group relative overflow-hidden shadow-xl"
+                        >
+                            {/* Decorative Background */}
+                            <div className={`absolute -top-10 -right-10 w-32 h-32 blur-[60px] opacity-20 group-hover:opacity-40 transition-opacity ${doc.colorTheme.split(' ')[0]}`} />
+
+                            {/* Card Header */}
+                            <div className="flex items-start justify-between mb-8 relative z-10">
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${doc.colorTheme}`}>
+                                    {renderIcon(doc.iconType, doc.colorTheme)}
+                                </div>
+                                <button className="text-slate-700 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
+                                    <MoreVertical className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Card Body */}
+                            <div className="flex-1 relative z-10">
+                                <h4 className="text-xl font-black text-white mb-2 tracking-tighter group-hover:text-[#10B981] transition-colors truncate">
+                                    {doc.title}
+                                </h4>
+                                <div className="flex items-center gap-2">
+                                    {doc.isActive && (
+                                        <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-[#10B981] text-[9px] font-black uppercase tracking-widest">
+                                            <Check className="w-2.5 h-2.5" />
+                                            Vigente
+                                        </span>
+                                    )}
                                     <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest truncate">{doc.subtitle}</span>
-                                )}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Card Footer */}
-                        <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5 relative z-10">
-                            <div className="flex flex-col gap-0.5">
-                                <span className="text-slate-600 text-[8px] font-black tracking-[0.2em] uppercase">FECHA</span>
-                                <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{doc.uploadDate}</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                                <button className="w-10 h-10 rounded-xl bg-[#0A110F] border border-white/5 text-slate-500 hover:text-[#10B981] hover:border-[#10B981]/30 transition-all flex items-center justify-center group/btn shadow-inner">
-                                    <Eye className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                                </button>
-                                <button className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-500 hover:text-emerald-400 hover:border-emerald-500/30 transition-all flex items-center justify-center group/btn shadow-inner">
-                                    <Download className="w-4 h-4 group-hover/btn:translate-y-0.5 transition-transform" />
-                                </button>
+                            {/* Card Footer */}
+                            <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5 relative z-10">
+                                <div className="flex flex-col gap-0.5">
+                                    <span className="text-slate-600 text-[8px] font-black tracking-[0.2em] uppercase">FECHA</span>
+                                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{doc.uploadDate}</span>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                    <button 
+                                        onClick={() => handlePreview(doc.id, doc.title, doc.fileUrl)}
+                                        className="w-10 h-10 rounded-xl bg-[#0A110F] border border-white/5 text-slate-500 hover:text-[#10B981] hover:border-[#10B981]/30 transition-all flex items-center justify-center group/btn shadow-inner"
+                                    >
+                                        <Eye className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                                    </button>
+                                    <button 
+                                        onClick={() => handleDownload(doc.id, doc.fileUrl)}
+                                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-500 hover:text-emerald-400 hover:border-emerald-500/30 transition-all flex items-center justify-center group/btn shadow-inner"
+                                    >
+                                        <Download className="w-4 h-4 group-hover/btn:translate-y-0.5 transition-transform" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
 
             {/* Empty State */}
-            {filteredDocuments.length === 0 && (
+            {!isLoading && filteredDocuments.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20 bg-[#15201D]/50 border border-white/5 border-dashed rounded-[40px] text-center px-10">
                     <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
                         <Search className="w-10 h-10 text-slate-600" />
@@ -261,10 +386,10 @@ export default function DocumentosPage() {
                     <div className="bg-[#15201D] border border-white/10 w-full max-w-xl rounded-[40px] overflow-hidden relative shadow-2xl animate-in zoom-in-95 duration-300">
                         <div className="h-2 bg-gradient-to-r from-[#10B981] via-teal-500 to-[#10B981]" />
                         
-                        <div className="p-10">
+                        <div className="p-10 max-h-[90vh] overflow-y-auto no-scrollbar">
                             <button 
                                 onClick={() => !isUploading && setIsUploadOpen(false)}
-                                className="absolute top-8 right-8 p-2 rounded-full hover:bg-white/5 text-slate-500 hover:text-white transition-all"
+                                className="absolute top-8 right-8 p-2 rounded-full hover:bg-white/5 text-slate-500 hover:text-white transition-all shadow-lg bg-slate-900/50"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -276,13 +401,31 @@ export default function DocumentosPage() {
                                             <Upload className="w-10 h-10" />
                                         </div>
                                         <h2 className="text-3xl font-black text-white mb-2 tracking-tighter uppercase tracking-widest">Cargar <span className="text-[#10B981]">Expediente</span></h2>
-                                        <p className="text-slate-500 font-bold text-xs">ARCHIVOS HASTA 15MB (PDF, PNG, JPG)</p>
+                                        <p className="text-slate-500 font-bold text-xs uppercase">Solo archivos PDF (Máx 10MB)</p>
                                     </div>
 
-                                    <form onSubmit={handleUpload} className="space-y-8">
+                                    <form onSubmit={handleUpload} className="space-y-6">
+                                        {/* Tipo de Documento Selector */}
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Categoría Documental</label>
+                                            <select 
+                                                className="w-full bg-[#0A110F] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/50 transition-all appearance-none"
+                                                value={uploadType}
+                                                onChange={(e) => setUploadType(e.target.value as DocumentType)}
+                                                required
+                                            >
+                                                <option value={DocumentType.INVOICE}>Factura de Compra</option>
+                                                <option value={DocumentType.SOAT}>SOAT / Seguro</option>
+                                                <option value={DocumentType.PROPERTY_CARD}>Tarjeta de Propiedad</option>
+                                                <option value={DocumentType.IMPORT_CERT}>Certificado de Importación</option>
+                                                <option value={DocumentType.MANUAL}>Manual de Usuario</option>
+                                                <option value={DocumentType.OTHER}>Otro Documento / General</option>
+                                            </select>
+                                        </div>
+
                                         <div 
                                             onClick={() => document.getElementById('file-upload')?.click()}
-                                            className={`border-2 border-dashed rounded-[32px] p-10 flex flex-col items-center justify-center text-center group cursor-pointer transition-all duration-300 ${
+                                            className={`border-2 border-dashed rounded-[32px] p-8 flex flex-col items-center justify-center text-center group cursor-pointer transition-all duration-300 ${
                                                 selectedFile 
                                                 ? 'border-[#10B981] bg-[#10B981]/5' 
                                                 : 'border-white/5 bg-[#0A110F]/50 hover:border-[#10B981]/30 hover:bg-white/[0.01]'
@@ -293,21 +436,21 @@ export default function DocumentosPage() {
                                                 type="file" 
                                                 className="hidden" 
                                                 onChange={handleFileChange}
-                                                accept=".pdf,.jpg,.jpeg,.png"
+                                                accept=".pdf"
                                             />
                                             {selectedFile ? (
                                                 <>
                                                     <div className="w-12 h-12 rounded-2xl bg-[#10B981]/20 flex items-center justify-center text-[#10B981] mb-4">
                                                         <FileText className="w-6 h-6" />
                                                     </div>
-                                                    <p className="text-white font-black text-sm mb-1 uppercase tracking-widest truncate max-w-xs">{selectedFile.name}</p>
-                                                    <p className="text-[#10B981] font-bold text-xs">¡ARCHIVO LISTO PARA CARGA!</p>
+                                                    <p className="text-white font-black text-sm mb-1 uppercase tracking-widest truncate max-w-[250px]">{selectedFile.name}</p>
+                                                    <p className="text-[#10B981] font-bold text-xs uppercase">¡Archivo listo!</p>
                                                 </>
                                             ) : (
                                                 <>
                                                     <Plus className="w-10 h-10 text-slate-700 mb-4 group-hover:text-[#10B981] transition-colors" />
-                                                    <p className="text-slate-400 font-bold text-sm mb-1 uppercase tracking-widest">Arrastra tus archivos aquí</p>
-                                                    <p className="text-slate-600 font-medium text-xs">O haz clic para explorar tu equipo</p>
+                                                    <p className="text-slate-400 font-bold text-sm mb-1 uppercase tracking-widest">Seleccionar Archivo</p>
+                                                    <p className="text-slate-600 font-medium text-xs uppercase">Únicamente Formato PDF</p>
                                                 </>
                                             )}
                                         </div>
@@ -315,12 +458,12 @@ export default function DocumentosPage() {
                                         <button 
                                             type="submit"
                                             disabled={isUploading || !selectedFile}
-                                            className="w-full bg-[#10B981] hover:bg-emerald-400 disabled:opacity-20 disabled:cursor-not-allowed text-[#0A110F] font-black py-5 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 shadow-[0_15px_40px_rgba(16,185,129,0.2)]"
+                                            className="w-full bg-[#10B981] hover:bg-emerald-400 disabled:opacity-20 disabled:cursor-not-allowed text-[#0A110F] font-black py-5 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 shadow-[0_15px_40px_rgba(16,185,129,0.2)] mt-4"
                                         >
                                             {isUploading ? (
                                                 <>
                                                     <RefreshCcw className="w-5 h-5 animate-spin" />
-                                                    PROCESANDO EXTRACCIÓN...
+                                                    PROCESANDO CARGA...
                                                 </>
                                             ) : (
                                                 <>
@@ -336,15 +479,56 @@ export default function DocumentosPage() {
                                     <div className="w-24 h-24 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(16,185,129,0.15)]">
                                         <Check className="w-12 h-12 text-[#10B981]" />
                                     </div>
-                                    <h2 className="text-3xl font-black text-white mb-4 tracking-tighter uppercase tracking-widest">Documento <span className="text-[#10B981]">Digitalizado</span></h2>
+                                    <h2 className="text-3xl font-black text-white mb-4 tracking-tighter uppercase">Documento <span className="text-[#10B981]">Cargado</span></h2>
                                     <p className="text-slate-400 font-medium max-w-sm mb-8">
-                                        El archivo ha sido indexado correctamente en tu historial. Estará disponible en breve.
+                                        El expediente ha sido indexado correctamente. Estará disponible en tu guantera digital.
                                     </p>
                                     <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
                                         <div className="h-full bg-[#10B981] animate-progress-modal" />
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Preview Modal */}
+            {previewDoc && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div 
+                        className="absolute inset-0 bg-[#0A110F]/90 backdrop-blur-xl animate-in fade-in duration-300" 
+                        onClick={() => setPreviewDoc(null)}
+                    />
+                    
+                    <div className="bg-[#15201D] border border-white/10 w-full max-w-5xl h-[85vh] rounded-[40px] overflow-hidden relative shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col">
+                        <div className="h-2 bg-gradient-to-r from-[#10B981] via-teal-500 to-[#10B981]" />
+                        
+                        <div className="p-6 flex items-center justify-between border-b border-white/5 bg-[#0A110F]/50">
+                            <div>
+                                <h3 className="text-white font-black uppercase tracking-widest text-sm">{previewDoc.title}</h3>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Vista Previa - Expediente Digital</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <button 
+                                    onClick={() => setPreviewDoc(null)}
+                                    className="p-3 rounded-xl hover:bg-white/5 text-slate-500 hover:text-white transition-all shadow-lg bg-slate-900/50"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 bg-white overflow-hidden">
+                            <iframe 
+                                src={`${previewDoc.url}#toolbar=0`} 
+                                className="w-full h-full border-none"
+                                title="Ficha Técnica PDF"
+                            />
+                        </div>
+
+                        <div className="p-6 bg-[#0A110F]/80 border-t border-white/5 flex justify-center">
+                            <p className="text-slate-500 text-[9px] font-black uppercase tracking-[0.2em]">© {new Date().getFullYear()} ELEMOTOR - SISTEMA DE GESTIÓN DOCUMENTAL</p>
                         </div>
                     </div>
                 </div>

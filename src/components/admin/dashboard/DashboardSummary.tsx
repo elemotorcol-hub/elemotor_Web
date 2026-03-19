@@ -1,5 +1,6 @@
 import React from 'react';
 import { Users, FileText, CheckCircle2, Car } from 'lucide-react';
+import { DashboardMetrics } from '@/services/dashboard.service';
 
 interface MetricCardProps {
     title: string;
@@ -37,13 +38,12 @@ function MetricCard({ title, value, trend, trendUp, icon: Icon, iconColor, iconB
     );
 }
 
-export default function DashboardSummary() {
-    // Simulated data according to /api/dashboard/summary criteria
+export default function DashboardSummary({ metrics }: { metrics?: DashboardMetrics }) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard 
                 title="Leads Hoy" 
-                value="24" 
+                value={metrics?.leadsToday ?? 0} 
                 trend="+12%" 
                 trendUp={true} 
                 icon={Users} 
@@ -52,7 +52,7 @@ export default function DashboardSummary() {
             />
             <MetricCard 
                 title="Leads Semana" 
-                value="156" 
+                value={metrics?.leadsWeekly ?? 0} 
                 trend="+8.5%" 
                 trendUp={true} 
                 icon={FileText} 
@@ -61,7 +61,7 @@ export default function DashboardSummary() {
             />
             <MetricCard 
                 title="Pedidos Activos" 
-                value="42" 
+                value={metrics?.activeOrders ?? 0} 
                 trend="-2.1%" 
                 trendUp={false} 
                 icon={CheckCircle2} 
@@ -70,7 +70,7 @@ export default function DashboardSummary() {
             />
             <MetricCard 
                 title="Vehículos en Stock" 
-                value="89" 
+                value={metrics?.vehiclesInStock ?? 0} 
                 trend="+5.4%" 
                 trendUp={true} 
                 icon={Car} 

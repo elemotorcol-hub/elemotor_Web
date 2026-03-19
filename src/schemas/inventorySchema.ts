@@ -88,17 +88,36 @@ export const trimSchema = z.object({
 export const vehicleModelSchema = z.object({
     id: z.string().optional(),
     brand_id: z.string().min(1, 'Selecciona una marca'),
-    name: z.string().min(2, 'Min 2 caracteres'),
-    slug: z.string().min(2, 'Slug requerido').regex(/^[a-z0-9-]+$/, 'Formato inválido (solo minúsculas y guiones)'),
+    name: z.string()
+        .min(2, 'El nombre debe tener al menos 2 caracteres')
+        .max(100, 'El nombre es demasiado largo'),
+    slug: z.string()
+        .min(2, 'Slug requerido')
+        .max(120, 'Slug demasiado largo')
+        .regex(/^[a-z0-9-]+$/, 'Formato inválido (solo minúsculas y guiones)'),
     type: z.enum(['suv', 'sedan', 'hatchback', 'pickup']),
-    year: z.coerce.number({ message: 'Debe ser un número' }).int('Año debe ser solo números enteros').min(1000, 'Año debe contener exactamente 4 números').max(9999, 'Año debe contener exactamente 4 números'),
-    description: z.string().optional(),
-    basePrice: z.coerce.number({ message: 'Debe ser un número' }).min(0, 'El precio no puede ser negativo').max(1000000000, 'Valor excesivamente grande'),
+    year: z.coerce.number({ message: 'Debe ser un número' })
+        .int('Año debe ser solo números enteros')
+        .min(1900, 'Año inválido')
+        .max(2100, 'Año fuera de rango'),
+    description: z.string()
+        .max(2000, 'La descripción no puede superar los 2000 caracteres')
+        .optional()
+        .or(z.literal('')),
+    basePrice: z.coerce.number({ message: 'Debe ser un número' })
+        .min(0, 'El precio no puede ser negativo')
+        .max(1000000000, 'Valor excesivamente grande'),
     featured: z.boolean().default(false),
     active: z.boolean().default(true),
     status: z.enum(['Active', 'Draft']),
     thumbnail: z.string().optional().or(z.literal('')),
     trims: z.array(trimSchema).default([]),
+
+    // Level 3 Detection
+    nickname: z.string().max(0, { message: 'Bot detected' }).optional(),
 });
+
+
+
 
 export type VehicleModelFormData = z.infer<typeof vehicleModelSchema>;

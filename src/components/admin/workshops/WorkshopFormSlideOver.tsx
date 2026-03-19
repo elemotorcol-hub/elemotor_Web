@@ -5,11 +5,14 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, Search, MapPin, Map as MapIcon, Clock, CheckSquare, Image as ImageIcon, Save, CheckCircle2 } from 'lucide-react';
-import { Workshop } from '@/mocks/workshopsData';
+import { WorkshopResponse } from '@/services/workshop.service';
 import LocationPicker from './LocationPicker';
 import ScheduleGrid, { defaultSchedule, DaySchedule } from './ScheduleGrid';
 import ServicesChecklist from './ServicesChecklist';
 import ImageUploader from './ImageUploader';
+import { sanitizeObject } from '@/lib/utils/sanitizationUtils';
+import { HoneyPot } from '@/components/common/HoneyPot';
+import { FormProvider } from 'react-hook-form';
 
 // 1. DTO y Esquemas de Validación usando Zod
 const scheduleSchema = z.object({
@@ -44,7 +47,7 @@ type WorkshopDTO = z.infer<typeof workshopSchema>;
 interface WorkshopFormSlideOverProps {
     isOpen: boolean;
     onClose: () => void;
-    workshopToEdit: Workshop | null;
+    workshopToEdit: WorkshopResponse | null;
     onSave: (data: WorkshopDTO) => void;
 }
 
@@ -55,8 +58,9 @@ export default function WorkshopFormSlideOver({ isOpen, onClose, workshopToEdit,
     const [saveSuccess, setSaveSuccess] = useState(false);
 
     // 2. Controladores robustos con React-Hook-Form
-    const { register, handleSubmit, control, reset, watch, formState: { errors } } = useForm<WorkshopDTO>({
+    const methods = useForm<WorkshopDTO>({
         resolver: zodResolver(workshopSchema),
+        mode: 'onChange',
         defaultValues: {
             name: '',
             phone: '',
@@ -74,6 +78,8 @@ export default function WorkshopFormSlideOver({ isOpen, onClose, workshopToEdit,
         }
     });
 
+    const { register, handleSubmit, control, reset, watch, formState: { errors } } = methods;
+
     // 3. Elevación de validez para deshabilitar botón principal
     const currentSchedule = watch('schedule');
     const hasInvalidSchedule = currentSchedule?.some(day => {
@@ -89,17 +95,33 @@ export default function WorkshopFormSlideOver({ isOpen, onClose, workshopToEdit,
             if (workshopToEdit) {
                 reset({
                     name: workshopToEdit.name,
-                    phone: workshopToEdit.phone,
-                    description: workshopToEdit.description,
-                    whatsapp: workshopToEdit.whatsapp,
+                    phone: workshopToEdit.phone || '',
+                    description: workshopToEdit.description || '',
+                    whatsapp: !!workshopToEdit.whatsapp,
                     isVerified: workshopToEdit.isVerified,
-                    status: workshopToEdit.status,
-                    address: workshopToEdit.address,
-                    city: workshopToEdit.city,
-                    location: workshopToEdit.location || { lat: 4.6097, lng: -74.0817 },
-                    schedule: defaultSchedule, // Map real schedule data here
-                    services: workshopToEdit.services?.map(s => s.id) || [],
-                    amenities: workshopToEdit.amenities || [],
+                    status: workshopToEdit.active ? 'active' : 'inactive',
+                    address: workshopToEdit.address || '',
+                    city: workshopToEdit.city || 'Bogotá',
+                    location: { lat: workshopToEdit.latitude || 4.6097, lng: workshopToEdit.longitude || -74.0817 },
+                    schedule: workshopToEdit.hours ? workshopToEdit.hours.map((h) => ({
+                        day: String(h.dayOfWeek),
+                        label: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'][(h.dayOfWeek - 1) % 7] || 'Día',
+                        isOpen: !h.isClosed,
+                        openTime: h.openTime || '08:00',
+                        closeTime: h.closeTime || '18:00'
+                    })) : defaultSchedule,
+                    services: workshopToEdit.services ? workshopToEdit.services.map((s: string) => {
+                        const reverseMapping: Record<string, string> = {
+                            'electric_diagnostics': 'srv-1',
+                            'maintenance': 'srv-2',
+                            'tires': 'srv-3',
+                            'chargers': 'srv-4',
+                            'general': 'srv-5',
+                            'body_paint': 'srv-6'
+                        };
+                        return reverseMapping[s] || s;
+                    }) : [],
+                    amenities: (workshopToEdit as any).amenities || [],
                     images: workshopToEdit.images || []
                 });
             } else {
@@ -128,9 +150,10 @@ export default function WorkshopFormSlideOver({ isOpen, onClose, workshopToEdit,
 
     const onSubmit = (data: WorkshopDTO) => {
         setIsSaving(true);
+        const sanitizedData = sanitizeObject(data);
         
         setTimeout(() => {
-            onSave(data);
+            onSave(sanitizedData);
             setIsSaving(false);
             setSaveSuccess(true);
             setTimeout(() => {
@@ -200,7 +223,9 @@ export default function WorkshopFormSlideOver({ isOpen, onClose, workshopToEdit,
                     </div>
                 </div>
 
-                <form id="workshop-form" onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#0f172a]">
+                <FormProvider {...methods}>
+                    <form id="workshop-form" onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#0f172a]">
+                        <HoneyPot />
                     
                     {activeTab === 'info' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -246,8 +271,14 @@ export default function WorkshopFormSlideOver({ isOpen, onClose, workshopToEdit,
                                     <div>
                                         <label className="text-sm font-medium text-slate-300 ml-1">Teléfono</label>
                                         <input
-                                            type="text"
+                                            type="tel"
                                             {...register('phone')}
+                                            onKeyDown={(e) => {
+                                                const allowedKeys = ['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', '+', 'Delete'];
+                                                if (!allowedKeys.includes(e.key) && !/^\d$/.test(e.key)) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
                                             className={`w-full mt-1.5 bg-slate-900 border rounded-xl py-2.5 px-4 text-slate-200 focus:outline-none focus:ring-1 transition-all ${errors.phone ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-800 focus:ring-[#10B981] focus:border-[#10B981]'}`}
                                             placeholder="+57 320..."
                                         />
@@ -310,6 +341,7 @@ export default function WorkshopFormSlideOver({ isOpen, onClose, workshopToEdit,
                                         initialLat={field.value.lat} 
                                         initialLng={field.value.lng} 
                                         onChange={(lat, lng) => field.onChange({ lat, lng })}
+                                        selectedCity={watch('city')}
                                     />
                                 )}
                             />
@@ -335,6 +367,24 @@ export default function WorkshopFormSlideOver({ isOpen, onClose, workshopToEdit,
                                         <option value="Medellín">Medellín</option>
                                         <option value="Cali">Cali</option>
                                         <option value="Barranquilla">Barranquilla</option>
+                                        <option value="Cartagena">Cartagena</option>
+                                        <option value="Bucaramanga">Bucaramanga</option>
+                                        <option value="Pereira">Pereira</option>
+                                        <option value="Cúcuta">Cúcuta</option>
+                                        <option value="Ibagué">Ibagué</option>
+                                        <option value="Manizales">Manizales</option>
+                                        <option value="Villavicencio">Villavicencio</option>
+                                        <option value="Santa Marta">Santa Marta</option>
+                                        <option value="Armenia">Armenia</option>
+                                        <option value="Valledupar">Valledupar</option>
+                                        <option value="Montería">Montería</option>
+                                        <option value="Pasto">Pasto</option>
+                                        <option value="Popayán">Popayán</option>
+                                        <option value="Neiva">Neiva</option>
+                                        <option value="Tunja">Tunja</option>
+                                        <option value="Sincelejo">Sincelejo</option>
+                                        <option value="Riohacha">Riohacha</option>
+                                        <option value="San Andrés">San Andrés</option>
                                     </select>
                                 </div>
                             </div>
@@ -395,6 +445,7 @@ export default function WorkshopFormSlideOver({ isOpen, onClose, workshopToEdit,
                     )}
 
                 </form>
+                </FormProvider>
 
                 {/* Footer Actions */}
                 <div className="p-6 border-t border-white/10 bg-[#15201D] flex gap-3">

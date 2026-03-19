@@ -2,32 +2,103 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Plus, MapPin, Star, MoreVertical, Edit2, CheckCircle2, XCircle } from 'lucide-react';
-import { mockWorkshops, Workshop } from '@/mocks/workshopsData';
+import { workshopService, WorkshopResponse } from '@/services/workshop.service';
 import WorkshopFormSlideOver from './WorkshopFormSlideOver';
 
+
 export default function WorkshopsTable() {
-    const [workshops, setWorkshops] = useState<Workshop[]>(mockWorkshops);
+    const [workshops, setWorkshops] = useState<WorkshopResponse[]>([]);
+    
+    // Add data transformation helper
+    const prepareWorkshopData = (formData: any) => {
+        // Map srv-X to backend enums
+        const serviceMapping: Record<string, string> = {
+            'srv-1': 'electric_diagnostics',
+            'srv-2': 'maintenance',
+            'srv-3': 'tires',
+            'srv-4': 'chargers',
+            'srv-5': 'general',
+            'srv-6': 'body_paint'
+        };
+
+        // ScheduleGrid usa nombres de día ('monday', 'tuesday'...) → backend espera número (1=Lun...7=Dom)
+        const dayNameToNumber: Record<string, number> = {
+            monday: 1, tuesday: 2, wednesday: 3,
+            thursday: 4, friday: 5, saturday: 6, sunday: 7
+        };
+
+        const raw: Record<string, any> = {
+            name: formData.name,
+            address: formData.address || undefined,
+            city: formData.city || undefined,
+            latitude: formData.location?.lat ?? undefined,
+            longitude: formData.location?.lng ?? undefined,
+            phone: formData.phone || undefined,
+            // Si whatsapp está marcado, usamos el mismo número de teléfono; si no, omitimos el campo
+            whatsapp: formData.whatsapp ? formData.phone : undefined,
+            description: formData.description || undefined,
+            isVerified: formData.isVerified,
+            active: formData.status === 'active',
+            hours: formData.schedule.map((s: any) => ({
+                // s.day puede ser 'monday', 'tuesday'... o ya un número (al editar desde la API)
+                dayOfWeek: dayNameToNumber[s.day] ?? parseInt(s.day),
+                openTime: s.openTime || undefined,
+                closeTime: s.closeTime || undefined,
+                isClosed: !s.isOpen
+            })),
+            services: formData.services.map((s: string) => serviceMapping[s] || s),
+            amenities: formData.amenities || [],
+            images: formData.images || []
+        };
+
+        // Elimina claves con valor undefined para que class-validator no las rechace
+        return Object.fromEntries(Object.entries(raw).filter(([, v]) => v !== undefined));
+    };
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [cityFilter, setCityFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
 
     const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
-    const [selectedWorkshop, setSelectedWorkshop] = useState<Workshop | null>(null);
+    const [selectedWorkshop, setSelectedWorkshop] = useState<WorkshopResponse | null>(null);
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const loadWorkshops = async () => {
+        setLoading(true);
+        try {
+            // El backend devuelve { data: [], meta: {} } directamente
+            const response = await workshopService.fetchWorkshops() as any;
+            if (response && response.data) {
+                setWorkshops(response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching workshops:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadWorkshops();
+    }, []);
+
     // Extract unique cities for filter
     const cities = useMemo(() => {
-        const unique = new Set(workshops.map(w => w.city));
+        const unique = new Set(workshops.map(w => w.city).filter((c): c is string => !!c));
         return Array.from(unique);
     }, [workshops]);
 
     const filteredWorkshops = useMemo(() => {
         return workshops.filter(workshop => {
-            const matchesSearch = workshop.name.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesCity = cityFilter === 'all' || workshop.city === cityFilter;
-            const matchesStatus = statusFilter === 'all' || workshop.status === statusFilter;
+            const name = workshop.name || '';
+            const city = workshop.city || '';
+            const status = workshop.active ? 'active' : 'inactive';
+            
+            const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesCity = cityFilter === 'all' || city === cityFilter;
+            const matchesStatus = statusFilter === 'all' || status === statusFilter;
             return matchesSearch && matchesCity && matchesStatus;
         });
     }, [workshops, searchQuery, cityFilter, statusFilter]);
@@ -43,14 +114,22 @@ export default function WorkshopsTable() {
 
     const totalPages = Math.ceil(filteredWorkshops.length / itemsPerPage);
 
-    const handleToggleStatus = (id: string, e: React.MouseEvent) => {
+    const handleToggleStatus = async (id: number, currentStatus: boolean, e: React.MouseEvent) => {
         e.stopPropagation();
-        setWorkshops(workshops.map(w => 
-            w.id === id ? { ...w, status: w.status === 'active' ? 'inactive' : 'active' } : w
-        ));
+        try {
+            // El backend devuelve el objeto actualizado directamente
+            const response = await workshopService.updateWorkshop(id, { active: !currentStatus }) as any;
+            if (response && response.id) {
+                setWorkshops(workshops.map(w => 
+                    w.id === id ? { ...w, active: !currentStatus } : w
+                ));
+            }
+        } catch (error) {
+            console.error('Error toggling status:', error);
+        }
     };
 
-    const handleEdit = (workshop: Workshop) => {
+    const handleEdit = (workshop: any) => {
         setSelectedWorkshop(workshop);
         setIsSlideOverOpen(true);
     };
@@ -132,13 +211,13 @@ export default function WorkshopsTable() {
                                 >
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 font-bold overflow-hidden">
-                                                {workshop.images.length > 0 ? (
-                                                    <img src={workshop.images[0]} alt={workshop.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    workshop.name.charAt(0)
-                                                )}
-                                            </div>
+                                                            <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 font-bold overflow-hidden">
+                                                                {workshop.images && workshop.images.length > 0 ? (
+                                                                    <img src={workshop.images[0]} alt={workshop.name} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    workshop.name ? workshop.name.charAt(0) : '?'
+                                                                )}
+                                                            </div>
                                             <div>
                                                 <div className="font-semibold text-slate-200 group-hover:text-[#10B981] transition-colors flex items-center gap-2">
                                                     {workshop.name}
@@ -160,17 +239,17 @@ export default function WorkshopsTable() {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <Star size={14} className="text-amber-400 fill-amber-400" />
-                                            <span className="text-sm font-bold text-white">{workshop.rating.toFixed(1)}</span>
-                                            <span className="text-xs text-slate-500">({workshop.reviewsCount})</span>
+                                            <span className="text-sm font-bold text-white">{(workshop.rating || 0).toFixed(1)}</span>
+                                            <span className="text-xs text-slate-500">({workshop.reviewsCount || 0})</span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded-md text-xs font-medium border ${
-                                            workshop.status === 'active' 
+                                            workshop.active 
                                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
                                             : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
                                         }`}>
-                                            {workshop.status === 'active' ? 'Activo' : 'Inactivo'}
+                                            {workshop.active ? 'Activo' : 'Inactivo'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right pr-6">
@@ -185,15 +264,15 @@ export default function WorkshopsTable() {
                                             
                                             {/* Toggle switch for status */}
                                             <button 
-                                                onClick={(e) => handleToggleStatus(workshop.id, e)}
+                                                onClick={(e) => handleToggleStatus(workshop.id, workshop.active, e)}
                                                 className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                                    workshop.status === 'active' ? 'bg-[#10B981]' : 'bg-slate-700'
+                                                    workshop.active ? 'bg-[#10B981]' : 'bg-slate-700'
                                                 }`}
                                                 role="switch"
-                                                title={workshop.status === 'active' ? "Desactivar" : "Activar"}
+                                                title={workshop.active ? "Desactivar" : "Activar"}
                                             >
                                                 <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                                    workshop.status === 'active' ? 'translate-x-4' : 'translate-x-0'
+                                                    workshop.active ? 'translate-x-4' : 'translate-x-0'
                                                 }`} />
                                             </button>
                                             
@@ -245,31 +324,25 @@ export default function WorkshopsTable() {
                     isOpen={isSlideOverOpen}
                     onClose={() => setIsSlideOverOpen(false)}
                     workshopToEdit={selectedWorkshop}
-                    onSave={(data) => {
-                        if (selectedWorkshop) {
-                            // Edit mode
-                            setWorkshops(workshops.map(w => 
-                                w.id === selectedWorkshop.id ? { 
-                                    ...w, 
-                                    ...data,
-                                    images: data.images.length > 0 ? data.images : w.images 
-                                } as unknown as Workshop : w
-                            ));
-                        } else {
-                            // Add mode
-                            const newWorkshop: Workshop = {
-                                ...data,
-                                id: Math.random().toString(36).substring(2, 9),
-                                rating: 0,
-                                reviewsCount: 0,
-                                services: data.services.map(sid => ({ id: sid, name: sid })),
-                                schedule: {
-                                    lunesViernes: data.schedule.find(s => s.day === 'lunes')?.openTime + ' - ' + data.schedule.find(s => s.day === 'lunes')?.closeTime,
-                                    sabado: data.schedule.find(s => s.day === 'sabado')?.openTime + ' - ' + data.schedule.find(s => s.day === 'sabado')?.closeTime,
-                                    domingo: data.schedule.find(s => s.day === 'domingo')?.openTime + ' - ' + data.schedule.find(s => s.day === 'domingo')?.closeTime,
+                    onSave={async (formData) => {
+                        const preparedData = prepareWorkshopData(formData);
+                        console.log('[Workshop] Body a enviar al backend:', JSON.stringify(preparedData, null, 2));
+                        try {
+                            if (selectedWorkshop) {
+                                // Real Edit mode
+                                const response = await workshopService.updateWorkshop(selectedWorkshop.id, preparedData) as any;
+                                if (response && response.id) {
+                                    loadWorkshops(); // Reload from API
                                 }
-                            } as unknown as Workshop;
-                            setWorkshops([newWorkshop, ...workshops]);
+                            } else {
+                                // Real Add mode
+                                const response = await workshopService.createWorkshop(preparedData) as any;
+                                if (response && response.id) {
+                                    loadWorkshops(); // Reload from API
+                                }
+                            }
+                        } catch (error: any) {
+                            console.error('Error saving workshop - Mensaje:', error?.message, '| Detalle API:', error?.data);
                         }
                     }}
                 />

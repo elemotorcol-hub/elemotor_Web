@@ -10,12 +10,15 @@ interface CustomRequestInit extends RequestInit {
 // Global promise para encolar peticiones mientras se hace el refresh
 let refreshPromise: Promise<any> | null = null;
 
-export async function fetchApi(endpoint: string, options: CustomRequestInit = {}) {
+export async function fetchApi<T = any>(endpoint: string, options: CustomRequestInit = {}): Promise<T> {
     const session = await getSession();
     
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-    };
+    const headers: Record<string, string> = {};
+    
+    // Si el cuerpo NO es FormData, seteamos application/json por defecto
+    if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
 
     if (session?.accessToken) {
         headers['Authorization'] = `Bearer ${session.accessToken}`;
@@ -69,7 +72,7 @@ export async function fetchApi(endpoint: string, options: CustomRequestInit = {}
 
     // Para endpoints como logout que podrían retornar 204 No Content
     if (response.status === 204) {
-        return null;
+        return null as any;
     }
 
     // Intentar parsear a JSON si tiene content-type y no fallar si está vacío
@@ -90,10 +93,14 @@ export async function fetchApi(endpoint: string, options: CustomRequestInit = {}
     }
 
     if (!response.ok) {
-        let errorMessage = typeof data === 'string' ? data : (data?.message || response.statusText);
-        if (Array.isArray(errorMessage)) errorMessage = errorMessage.join(', ');
+        // Log completo para debug — HttpExceptionFilter responde con {error: ...} no {message: ...}
+        console.error(`[fetchApi] Error response body from ${endpoint}:`, data);
+        const rawMessage = data?.message || data?.error || response.statusText;
+        let errorMessage = typeof rawMessage === 'string' ? rawMessage : JSON.stringify(rawMessage);
+        if (Array.isArray(rawMessage)) errorMessage = rawMessage.join(', ');
         const error: any = new Error(errorMessage || `API error: ${response.status}`);
         error.status = response.status;
+        error.data = data;
         throw error;
     }
 

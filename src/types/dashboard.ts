@@ -89,4 +89,5 @@ export interface ClientDocument {
     category: 'Legales' | 'Mantenimiento' | 'Facturas';
     isActive?: boolean;
     warningMessage?: string;
+    fileUrl?: string;
 }
