@@ -4,18 +4,21 @@ import { Bell, Menu, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Props {
     userName: string;
+    userLastName?: string;
     role: string;
     onToggleSidebar?: () => void;
     onToggleMobile?: () => void;
     isSidebarCollapsed?: boolean;
 }
 
-export function TopHeader({ userName, role, onToggleSidebar, onToggleMobile, isSidebarCollapsed }: Props) {
-    const getInitials = (name?: string) => {
-        if (!name || !name.trim()) return 'U';
-        return name.trim().split(/\s+/).map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    };
-    const fallbackInitials = getInitials(userName);
+export function TopHeader({ userName, userLastName = '', role, onToggleSidebar, onToggleMobile, isSidebarCollapsed }: Props) {
+    // Solución estricta según requerimientos para iniciales:
+    const safeFirst = userName && userName.length > 0 ? userName[0] : '';
+    const safeLast = userLastName && userLastName.length > 0 ? userLastName[0] : '';
+    const initials = safeLast ? `${safeFirst}${safeLast}`.toUpperCase() : (safeFirst || 'U').toUpperCase();
+    
+    // Solución para nombre completo en topbar derecho
+    const fullName = userLastName ? `${userName} ${userLastName}` : userName;
 
     return (
         <header className={`h-[80px] flex items-center justify-between px-4 lg:px-8 bg-[#0A110F] border-b border-white/5 sticky top-0 z-40 transition-all duration-300`}>
@@ -39,7 +42,7 @@ export function TopHeader({ userName, role, onToggleSidebar, onToggleMobile, isS
 
                 <div className="flex flex-col">
                     <h1 className="text-xl lg:text-2xl font-bold text-white tracking-tight">
-                        Hola, {userName.split(' ')[0]}
+                        Hola, {userName}
                     </h1>
                     <p className="text-[11px] lg:text-sm font-medium text-slate-400">
                         Bienvenido de nuevo
@@ -58,11 +61,11 @@ export function TopHeader({ userName, role, onToggleSidebar, onToggleMobile, isS
                 {/* Profile Widget */}
                 <div className="flex items-center gap-3 cursor-pointer group">
                     <div className="hidden md:block text-right">
-                        <p className="text-sm font-bold text-white group-hover:text-[#10B981] transition-colors">{userName}</p>
+                        <p className="text-sm font-bold text-white group-hover:text-[#10B981] transition-colors">{fullName}</p>
                         <p className="text-[11px] font-medium text-slate-400">{role}</p>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-[#15201D] border border-white/10 flex items-center justify-center overflow-hidden">
-                        <span className="text-[#10B981] font-bold text-sm">{fallbackInitials}</span>
+                        <span className="text-[#10B981] font-bold text-sm">{initials}</span>
                     </div>
                 </div>
             </div>
