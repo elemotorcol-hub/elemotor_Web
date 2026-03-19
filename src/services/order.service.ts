@@ -102,4 +102,11 @@ export const orderService = {
     async fetchMyOrderDetail(id: number | string): Promise<any> {
         return fetchApi(`/api/orders/my/${id}`);
     },
+
+    /**
+     * [Cliente] Obtener el vehículo activo (dashboard)
+     */
+    async fetchMyVehicle(): Promise<any> {
+        return fetchApi('/api/orders/my-vehicle');
+    },
 };

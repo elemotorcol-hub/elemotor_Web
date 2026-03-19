@@ -9,7 +9,7 @@ export default function DashboardLayoutWrapper({
     user 
 }: { 
     children: React.ReactNode;
-    user: { name: string; role: string };
+    user: { name: string; lastName: string; role: string };
 }) {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -54,6 +54,7 @@ export default function DashboardLayoutWrapper({
             }`}>
                 <TopHeader 
                     userName={user.name} 
+                    userLastName={user.lastName}
                     role={user.role} 
                     onToggleSidebar={toggleSidebar}
                     onToggleMobile={toggleMobileMenu}
