@@ -2,29 +2,17 @@
 
 import React, { useMemo } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { ChartDataPoint } from '@/services/dashboard.service';
 
-export default function DashboardChart() {
-    // Generate 30 days of mock data
+export default function DashboardChart({ data: rawData }: { data?: ChartDataPoint[] }) {
     const data = useMemo(() => {
-        const today = new Date();
-        const past30Days = [];
-        let baseLeads = 15; // Starting point
-
-        for (let i = 29; i >= 0; i--) {
-            const date = new Date(today);
-            date.setDate(date.getDate() - i);
-            
-            // Generate realistic looking fluctuations
-            const fluctuation = Math.floor(Math.random() * 10) - 4; 
-            baseLeads = Math.max(5, baseLeads + fluctuation); // Keep it above 5
-
-            past30Days.push({
-                date: date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }),
-                leads: baseLeads,
-            });
-        }
-        return past30Days;
-    }, []);
+        if (!rawData || rawData.length === 0) return [];
+        
+        return rawData.map(item => ({
+            ...item,
+            displayDate: new Date(item.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
+        }));
+    }, [rawData]);
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
@@ -46,7 +34,7 @@ export default function DashboardChart() {
                 <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                     <XAxis 
-                        dataKey="date" 
+                        dataKey="displayDate" 
                         stroke="rgba(255,255,255,0.2)" 
                         fontSize={12} 
                         tickLine={false} 

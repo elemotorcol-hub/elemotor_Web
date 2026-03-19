@@ -131,7 +131,10 @@ export default function TrimsAndSpecsTab({ mode }: { mode?: 'add' | 'edit' }) {
                                             <label className="text-[12px] font-semibold text-[#10B981]">Precio (USD)</label>
                                             <input
                                                 type="number"
-                                                {...register(`trims.${index}.price`)}
+                                                {...register(`trims.${index}.price`, { valueAsNumber: true })}
+                                                onKeyDown={(e) => {
+                                                    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+                                                }}
                                                 className="w-full bg-[#0f172a]/60 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#10B981] transition-colors"
                                             />
                                             {trimError?.price && <span className="text-red-400 text-[10px]">{trimError.price.message}</span>}
@@ -141,7 +144,10 @@ export default function TrimsAndSpecsTab({ mode }: { mode?: 'add' | 'edit' }) {
                                             <label className="text-[12px] font-semibold text-slate-300">Stock Disponible</label>
                                             <input
                                                 type="number"
-                                                {...register(`trims.${index}.available_quantity`)}
+                                                {...register(`trims.${index}.available_quantity`, { valueAsNumber: true })}
+                                                onKeyDown={(e) => {
+                                                    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+                                                }}
                                                 className="w-full bg-[#0f172a]/60 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#10B981] transition-colors"
                                             />
                                         </div>
@@ -503,8 +509,13 @@ function SpecInput({
             <input
                 type={type}
                 step={step}
-                {...register(name as any)}
+                {...register(name as any, type === 'number' ? { valueAsNumber: true } : {})}
                 placeholder={placeholder}
+                onKeyDown={(e) => {
+                    if (type === 'number' && ['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                    }
+                }}
                 className="w-full bg-transparent border-b border-slate-700 pb-1 text-sm text-white focus:outline-none focus:border-[#10B981]"
             />
             {error && <span className="text-red-400 text-[10px]">{error.message}</span>}

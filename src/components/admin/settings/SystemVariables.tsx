@@ -1,100 +1,119 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Zap, Droplets, Save, Plus, Edit2, X, Trash2 } from 'lucide-react';
-
-interface EnergyRate {
-    id: string;
-    city: string;
-    priceKwh: number;
-    source: string;
-}
-
-interface FuelPrice {
-    id: string;
-    city: string;
-    type: 'Corriente' | 'Extra' | 'Diesel';
-    priceGallon: number;
-    source: string;
-}
+import React, { useState, useEffect } from 'react';
+import { Zap, Droplets, Save, Plus, Edit2, X, Trash2, Loader2 } from 'lucide-react';
+import { settingsService, ElectricityRate, FuelPrice } from '@/services/settings.service';
 
 export default function SystemVariables() {
     // State
-    const [energyRates, setEnergyRates] = useState<EnergyRate[]>([
-        { id: '1', city: 'Bogotá', priceKwh: 850, source: 'Enel Colombia' },
-        { id: '2', city: 'Medellín', priceKwh: 810, source: 'EPM' },
-        { id: '3', city: 'Cali', priceKwh: 890, source: 'Emcali' },
-    ]);
+    const [energyRates, setEnergyRates] = useState<ElectricityRate[]>([]);
+    const [fuelPrices, setFuelPrices] = useState<FuelPrice[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const [fuelPrices, setFuelPrices] = useState<FuelPrice[]>([
-        { id: '1', city: 'Bogotá', type: 'Corriente', priceGallon: 15400, source: 'MinMinas' },
-        { id: '2', city: 'Medellín', type: 'Corriente', priceGallon: 15300, source: 'MinMinas' },
-        { id: '3', city: 'Cali', type: 'Corriente', priceGallon: 15500, source: 'MinMinas' },
-    ]);
+    // Initial load
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [rates, fuel] = await Promise.all([
+                settingsService.getElectricityRates(),
+                settingsService.getFuelPrices()
+            ]);
+            setEnergyRates(rates);
+            setFuelPrices(fuel);
+        } catch (error) {
+            console.error("Error fetching system variables:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Modals state
     const [isEnergyModalOpen, setIsEnergyModalOpen] = useState(false);
     const [isFuelModalOpen, setIsFuelModalOpen] = useState(false);
-    const [editingEnergy, setEditingEnergy] = useState<EnergyRate | null>(null);
-    const [editingFuel, setEditingFuel] = useState<FuelPrice | null>(null);
+    const [editingEnergy, setEditingEnergy] = useState<ElectricityRate | null>(null);
+    const [editingFuel, setFuelEditingItem] = useState<FuelPrice | null>(null);
 
     // Form states
-    const [energyForm, setEnergyForm] = useState<Partial<EnergyRate>>({});
-    const [fuelForm, setFuelForm] = useState<Partial<FuelPrice>>({ type: 'Corriente' });
+    const [energyForm, setEnergyForm] = useState<Partial<ElectricityRate>>({});
+    const [fuelForm, setFuelForm] = useState<Partial<FuelPrice>>({ fuelType: 'regular' });
 
     // Handlers Energy
-    const openEnergyModal = (rate?: EnergyRate) => {
+    const openEnergyModal = (rate?: ElectricityRate) => {
         if (rate) {
             setEditingEnergy(rate);
             setEnergyForm(rate);
         } else {
             setEditingEnergy(null);
-            setEnergyForm({ city: '', priceKwh: 0, source: '' });
+            setEnergyForm({ city: '', pricePerKwhCop: 0, source: '' });
         }
         setIsEnergyModalOpen(true);
     };
 
-    const saveEnergyRate = () => {
-        if (editingEnergy) {
-            setEnergyRates(rates => rates.map(r => r.id === editingEnergy.id ? { ...r, ...energyForm } as EnergyRate : r));
-        } else {
-            setEnergyRates([...energyRates, { ...energyForm, id: Date.now().toString() } as EnergyRate]);
+    const saveEnergyRate = async () => {
+        try {
+            if (editingEnergy) {
+                await settingsService.updateElectricityRate(editingEnergy.id, energyForm as ElectricityRate);
+            } else {
+                await settingsService.createElectricityRate(energyForm as ElectricityRate);
+            }
+            fetchData();
+            setIsEnergyModalOpen(false);
+        } catch (error) {
+            alert("Error al guardar la tarifa de energía");
         }
-        setIsEnergyModalOpen(false);
     };
 
-    const deleteEnergyRate = (id: string, e: React.MouseEvent) => {
+    const deleteEnergyRate = async (id: number, e: React.MouseEvent) => {
         e.stopPropagation();
         if(confirm("¿Estás seguro de eliminar esta tarifa?")) {
-            setEnergyRates(rates => rates.filter(r => r.id !== id));
+            try {
+                await settingsService.deleteElectricityRate(id);
+                fetchData();
+            } catch (error) {
+                alert("Error al eliminar la tarifa");
+            }
         }
     }
 
     // Handlers Fuel
     const openFuelModal = (fuel?: FuelPrice) => {
         if (fuel) {
-            setEditingFuel(fuel);
+            setFuelEditingItem(fuel);
             setFuelForm(fuel);
         } else {
-            setEditingFuel(null);
-            setFuelForm({ city: '', type: 'Corriente', priceGallon: 0, source: '' });
+            setFuelEditingItem(null);
+            setFuelForm({ city: '', fuelType: 'regular', pricePerGallonCop: 0, source: '' });
         }
         setIsFuelModalOpen(true);
     };
 
-    const saveFuelPrice = () => {
-        if (editingFuel) {
-            setFuelPrices(prices => prices.map(p => p.id === editingFuel.id ? { ...p, ...fuelForm } as FuelPrice : p));
-        } else {
-            setFuelPrices([...fuelPrices, { ...fuelForm, id: Date.now().toString() } as FuelPrice]);
+    const saveFuelPrice = async () => {
+        try {
+            if (editingFuel) {
+                await settingsService.updateFuelPrice(editingFuel.id, fuelForm as FuelPrice);
+            } else {
+                await settingsService.createFuelPrice(fuelForm as FuelPrice);
+            }
+            fetchData();
+            setIsFuelModalOpen(false);
+        } catch (error) {
+            alert("Error al guardar el precio del combustible");
         }
-        setIsFuelModalOpen(false);
     };
 
-    const deleteFuelPrice = (id: string, e: React.MouseEvent) => {
+    const deleteFuelPrice = async (id: number, e: React.MouseEvent) => {
         e.stopPropagation();
         if(confirm("¿Estás seguro de eliminar esta tarifa?")) {
-            setFuelPrices(prices => prices.filter(p => p.id !== id));
+            try {
+                await settingsService.deleteFuelPrice(id);
+                fetchData();
+            } catch (error) {
+                alert("Error al eliminar el precio");
+            }
         }
     }
 
@@ -133,35 +152,44 @@ export default function SystemVariables() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {energyRates.map((rate) => (
-                                    <tr key={rate.id} className="hover:bg-white/[0.02] transition-colors group">
-                                        <td className="px-4 py-4 text-sm font-medium text-slate-200">{rate.city}</td>
-                                        <td className="px-4 py-4">
-                                            <span className="text-sm font-medium text-[#10B981]">${rate.priceKwh.toLocaleString()}</span>
-                                        </td>
-                                        <td className="px-4 py-4">
-                                            <span className="text-sm text-slate-400">{rate.source}</span>
-                                        </td>
-                                        <td className="px-4 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button 
-                                                    onClick={() => openEnergyModal(rate)}
-                                                    className="p-1.5 text-slate-400 hover:text-[#10B981] hover:bg-[#10B981]/10 rounded-lg transition-colors"
-                                                    title="Editar"
-                                                >
-                                                    <Edit2 size={16} />
-                                                </button>
-                                                <button 
-                                                    onClick={(e) => deleteEnergyRate(rate.id, e)}
-                                                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                    title="Eliminar"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={4} className="px-4 py-10 text-center">
+                                            <Loader2 className="w-6 h-6 animate-spin mx-auto text-emerald-500 mb-2" />
+                                            <span className="text-xs text-slate-500">Cargando tarifas...</span>
                                         </td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    energyRates.map((rate) => (
+                                        <tr key={rate.id} className="hover:bg-white/[0.02] transition-colors group">
+                                            <td className="px-4 py-4 text-sm font-medium text-slate-200">{rate.city}</td>
+                                            <td className="px-4 py-4">
+                                                <span className="text-sm font-medium text-[#10B981]">${Number(rate.pricePerKwhCop).toLocaleString()}</span>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <span className="text-sm text-slate-400">{rate.source || 'N/A'}</span>
+                                            </td>
+                                            <td className="px-4 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button 
+                                                        onClick={() => openEnergyModal(rate)}
+                                                        className="p-1.5 text-slate-400 hover:text-[#10B981] hover:bg-[#10B981]/10 rounded-lg transition-colors"
+                                                        title="Editar"
+                                                    >
+                                                        <Edit2 size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => deleteEnergyRate(rate.id, e)}
+                                                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                        title="Eliminar"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -198,38 +226,47 @@ export default function SystemVariables() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {fuelPrices.map((fuel) => (
-                                    <tr key={fuel.id} className="hover:bg-white/[0.02] transition-colors group">
-                                        <td className="px-4 py-4">
-                                            <div className="text-sm font-medium text-slate-200">{fuel.city}</div>
-                                            <div className="text-xs text-slate-500 mt-0.5">{fuel.type}</div>
-                                        </td>
-                                        <td className="px-4 py-4">
-                                            <span className="text-sm font-medium text-blue-400">${fuel.priceGallon.toLocaleString()}</span>
-                                        </td>
-                                        <td className="px-4 py-4">
-                                            <span className="text-sm text-slate-400">{fuel.source}</span>
-                                        </td>
-                                        <td className="px-4 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button 
-                                                    onClick={() => openFuelModal(fuel)}
-                                                    className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-colors"
-                                                    title="Editar"
-                                                >
-                                                    <Edit2 size={16} />
-                                                </button>
-                                                <button 
-                                                    onClick={(e) => deleteFuelPrice(fuel.id, e)}
-                                                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                    title="Eliminar"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={4} className="px-4 py-10 text-center">
+                                            <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500 mb-2" />
+                                            <span className="text-xs text-slate-500">Cargando precios...</span>
                                         </td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    fuelPrices.map((fuel) => (
+                                        <tr key={fuel.id} className="hover:bg-white/[0.02] transition-colors group">
+                                            <td className="px-4 py-4">
+                                                <div className="text-sm font-medium text-slate-200">{fuel.city}</div>
+                                                <div className="text-xs text-slate-500 mt-0.5">{fuel.fuelType}</div>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <span className="text-sm font-medium text-blue-400">${Number(fuel.pricePerGallonCop).toLocaleString()}</span>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <span className="text-sm text-slate-400">{fuel.source || 'N/A'}</span>
+                                            </td>
+                                            <td className="px-4 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button 
+                                                        onClick={() => openFuelModal(fuel)}
+                                                        className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-colors"
+                                                        title="Editar"
+                                                    >
+                                                        <Edit2 size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => deleteFuelPrice(fuel.id, e)}
+                                                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                        title="Eliminar"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -266,8 +303,8 @@ export default function SystemVariables() {
                                 <label className="block text-xs font-medium text-slate-400 mb-1.5">Precio por kWh (COP)</label>
                                 <input 
                                     type="number" 
-                                    value={energyForm.priceKwh || ''}
-                                    onChange={e => setEnergyForm({...energyForm, priceKwh: Number(e.target.value)})}
+                                    value={energyForm.pricePerKwhCop || ''}
+                                    onChange={e => setEnergyForm({...energyForm, pricePerKwhCop: Number(e.target.value)})}
                                     placeholder="850"
                                     className="w-full bg-slate-900 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/50 transition-all font-light"
                                 />
@@ -322,22 +359,21 @@ export default function SystemVariables() {
                             <div>
                                 <label className="block text-xs font-medium text-slate-400 mb-1.5">Tipo de Combustible</label>
                                 <select 
-                                    value={fuelForm.type}
-                                    onChange={e => setFuelForm({...fuelForm, type: e.target.value as any})}
+                                    value={fuelForm.fuelType}
+                                    onChange={e => setFuelForm({...fuelForm, fuelType: e.target.value as any})}
                                     className="w-full bg-slate-900 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#10B981]/50 transition-all font-light"
                                 >
-                                    <option value="Corriente">Corriente</option>
-                                    <option value="Extra">Extra</option>
-                                    <option value="Diesel">Diesel</option>
+                                    <option value="regular">Corriente</option>
+                                    <option value="premium">Extra</option>
                                 </select>
                             </div>
                             <div>
                                 <label className="block text-xs font-medium text-slate-400 mb-1.5">Precio por Galón (COP)</label>
                                 <input 
                                     type="number" 
-                                    value={fuelForm.priceGallon || ''}
+                                    value={fuelForm.pricePerGallonCop || ''}
                                     placeholder="15000"
-                                    onChange={e => setFuelForm({...fuelForm, priceGallon: Number(e.target.value)})}
+                                    onChange={e => setFuelForm({...fuelForm, pricePerGallonCop: Number(e.target.value)})}
                                     className="w-full bg-slate-900 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#10B981]/50 transition-all font-light"
                                 />
                             </div>

@@ -1,23 +1,23 @@
 'use server';
 
-export async function submitQuoteAction(formData: FormData) {
+import { fetchApi } from '@/lib/api';
+
+export async function submitQuoteAction(backendData: any) {
     try {
-        // En un entorno de producción real:
-        // 1. Extraeríamos los datos (const rawData = Object.fromEntries(formData))
-        // 2. Validaríamos de nuevo en el servidor con Zod
-        // 3. Guardaríamos en nuestra Base de Datos (ej. Prisma: prisma.lead.create({...}))
-        // 4. Se dispararía un webhook a un CRM (Salesforce / HubSpot)
-        // 5. Enviaríamos un email transaccional (Resend/SendGrid) al cliente.
+        // Ejecutar llamada real a la API del DMS
+        const result = await fetchApi('/api/quotes', {
+            method: 'POST',
+            body: JSON.stringify(backendData)
+        });
 
-        // Simulamos latencia de red contra una DB
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        console.log('Lead de Cotización procesado en servidor:', result);
 
-        // Log seguro en entorno backend, nunca expuesto en consola del cliente
-        console.log('Lead de Cotización procesado en servidor:', Object.fromEntries(formData));
-
-        return { success: true };
-    } catch (error) {
+        return { success: true, data: result };
+    } catch (error: any) {
         console.error('Error procesando cotización:', error);
-        return { success: false, error: 'Hubo un error contactando el sistema. Intenta más tarde.' };
+        return {
+            success: false,
+            error: error.message || 'Hubo un error contactando el sistema. Intenta más tarde.'
+        };
     }
 }

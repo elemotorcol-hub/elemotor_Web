@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { UploadCloud, X, GripVertical, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { UploadCloud, X, GripVertical, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { uploadService } from '@/services/upload.service';
 
 interface ImageUploaderProps {
     images: string[];
@@ -10,8 +11,42 @@ interface ImageUploaderProps {
 
 export default function ImageUploader({ images, onChange }: ImageUploaderProps) {
     const [isDragging, setIsDragging] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Simulate drag & drop behavior for adding
+    const handleUpload = async (files: FileList | null) => {
+        if (!files || files.length === 0) return;
+        
+        const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+        const validFiles = Array.from(files).filter(file => {
+            if (file.size > MAX_SIZE) {
+                alert(`El archivo ${file.name} es demasiado grande. El máximo permitido es 10MB.`);
+                return false;
+            }
+            return true;
+        });
+
+        if (validFiles.length === 0) {
+            setIsUploading(false);
+            return;
+        }
+        
+        try {
+            const uploadPromises = validFiles.map(file => 
+                uploadService.uploadImage(file, 'workshops')
+            );
+            
+            const results = await Promise.all(uploadPromises);
+            const newUrls = results.map(res => res.publicUrl);
+            onChange([...images, ...newUrls]);
+        } catch (error) {
+            console.error('Error uploading images:', error);
+            alert('Error al subir las imágenes. Inténtalo de nuevo.');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(true);
@@ -22,13 +57,15 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
         setIsDragging(false);
     };
 
-    const handleDrop = (e: React.DragEvent) => {
+    const handleDrop = async (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(false);
-        
-        // For simulation, just add a placeholder image
-        const newMockImage = `/taller-${Math.floor(Math.random() * 5) + 1}.jpg`;
-        onChange([...images, newMockImage]);
+        await handleUpload(e.dataTransfer.files);
+    };
+
+    const onFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        await handleUpload(e.target.files);
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     const removeImage = (indexToRemove: number) => {
@@ -62,16 +99,27 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                onClick={() => {
-                    const newMockImage = `/taller-${Math.floor(Math.random() * 5) + 1}.jpg`;
-                    onChange([...images, newMockImage]);
-                }}
+                onClick={() => fileInputRef.current?.click()}
             >
+                <input 
+                    type="file" 
+                    className="hidden" 
+                    ref={fileInputRef}
+                    multiple 
+                    accept="image/*"
+                    onChange={onFileSelect}
+                />
                 <div className={`p-4 rounded-full mb-3 ${isDragging ? 'bg-[#10B981]/20' : 'bg-slate-800'}`}>
-                    <UploadCloud size={28} className={isDragging ? 'text-[#10B981]' : 'text-slate-400'} />
+                    {isUploading ? (
+                        <Loader2 size={28} className="text-[#10B981] animate-spin" />
+                    ) : (
+                        <UploadCloud size={28} className={isDragging ? 'text-[#10B981]' : 'text-slate-400'} />
+                    )}
                 </div>
-                <p className="text-sm font-semibold">Haz clic o arrastra fotos aquí</p>
-                <p className="text-xs opacity-70 mt-1">Soporta JPG, PNG hasta 5MB (Simulado)</p>
+                <p className="text-sm font-semibold">
+                    {isUploading ? 'Subiendo imágenes...' : 'Haz clic o arrastra fotos aquí'}
+                </p>
+                <p className="text-xs opacity-70 mt-1">Soporta JPG, PNG, WebP hasta 5MB</p>
             </div>
 
             {/* Uploaded List */}
@@ -82,10 +130,10 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
                         <span className="text-xs font-normal text-slate-500">{images.length} imágenes</span>
                     </h4>
                     
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 gap-2">
                         {images.map((imgSrc, index) => (
                             <div 
-                                key={`${imgSrc}-${index}`} 
+                                key={imgSrc} 
                                 className="flex items-center gap-3 p-3 bg-slate-900 border border-slate-800 rounded-xl group"
                             >
                                 {/* Drag Handle (Simulated arrows for click ordering instead of complex D&D list) */}
@@ -102,10 +150,11 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
 
                                 {/* Preview Thumbnail */}
                                 <div className="w-16 h-16 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
-                                    <div className="w-full h-full bg-slate-700 flex flex-col items-center justify-center text-slate-500 text-xs">
-                                        <ImageIcon size={20} className="mb-1" />
-                                        Foto {index + 1}
-                                    </div>
+                                    <img 
+                                        src={imgSrc} 
+                                        alt={`Foto ${index + 1}`} 
+                                        className="w-full h-full object-cover"
+                                    />
                                 </div>
 
                                 {/* Info */}

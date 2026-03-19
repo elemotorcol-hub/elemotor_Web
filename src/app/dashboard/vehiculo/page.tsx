@@ -1,118 +1,146 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import {
-    BatteryCharging, Map, Gauge, Wrench, ShieldCheck, FileText,
-    Calendar, Download, ExternalLink
+    Gauge, Wrench, ShieldCheck, Zap,
+    Calendar, ArrowRight, Timer, HardDrive
 } from 'lucide-react';
-import { MOCK_VEHICLE_DATA as mockData } from '@/mocks/clientPortalData';
+
+import { useRouter } from 'next/navigation';
+
+// Using real data from models.ts for AVATR 11
+const VEHICLE_SPECS = {
+    brand: 'AVATR',
+    model: '11',
+    year: '2024',
+    vin: '5YJ3E1EA...892',
+    color: { name: 'Blanco Perla', hex: '#F8FAFC' },
+    purchaseDate: '24 Oct, 2023',
+    specs: [
+        { label: 'Batería', value: '83 kWh', icon: HardDrive, detail: 'Litio-NCM' },
+        { label: 'Autonomía', value: '610 km', icon: Zap, detail: 'Ciclo WLTP' },
+        { label: 'Potencia', value: '578 HP', icon: Gauge, detail: 'Dual Motor AWD' },
+        { label: 'Aceleración', value: '3.9 s', icon: Timer, detail: '0-100 km/h' },
+        { label: 'Torque', value: '650 Nm', icon: Wrench, detail: 'Instantáneo' },
+        { label: 'Carga Rápida', value: '25 min', icon: Zap, detail: '30% a 80%' },
+    ]
+};
 
 export default function MiVehiculoPage() {
+    const router = useRouter();
+
     return (
-        <div className="flex flex-col gap-8 max-w-[1200px] mx-auto w-full pb-10">
+        <div className="flex flex-col gap-10 max-w-7xl mx-auto w-full pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/5 pb-6">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Mi Vehículo</h1>
-                    <p className="text-slate-400 text-sm md:text-base">Gestione los detalles y el estado de su vehículo.</p>
+                    <h1 className="text-4xl md:text-5xl font-black text-white mb-2 tracking-tighter">
+                        Mi <span className="text-[#10B981]">Vehículo</span>
+                    </h1>
+                    <p className="text-slate-400 font-medium">Especificaciones detalladas y estado técnico oficial.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                        <ShieldCheck className="w-4 h-4" />
+                        Garantía de Fábrica Activa
+                    </div>
                 </div>
             </div>
 
-            {/* Hero Card */}
-            <div className="bg-[#15201D] border border-white/5 rounded-3xl overflow-hidden flex flex-col lg:flex-row relative">
+            {/* Hero Card - Premium Presentation */}
+            <div className="bg-[#15201D] border border-white/5 rounded-[40px] overflow-hidden flex flex-col lg:flex-row relative shadow-2xl group">
+                {/* Visual Background Decoration */}
+                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[#10B981]/5 to-transparent pointer-events-none" />
+
                 {/* Left Side: Vehicle Image */}
-                <div className="lg:w-[60%] h-[300px] lg:h-auto relative">
-                    <div
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=2000&auto=format&fit=crop')" }}
-                    ></div>
-                    {/* Gradients to blend into the right side smoothly */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#15201D]/80 to-[#15201D] hidden lg:block"></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#15201D] via-[#15201D]/40 to-transparent lg:hidden"></div>
+                <div className="lg:w-[65%] h-[400px] lg:h-[500px] relative overflow-hidden bg-[#0A110F]">
+                    <Image
+                        src="https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=2000&auto=format&fit=crop"
+                        alt="AVATR 11 - Premium Edition"
+                        fill
+                        className="object-contain p-8 transform group-hover:scale-105 transition-transform duration-1000 ease-out"
+                        priority
+                    />
+                    {/* Artistic Gradients */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#15201D] hidden lg:block" />
+                    <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#15201D] to-transparent lg:hidden" />
                 </div>
 
-                {/* Right Side: Vehicle Info */}
-                <div className="lg:w-[40%] p-8 lg:p-10 flex flex-col justify-center relative z-10 bg-[#15201D]">
-                    <p className="text-[#10B981] text-xs font-bold tracking-wider mb-2">{mockData.modelYear}</p>
-                    <h2 className="text-4xl font-bold text-white mb-3">{mockData.modelName}</h2>
-
-                    <div className="flex items-center gap-2 text-slate-400 text-sm mb-8">
-                        <div className="px-2 py-0.5 rounded bg-white/5 border border-white/10 flex items-center justify-center font-mono text-[10px] text-slate-300">VIN</div>
-                        <span>{mockData.vin}</span>
+                {/* Right Side: Primary Info */}
+                <div className="lg:w-[35%] p-10 lg:p-12 flex flex-col justify-center relative z-10 bg-[#15201D]/50 backdrop-blur-sm">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-black text-[#10B981] uppercase tracking-[0.2em] mb-4 w-fit">
+                        {VEHICLE_SPECS.brand} EXCLUSIVE
                     </div>
+                    <h2 className="text-5xl font-black text-white mb-2 tracking-tighter leading-none">
+                        {VEHICLE_SPECS.model}
+                        <span className="block text-xl text-slate-500 mt-2 font-bold tracking-normal">{VEHICLE_SPECS.year} Edition</span>
+                    </h2>
 
-                    <div className="grid grid-cols-2 gap-6 mb-8 pt-6 border-t border-white/5">
-                        <div>
-                            <p className="text-slate-500 text-xs mb-2">Color Exterior</p>
-                            <div className="flex items-center gap-2 text-slate-200 text-sm font-medium">
-                                <span className="w-4 h-4 rounded-full border border-white/20 shadow-inner" style={{ backgroundColor: mockData.exteriorColor.hex }}></span>
-                                {mockData.exteriorColor.name}
+                    <div className="space-y-6 mt-8 pt-8 border-t border-white/5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Color</span>
+                            <div className="flex items-center gap-2 text-white font-bold text-sm">
+                                <span className="w-4 h-4 rounded-full border border-white/20 shadow-inner" style={{ backgroundColor: VEHICLE_SPECS.color.hex }} />
+                                {VEHICLE_SPECS.color.name}
                             </div>
                         </div>
-                        <div>
-                            <p className="text-slate-500 text-xs mb-2">Fecha Compra</p>
-                            <div className="flex items-center gap-2 text-slate-200 text-sm font-medium">
-                                <Calendar className="w-4 h-4 text-slate-400" />
-                                {mockData.purchaseDate}
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">VIN</span>
+                            <span className="text-sm font-mono text-slate-300 bg-white/5 px-2 py-1 rounded-md">{VEHICLE_SPECS.vin}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Adquisición</span>
+                            <div className="flex items-center gap-2 text-white font-bold text-sm">
+                                <Calendar className="w-4 h-4 text-[#10B981]" />
+                                {VEHICLE_SPECS.purchaseDate}
                             </div>
                         </div>
                     </div>
+
+                    <button
+                        onClick={() => router.push('/dashboard/documentos')}
+                        className="mt-10 w-full bg-[#10B981] hover:bg-emerald-400 text-[#0A110F] font-black py-5 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 shadow-[0_10px_30px_rgba(16,185,129,0.2)] hover:shadow-[0_15px_40px_rgba(16,185,129,0.4)] group/btn"
+                    >
+                        Manual del Propietario
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </button>
                 </div>
             </div>
 
-            {/* Bottom Section: Autonomy and Documentation */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                {/* Autonomia Card - Unified for EV status focus */}
-                <div className="lg:col-span-1 bg-[#15201D] border border-white/5 rounded-3xl p-8 relative overflow-hidden group flex flex-col justify-center min-h-[300px]">
-                    <div className="relative z-10">
-                        <span className="text-slate-400 text-sm font-bold uppercase tracking-widest mb-4 block">Energía y Rango</span>
-                        <div className="text-6xl font-black text-white mb-4 tracking-tighter">
-                            {mockData.telemetry.range.value} <span className="text-2xl text-slate-500 font-bold">{mockData.telemetry.range.unit}</span>
-                        </div>
-                        <p className="text-slate-400 text-sm leading-relaxed max-w-[200px]">
-                            Autonomía estimada disponible basada en tu estilo de conducción reciente.
-                        </p>
-                    </div>
-                    
-                    {/* Background Icon */}
-                    <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-[#10B981] opacity-[0.02] rounded-full blur-3xl pointer-events-none group-hover:opacity-[0.05] transition-opacity duration-500"></div>
-                    <Map className="absolute top-1/2 right-4 -translate-y-1/2 w-40 h-40 text-white/[0.02] transform rotate-12 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6 pointer-events-none" />
+            {/* Technical Specs Grid */}
+            <div className="space-y-6">
+                <div className="flex items-center gap-4 px-2">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10" />
+                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em]">Especificaciones Técnicas</h3>
+                    <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
                 </div>
 
-                {/* Documentacion Card */}
-                <div className="lg:col-span-2 bg-[#15201D] border border-white/5 rounded-3xl p-8 flex flex-col group">
-                    <div className="flex items-center gap-4 mb-8">
-                        <div className="w-12 h-12 rounded-2xl bg-[#10B981]/10 flex items-center justify-center text-[#10B981]">
-                            <FileText className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-bold text-white">Documentación</h3>
-                            <p className="text-slate-500 text-sm">Manuales y certificados oficiales de tu vehículo.</p>
-                        </div>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {VEHICLE_SPECS.specs.map((spec, idx) => {
+                        const Icon = spec.icon;
+                        return (
+                            <div key={idx} className="bg-[#15201D] border border-white/5 p-8 rounded-[32px] hover:border-[#10B981]/30 transition-all duration-300 group hover:translate-y-[-4px] shadow-lg">
+                                <div className="flex items-start justify-between mb-6">
+                                    <div className="w-12 h-12 bg-[#0A110F] rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-[#10B981] transition-colors border border-white/5 shadow-inner">
+                                        <Icon className="w-6 h-6" />
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-500 tracking-widest uppercase py-1 px-2.5 rounded-full bg-white/5">
+                                        Oficial
+                                    </span>
+                                </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {mockData.documents.map((doc, index) => (
-                            <div key={index} className="bg-[#0A110F] border border-white/5 rounded-2xl p-5 flex items-center gap-4 hover:border-[#10B981]/30 hover:bg-[#10B981]/5 transition-all cursor-pointer group/item">
-                                <div className="w-12 h-12 rounded-xl bg-[#15201D] border border-white/5 flex items-center justify-center text-slate-400 group-hover/item:text-[#10B981] transition-colors shrink-0">
-                                    <FileText className="w-6 h-6" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="text-white text-base font-bold truncate mb-1">{doc.name}</h4>
-                                    <p className="text-slate-500 text-xs font-semibold">{doc.info}</p>
-                                </div>
-                                <div className="text-slate-500 group-hover/item:text-white transition-colors">
-                                    {doc.actionType === 'download' ? (
-                                        <Download className="w-5 h-5" />
-                                    ) : (
-                                        <ExternalLink className="w-5 h-5" />
-                                    )}
+                                <div>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">{spec.label}</p>
+                                    <h4 className="text-3xl font-black text-white mb-1 group-hover:text-[#10B981] transition-colors tracking-tighter">
+                                        {spec.value}
+                                    </h4>
+                                    <p className="text-sm font-medium text-slate-400">{spec.detail}</p>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        );
+                    })}
                 </div>
             </div>
 

@@ -1,9 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Calendar, MapPin, Wrench, Clock, CheckCircle2, ChevronDown } from 'lucide-react';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { X, Calendar, MapPin, Wrench, Clock, CheckCircle2, ChevronDown, AlertCircle } from 'lucide-react';
 import { WORKSHOPS_DATA } from '@/mocks/talleresData';
 import { Button } from '@/components/Button';
+import { maintenanceSchema, MaintenanceFormData } from '@/schemas/maintenanceSchema';
+import { sanitizeObject } from '@/lib/utils/sanitizationUtils';
+import { HoneyPot } from '@/components/common/HoneyPot';
 
 interface ScheduleMaintenanceModalProps {
     isOpen: boolean;
@@ -12,29 +17,11 @@ interface ScheduleMaintenanceModalProps {
 
 export function ScheduleMaintenanceModal({ isOpen, onClose }: ScheduleMaintenanceModalProps) {
     const [step, setStep] = useState<'form' | 'success'>('form');
-    const [formData, setFormData] = useState({
-        workshopId: '',
-        date: '',
-        time: '',
-        serviceType: 'Mantenimiento General',
-        phone: '',
-        email: '',
-        notes: ''
-    });
-
-    const today = new Date().toISOString().split('T')[0];
-
-    if (!isOpen) return null;
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Simulate API call
-        setStep('success');
-    };
-
-    const handleReset = () => {
-        setStep('form');
-        setFormData({
+    
+    const methods = useForm<MaintenanceFormData>({
+        resolver: zodResolver(maintenanceSchema),
+        mode: 'onChange',
+        defaultValues: {
             workshopId: '',
             date: '',
             time: '',
@@ -42,7 +29,35 @@ export function ScheduleMaintenanceModal({ isOpen, onClose }: ScheduleMaintenanc
             phone: '',
             email: '',
             notes: ''
-        });
+        }
+    });
+
+    const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = methods;
+
+    const today = new Date().toISOString().split('T')[0];
+
+    if (!isOpen) return null;
+
+    const onSubmit = async (data: MaintenanceFormData) => {
+        // Level 2 Security: Sanitization
+        const sanitizedData = sanitizeObject(data);
+        
+        // Level 3 Governance: Check HoneyPot (Zod does this via schema, but we double check)
+        if (sanitizedData.nickname) {
+            console.error('Bot submission blocked');
+            return;
+        }
+
+        console.log('Final Prepared Data (Safe):', sanitizedData);
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        setStep('success');
+    };
+
+    const handleReset = () => {
+        setStep('form');
+        reset();
         onClose();
     };
 
@@ -81,96 +96,101 @@ export function ScheduleMaintenanceModal({ isOpen, onClose }: ScheduleMaintenanc
 
                 <div className="p-8">
                     {step === 'form' ? (
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Workshop Selection */}
-                            <div className="space-y-2">
-                                <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                    <MapPin className="w-3 h-3 text-[#10B981]" />
-                                    Seleccionar Taller
-                                </label>
-                                <div className="relative group">
-                                    <select
-                                        required
-                                        value={formData.workshopId}
-                                        onChange={(e) => setFormData({ ...formData, workshopId: e.target.value })}
-                                        className="w-full bg-[#0A110F] border border-white/5 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:border-[#10B981]/50 transition-all appearance-none cursor-pointer group-hover:border-white/10"
-                                    >
-                                        <option value="" disabled>Elige un centro de servicio</option>
-                                        {WORKSHOPS_DATA.map(workshop => (
-                                            <option key={workshop.id} value={workshop.id}>
-                                                {workshop.name} - {workshop.city}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                                </div>
-                            </div>
+                        <FormProvider {...methods}>
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                                {/* Level 3 Detection */}
+                                <HoneyPot />
 
-                            <div className="grid grid-cols-2 gap-4">
-                                {/* Date */}
+                                {/* Workshop Selection */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                        <Calendar className="w-3 h-3 text-[#10B981]" />
-                                        Fecha
+                                        <MapPin className="w-3 h-3 text-[#10B981]" />
+                                        Seleccionar Taller <span className="text-red-500">*</span>
                                     </label>
-                                    <input
-                                        type="date"
-                                        required
-                                        min={today}
-                                        value={formData.date}
-                                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                        className="w-full bg-[#0A110F] border border-white/5 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#10B981]/50 transition-all [color-scheme:dark]"
-                                    />
+                                    <div className="relative group">
+                                        <select
+                                            {...register('workshopId')}
+                                            className={`w-full bg-[#0A110F] border rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none transition-all appearance-none cursor-pointer group-hover:border-white/10 ${errors.workshopId ? 'border-red-500/50 focus:border-red-500' : 'border-white/5 focus:border-[#10B981]/50'}`}
+                                        >
+                                            <option value="" disabled>Elige un centro de servicio</option>
+                                            {WORKSHOPS_DATA.map(workshop => (
+                                                <option key={workshop.id} value={workshop.id}>
+                                                    {workshop.name} - {workshop.city}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                                    </div>
+                                    {errors.workshopId && <p className="text-[10px] font-bold text-red-400 flex items-center gap-1 mt-1"><AlertCircle size={10} /> {errors.workshopId.message}</p>}
                                 </div>
 
-                                {/* Time */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                        <Clock className="w-3 h-3 text-[#10B981]" />
-                                        Hora
-                                    </label>
-                                    <select
-                                        required
-                                        value={formData.time}
-                                        onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                                        className="w-full bg-[#0A110F] border border-white/5 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#10B981]/50 transition-all appearance-none cursor-pointer"
-                                    >
-                                        <option value="" disabled>Selecciona hora</option>
-                                        <option value="08:00 AM">08:00 AM</option>
-                                        <option value="10:00 AM">10:00 AM</option>
-                                        <option value="12:00 PM">12:00 PM</option>
-                                        <option value="02:00 PM">02:00 PM</option>
-                                        <option value="04:00 PM">04:00 PM</option>
-                                    </select>
-                                </div>
-                            </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* Date */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                            <Calendar className="w-3 h-3 text-[#10B981]" />
+                                            Fecha <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="date"
+                                            min={today}
+                                            {...register('date')}
+                                            className={`w-full bg-[#0A110F] border rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all [color-scheme:dark] ${errors.date ? 'border-red-500/50 focus:border-red-500' : 'border-white/5 focus:border-[#10B981]/50'}`}
+                                        />
+                                        {errors.date && <p className="text-[10px] font-bold text-red-400 flex items-center gap-1 mt-1"><AlertCircle size={10} /> {errors.date.message}</p>}
+                                    </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {/* Phone */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Teléfono de Contacto</label>
-                                    <input
-                                        type="tel"
-                                        required
-                                        placeholder="+57..."
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full bg-[#0A110F] border border-white/5 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#10B981]/50 transition-all"
-                                    />
+                                    {/* Time */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                            <Clock className="w-3 h-3 text-[#10B981]" />
+                                            Hora <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            {...register('time')}
+                                            className={`w-full bg-[#0A110F] border rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all appearance-none cursor-pointer ${errors.time ? 'border-red-500/50 focus:border-red-500' : 'border-white/5 focus:border-[#10B981]/50'}`}
+                                        >
+                                            <option value="" disabled>Selecciona hora</option>
+                                            <option value="08:00 AM">08:00 AM</option>
+                                            <option value="10:00 AM">10:00 AM</option>
+                                            <option value="12:00 PM">12:00 PM</option>
+                                            <option value="02:00 PM">02:00 PM</option>
+                                            <option value="04:00 PM">04:00 PM</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                {/* Email */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Email</label>
-                                    <input
-                                        type="email"
-                                        required
-                                        placeholder="tu@email.com"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full bg-[#0A110F] border border-white/5 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#10B981]/50 transition-all"
-                                    />
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {/* Phone */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Teléfono <span className="text-red-500">*</span></label>
+                                        <input
+                                            type="tel"
+                                            placeholder="+57..."
+                                            {...register('phone')}
+                                            onKeyDown={(e) => {
+                                                // Permitir números, retroceso, tab, flechas y el signo +
+                                                const allowedKeys = ['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', '+', 'Delete'];
+                                                if (!allowedKeys.includes(e.key) && !/^\d$/.test(e.key)) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                            className={`w-full bg-[#0A110F] border rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all ${errors.phone ? 'border-red-500/50 focus:border-red-500' : 'border-white/5 focus:border-[#10B981]/50'}`}
+                                        />
+                                        {errors.phone && <p className="text-[10px] font-bold text-red-400 flex items-center gap-1 mt-1"><AlertCircle size={10} /> {errors.phone.message}</p>}
+                                    </div>
+                                    {/* Email */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Email <span className="text-red-500">*</span></label>
+                                        <input
+                                            type="email"
+                                            placeholder="tu@email.com"
+                                            {...register('email')}
+                                            className={`w-full bg-[#0A110F] border rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-all ${errors.email ? 'border-red-500/50 focus:border-red-500' : 'border-white/5 focus:border-[#10B981]/50'}`}
+                                        />
+                                        {errors.email && <p className="text-[10px] font-bold text-red-400 flex items-center gap-1 mt-1"><AlertCircle size={10} /> {errors.email.message}</p>}
+                                    </div>
                                 </div>
-                            </div>
 
                             {/* Service Type */}
                             <div className="space-y-2">
@@ -183,9 +203,9 @@ export function ScheduleMaintenanceModal({ isOpen, onClose }: ScheduleMaintenanc
                                         <button
                                             key={type}
                                             type="button"
-                                            onClick={() => setFormData({ ...formData, serviceType: type })}
+                                            onClick={() => methods.setValue('serviceType', type, { shouldValidate: true })}
                                             className={`px-3 py-2 rounded-lg text-[11px] font-bold border transition-all ${
-                                                formData.serviceType === type 
+                                                watch('serviceType') === type 
                                                     ? 'bg-[#10B981]/10 border-[#10B981] text-[#10B981]' 
                                                     : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
                                             }`}
@@ -200,26 +220,31 @@ export function ScheduleMaintenanceModal({ isOpen, onClose }: ScheduleMaintenanc
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
                                     <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Descripción del problema</label>
-                                    <span className={`text-[10px] font-bold ${formData.notes.length >= 450 ? 'text-orange-500' : 'text-slate-500'}`}>
-                                        {formData.notes.length}/500
+                                    <span className={`text-[10px] font-bold ${(watch('notes') || '').length >= 450 ? 'text-orange-500' : 'text-slate-500'}`}>
+                                        {(watch('notes') || '').length}/500
                                     </span>
                                 </div>
                                 <textarea
                                     maxLength={500}
                                     placeholder="Describe brevemente el motivo de tu visita..."
-                                    value={formData.notes}
-                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                    {...register('notes')}
                                     className="w-full h-24 bg-[#0A110F] border border-white/5 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#10B981]/50 transition-all resize-none"
                                 />
+                                {errors.notes && <p className="text-[10px] font-bold text-red-400 mt-1">{errors.notes.message}</p>}
                             </div>
 
                             {/* Footer CTAs */}
                             <div className="pt-4 flex flex-col gap-3">
-                                <Button type="submit" className="w-full bg-[#10B981] hover:bg-[#0E9F6E] text-slate-900 font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all">
+                                <Button 
+                                    type="submit" 
+                                    isLoading={isSubmitting}
+                                    className="w-full bg-[#10B981] hover:bg-[#0E9F6E] text-slate-900 font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all"
+                                >
                                     Confirmar Cita
                                 </Button>
                             </div>
                         </form>
+                    </FormProvider>
                     ) : (
                         <div className="text-center py-10 animate-in fade-in zoom-in-95 duration-500">
                             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#10B981]/10 border-2 border-[#10B981]/20 mb-6">

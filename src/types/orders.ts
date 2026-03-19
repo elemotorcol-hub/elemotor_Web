@@ -1,4 +1,4 @@
-export type OrderStatus = 'Fabricación' | 'En Puerto' | 'En Tránsito' | 'Aduanas' | 'Listo para Entrega';
+export type OrderStatus = 'confirmed' | 'port_origin' | 'transit' | 'customs' | 'nationalization' | 'ready' | 'delivered';
 
 export interface OrderStatusHistory {
     status: OrderStatus;
@@ -7,20 +7,45 @@ export interface OrderStatusHistory {
 }
 
 export interface Order {
-    id: string; // Internal DB ID usually
-    trackingCode: string; // EJ: ELE-2401-ABC
-    clientId: string;
-    clientName: string;
-    vehicleModelId: string;
-    vehicleModel: string;
-    trimId: string;
-    trimName: string;
-    colorId: string;
-    colorName: string;
+    id: string | number;
+    trackingCode: string;
+    userId: number;
+    user?: {
+        id: number;
+        name: string;
+        email: string;
+    };
+    trimId: number;
+    trim?: {
+        id: number;
+        name: string;
+        model?: {
+            id: number;
+            name: string;
+            brand?: {
+                id: number;
+                name: string;
+            };
+        };
+    };
+    colorId: number;
+    color?: {
+        id: number;
+        name: string;
+        hexCode: string;
+    };
     status: OrderStatus;
-    estimatedDelivery: string;
-    totalPrice: number;
+    estimatedDelivery?: string;
     vin?: string;
     notes?: string;
-    history: OrderStatusHistory[];
+    createdAt?: string;
+    updatedAt?: string;
+    totalPrice?: number;
+    statusHistory?: OrderStatusHistory[];
+    
+    // Legacy mapping compatibility
+    clientName?: string;
+    vehicleModel?: string;
+    trimName?: string;
+    colorName?: string;
 }

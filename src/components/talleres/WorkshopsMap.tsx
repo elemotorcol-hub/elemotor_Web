@@ -1,31 +1,93 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, Zap, Navigation, X, Target, Layers } from 'lucide-react';
 import Image from 'next/image';
-import { WORKSHOPS_DATA, WORKSHOP_FILTERS, Workshop } from '@/mocks/talleresData';
+import { workshopService } from '@/services/workshop.service';
 import { WorkshopDetailsModal } from '@/components/talleres/WorkshopDetailsModal';
 
+const WORKSHOP_FILTERS = ['Todos', 'Mantenimiento', 'Cargadores', 'Frenos', 'General'];
+
 export function WorkshopsMap() {
+// ... existing states and effect ...
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('Todos');
     const [activeWorkshopId, setActiveWorkshopId] = useState<string | null>(null);
     const [modalWorkshopId, setModalWorkshopId] = useState<string | null>(null);
+    const [workshops, setWorkshops] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Coordinate mapping: real world to percentage UI
+    // Bbox de Colombia: Lng [-82, -66.5], Lat [-4.5, 13.5]
+    const mapToCoordinates = (lat: number | null, lng: number | null) => {
+        if (!lat || !lng) return { x: 50, y: 50 }; // Fallback central
+        const x = ((lng + 82.0) / 15.5) * 100;
+        const y = ((13.5 - lat) / 18.0) * 100;
+        return { x, y };
+    };
+
+    // Mapping service types to UI icons/titles
+    const serviceTypeMap: Record<string, any> = {
+        'chargers': { id: 'c', icon: 'zap', title: 'Estación de Carga', description: 'Carga rápida disponible' },
+        'maintenance': { id: 'm', icon: 'wrench', title: 'Mantenimiento General', description: 'Servicio preventivo' },
+        'tires': { id: 't', icon: 'tire', title: 'Llantas y Alineación', description: 'Especial EVs' },
+        'electric_diagnostics': { id: 'e', icon: 'zap', title: 'Diagnóstico Eléctrico', description: 'Sistemas HV' },
+        'body_paint': { id: 'b', icon: 'wrench', title: 'Carrocería', description: 'Pintura especializada' }
+    };
+
+    const mapDays = (dayOfWeek: number) => {
+        const days = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+        return days[dayOfWeek % 7];
+    };
+
+    useEffect(() => {
+        const loadWorkshops = async () => {
+            try {
+                const response = await workshopService.fetchWorkshops();
+                if (response.success && response.result.data) {
+                    const mapped = response.result.data.map((w: any) => ({
+                        ...w,
+                        id: String(w.id), // UI expects string
+                        x: mapToCoordinates(w.latitude, w.longitude).x,
+                        y: mapToCoordinates(w.latitude, w.longitude).y,
+                        type: w.services.includes('chargers') ? 'Cargadores' : 'Mantenimiento',
+                        services: w.services.map((type: string) => serviceTypeMap[type] || serviceTypeMap['maintenance']),
+                        hoursList: w.hours.map((h: any) => ({
+                            day: mapDays(h.dayOfWeek),
+                            open_time: h.openTime || '--:--',
+                            close_time: h.closeTime || '--:--',
+                            is_closed: h.isClosed
+                        })),
+                        reviews: 40 + Math.floor(Math.random() * 100), // Mock reviews if not in DB
+                        rating: w.rating || 4.5,
+                        estimatedDistance: 'Calculando...',
+                        estimatedTime: '--'
+                    }));
+                    setWorkshops(mapped);
+                }
+            } catch (error) {
+                console.error('Error loading workshops:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadWorkshops();
+    }, []);
 
     // Filter Logic
     const filteredWorkshops = useMemo(() => {
-        return WORKSHOPS_DATA.filter(workshop => {
+        return workshops.filter(workshop => {
             const matchesSearch = workshop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                workshop.address.toLowerCase().includes(searchQuery.toLowerCase());
+                (workshop.address || '').toLowerCase().includes(searchQuery.toLowerCase());
             const matchesFilter = selectedFilter === 'Todos' || workshop.type === selectedFilter;
             return matchesSearch && matchesFilter;
         });
-    }, [searchQuery, selectedFilter]);
+    }, [searchQuery, selectedFilter, workshops]);
 
     const activeWorkshop = useMemo(() => {
-        return WORKSHOPS_DATA.find(w => w.id === activeWorkshopId);
-    }, [activeWorkshopId]);
+        return workshops.find(w => w.id === activeWorkshopId);
+    }, [activeWorkshopId, workshops]);
 
     // Handle map pin click
     const handlePinClick = (id: string, e: React.MouseEvent) => {
@@ -184,8 +246,8 @@ export function WorkshopsMap() {
                     </button>
                 </div>
 
-                {/* Marcadores / Pines (Mock con posiciones % relativas) */}
-                {WORKSHOPS_DATA.map(workshop => {
+                {/* Marcadores / Pines (Basados en datos reales) */}
+                {workshops.map(workshop => {
                     const isActive = activeWorkshopId === workshop.id;
                     const isFiltered = filteredWorkshops.some(w => w.id === workshop.id);
 
@@ -292,7 +354,7 @@ export function WorkshopsMap() {
                 <AnimatePresence>
                     {modalWorkshopId && (
                         <WorkshopDetailsModal
-                            workshop={WORKSHOPS_DATA.find(w => w.id === modalWorkshopId)!}
+                            workshop={workshops.find(w => w.id === modalWorkshopId)!}
                             onClose={() => setModalWorkshopId(null)}
                         />
                     )}
