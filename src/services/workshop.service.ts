@@ -7,6 +7,16 @@ export interface WorkshopHour {
     isClosed: boolean;
 }
 
+export interface PaginatedWorkshopsResponse {
+    data: WorkshopResponse[];
+    meta: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    };
+}
+
 export interface WorkshopResponse {
     id: number;
     name: string;
@@ -33,7 +43,7 @@ export interface WorkshopResponse {
 
 export const workshopService = {
     async fetchWorkshops(query: string = '') {
-        return fetchApi<any>(`/api/workshops${query}`);
+        return fetchApi<PaginatedWorkshopsResponse>(`/api/workshops${query}`);
     },
 
     async fetchWorkshopById(id: number) {

@@ -68,8 +68,7 @@ export default function WorkshopsTable() {
     const loadWorkshops = async () => {
         setLoading(true);
         try {
-            // El backend devuelve { data: [], meta: {} } directamente
-            const response = await workshopService.fetchWorkshops() as any;
+            const response = await workshopService.fetchWorkshops('?includeInactive=true');
             if (response && response.data) {
                 setWorkshops(response.data);
             }
@@ -117,8 +116,7 @@ export default function WorkshopsTable() {
     const handleToggleStatus = async (id: number, currentStatus: boolean, e: React.MouseEvent) => {
         e.stopPropagation();
         try {
-            // El backend devuelve el objeto actualizado directamente
-            const response = await workshopService.updateWorkshop(id, { active: !currentStatus }) as any;
+            const response = await workshopService.updateWorkshop(id, { active: !currentStatus });
             if (response && response.id) {
                 setWorkshops(workshops.map(w => 
                     w.id === id ? { ...w, active: !currentStatus } : w
@@ -129,7 +127,7 @@ export default function WorkshopsTable() {
         }
     };
 
-    const handleEdit = (workshop: any) => {
+    const handleEdit = (workshop: WorkshopResponse) => {
         setSelectedWorkshop(workshop);
         setIsSlideOverOpen(true);
     };
@@ -275,10 +273,6 @@ export default function WorkshopsTable() {
                                                     workshop.active ? 'translate-x-4' : 'translate-x-0'
                                                 }`} />
                                             </button>
-                                            
-                                            <button className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-                                                <MoreVertical size={16} />
-                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -330,13 +324,13 @@ export default function WorkshopsTable() {
                         try {
                             if (selectedWorkshop) {
                                 // Real Edit mode
-                                const response = await workshopService.updateWorkshop(selectedWorkshop.id, preparedData) as any;
+                                const response = await workshopService.updateWorkshop(selectedWorkshop.id, preparedData);
                                 if (response && response.id) {
                                     loadWorkshops(); // Reload from API
                                 }
                             } else {
                                 // Real Add mode
-                                const response = await workshopService.createWorkshop(preparedData) as any;
+                                const response = await workshopService.createWorkshop(preparedData);
                                 if (response && response.id) {
                                     loadWorkshops(); // Reload from API
                                 }
