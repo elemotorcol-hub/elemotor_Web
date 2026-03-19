@@ -6,19 +6,31 @@ interface UpdateOrderStatusModalProps {
     order: Order | null;
     isOpen: boolean;
     onClose: () => void;
-    onSave: (orderId: string, newStatus: OrderStatus, description: string) => void;
+    onSave: (orderId: string | number, newStatus: OrderStatus, description: string) => void;
 }
 
+const STATUS_LABELS: Record<OrderStatus, string> = {
+    'confirmed': 'Pedido Confirmado',
+    'port_origin': 'En Puerto de Origen',
+    'transit': 'En Tránsito',
+    'customs': 'En Aduanas',
+    'nationalization': 'Nacionalización',
+    'ready': 'Listo para Entrega',
+    'delivered': 'Entregado'
+};
+
 const PIPELINE: OrderStatus[] = [
-    'Fabricación',
-    'En Puerto',
-    'En Tránsito',
-    'Aduanas',
-    'Listo para Entrega'
+    'confirmed',
+    'port_origin',
+    'transit',
+    'customs',
+    'nationalization',
+    'ready',
+    'delivered'
 ];
 
 export default function UpdateOrderStatusModal({ order, isOpen, onClose, onSave }: UpdateOrderStatusModalProps) {
-    const [selectedStatus, setSelectedStatus] = useState<OrderStatus>('Fabricación');
+    const [selectedStatus, setSelectedStatus] = useState<OrderStatus>('confirmed');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [description, setDescription] = useState('');
 
@@ -74,7 +86,7 @@ export default function UpdateOrderStatusModal({ order, isOpen, onClose, onSave 
 
                             // Búsqueda del historial para esta fase (si lo hay)
                             // Al re-pasar fases solo tomará la última vez
-                            const stepHistory = order.history?.find(h => h.status === step);
+                            const stepHistory = order.statusHistory?.find(h => h.status === step);
 
                             return (
                                 <div key={step} className="flex gap-4 relative z-10 min-h-[40px]">
@@ -92,7 +104,7 @@ export default function UpdateOrderStatusModal({ order, isOpen, onClose, onSave 
                                     <div className="flex flex-col mt-[-1px] max-w-[280px]">
                                         <div className="flex items-center gap-2">
                                             <span className={`text-[15px] font-bold leading-none ${isCurrent ? 'text-[#10B981]' : isCompleted ? 'text-white' : 'text-slate-500'}`}>
-                                                {step}
+                                                {STATUS_LABELS[step]}
                                             </span>
                                             {stepHistory && (
                                                 <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
@@ -124,7 +136,7 @@ export default function UpdateOrderStatusModal({ order, isOpen, onClose, onSave 
                             className="w-full bg-[#15201D] border border-white/5 rounded-xl px-4 py-3.5 flex justify-between items-center text-[15px] font-semibold text-white hover:border-white/10 transition-colors focus:outline-none"
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         >
-                            {selectedStatus}
+                            {STATUS_LABELS[selectedStatus]}
                             <svg className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
@@ -144,7 +156,7 @@ export default function UpdateOrderStatusModal({ order, isOpen, onClose, onSave 
                                             setIsDropdownOpen(false);
                                         }}
                                     >
-                                        {step}
+                                        {STATUS_LABELS[step]}
                                         {step === selectedStatus && <Check className="w-4 h-4" />}
                                     </button>
                                 ))}

@@ -2,9 +2,9 @@
 
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
-import { 
-    Car, ArrowRight, Search, FileText, 
-    CheckCircle2, Clock, AlertCircle, 
+import {
+    Car, ArrowRight, Search, FileText,
+    CheckCircle2, Clock, AlertCircle,
     Calendar, Filter, ChevronRight,
     ArrowUpRight, DollarSign, RefreshCcw,
     X, Wallet, Timer as TimerIcon, Info,
@@ -14,20 +14,22 @@ import { MOCK_QUOTES_DATA as mockQuotes } from '@/mocks/clientPortalData';
 import { useRouter } from 'next/navigation';
 import { vehiclesData } from '@/data/models';
 import { QuoteData } from '@/types/dashboard';
+import { formatCurrency, sanitizeHTML, deformatCurrency } from '@/lib/utils/sanitizationUtils';
 
 export default function MisCotizacionesPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending' | 'expired'>('all');
     const [quotes, setQuotes] = useState<QuoteData[]>(mockQuotes);
-    
+
     // Modal New Quote State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
-    
+
     // Details Modal State
     const [selectedQuote, setSelectedQuote] = useState<QuoteData | null>(null);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -39,8 +41,8 @@ export default function MisCotizacionesPage() {
 
     const filteredQuotes = useMemo(() => {
         return quotes.filter(quote => {
-            const matchesSearch = quote.model.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                 quote.id.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSearch = quote.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                quote.id.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesFilter = statusFilter === 'all' || quote.statusCode === statusFilter;
             return matchesSearch && matchesFilter;
         });
@@ -48,10 +50,24 @@ export default function MisCotizacionesPage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        const numericValue = deformatCurrency(formData.initialPayment);
+
+        if (numericValue < 100000000) {
+            setPaymentError('La cuota inicial mínima es de $5,000,000');
+            return;
+        }
+        if (numericValue > 500000000) {
+            setPaymentError('La cuota inicial máxima es de $500,000,000');
+            return;
+        }
+
+        setPaymentError(null);
         setIsSubmitting(true);
-        
+
+        const sanitizedComments = sanitizeHTML(formData.comments);
         const vehicle = vehiclesData.find(v => v.id === formData.modelId);
-        
+
         setTimeout(() => {
             const newQuote: QuoteData = {
                 id: `COT-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -68,7 +84,7 @@ export default function MisCotizacionesPage() {
             setQuotes(prev => [newQuote, ...prev]);
             setIsSubmitting(false);
             setIsSuccess(true);
-            
+
             setTimeout(() => {
                 setIsModalOpen(false);
                 setIsSuccess(false);
@@ -99,7 +115,7 @@ export default function MisCotizacionesPage() {
         WWW.ELEMOTOR.COM.CO
         ──────────────────────────────────────────
         `;
-        
+
         const blob = new Blob([content], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -137,7 +153,7 @@ export default function MisCotizacionesPage() {
                     <p className="text-slate-400 font-medium">Gestiona tus procesos de adquisición y precios oficiales.</p>
                 </div>
 
-                <button 
+                <button
                     onClick={() => setIsModalOpen(true)}
                     className="bg-[#10B981] hover:bg-emerald-400 text-[#0A110F] font-black py-4 px-8 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 shadow-[0_10px_30px_rgba(16,185,129,0.15)] group"
                 >
@@ -169,11 +185,10 @@ export default function MisCotizacionesPage() {
                         <button
                             key={filter.id}
                             onClick={() => setStatusFilter(filter.id as any)}
-                            className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                                statusFilter === filter.id 
-                                ? 'bg-[#10B981] text-[#0A110F] shadow-[0_5px_15px_rgba(16,185,129,0.2)]' 
+                            className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${statusFilter === filter.id
+                                ? 'bg-[#10B981] text-[#0A110F] shadow-[0_5px_15px_rgba(16,185,129,0.2)]'
                                 : 'text-slate-500 hover:text-white hover:bg-white/5'
-                            }`}
+                                }`}
                         >
                             {filter.label}
                         </button>
@@ -214,7 +229,7 @@ export default function MisCotizacionesPage() {
                                     </span>
                                 </div>
                                 <h3 className="text-2xl font-black text-white mb-4 tracking-tighter leading-tight">{quote.model}</h3>
-                                
+
                                 <div className="flex items-center gap-6">
                                     <div className="flex flex-col">
                                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Inversión</span>
@@ -226,10 +241,9 @@ export default function MisCotizacionesPage() {
                                     <div className="w-px h-8 bg-white/5" />
                                     <div className="flex flex-col">
                                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Estado</span>
-                                        <div className={`flex items-center gap-1.5 text-sm font-bold ${
-                                            quote.statusCode === 'approved' ? 'text-[#10B981]' : 
+                                        <div className={`flex items-center gap-1.5 text-sm font-bold ${quote.statusCode === 'approved' ? 'text-[#10B981]' :
                                             quote.statusCode === 'pending' ? 'text-blue-400' : 'text-slate-400'
-                                        }`}>
+                                            }`}>
                                             {renderStatusIcon(quote.statusCode)}
                                             {quote.status}
                                         </div>
@@ -239,13 +253,13 @@ export default function MisCotizacionesPage() {
 
                             {/* Actions */}
                             <div className="flex items-center lg:flex-col justify-between lg:justify-center gap-4 lg:pl-8 lg:border-l border-white/5">
-                                <button 
+                                <button
                                     onClick={() => downloadQuotePDF(quote)}
                                     className="p-4 rounded-xl bg-[#0A110F] border border-white/5 text-slate-400 hover:text-[#10B981] hover:border-[#10B981]/30 transition-all group/action"
                                 >
                                     <Download className="w-5 h-5" />
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setSelectedQuote(quote)}
                                     className="flex-1 lg:flex-none py-4 px-8 rounded-xl bg-white/5 border border-white/10 hover:bg-[#10B981] hover:text-[#0A110F] hover:border-[#10B981] text-xs font-black uppercase tracking-widest transition-all duration-300"
                                 >
@@ -261,7 +275,7 @@ export default function MisCotizacionesPage() {
                         </div>
                         <h4 className="text-xl font-black text-white mb-2">No encontramos coincidencias</h4>
                         <p className="text-slate-500 max-w-xs text-sm">Prueba ajustando tus filtros o el término de búsqueda.</p>
-                        <button 
+                        <button
                             onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
                             className="mt-6 text-[#10B981] font-black text-xs uppercase tracking-widest hover:text-emerald-400 transition-colors"
                         >
@@ -346,10 +360,9 @@ export default function MisCotizacionesPage() {
                                 <div className="space-y-3">
                                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Proceso Actual</p>
                                     <div className="flex items-center gap-2">
-                                        <div className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${
-                                            selectedQuote.statusCode === 'approved' ? 'bg-[#10B981] text-[#0A110F]' : 
+                                        <div className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${selectedQuote.statusCode === 'approved' ? 'bg-[#10B981] text-[#0A110F]' :
                                             selectedQuote.statusCode === 'pending' ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300'
-                                        }`}>
+                                            }`}>
                                             {selectedQuote.status}
                                         </div>
                                         {selectedQuote.statusCode === 'pending' && (
@@ -360,7 +373,7 @@ export default function MisCotizacionesPage() {
                             </div>
 
                             <div className="flex gap-4 mt-8 pt-8 border-t border-white/5">
-                                <button 
+                                <button
                                     onClick={() => downloadQuotePDF(selectedQuote)}
                                     className="flex-1 bg-[#10B981] hover:bg-emerald-400 text-[#0A110F] font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg"
                                 >
@@ -380,18 +393,18 @@ export default function MisCotizacionesPage() {
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     {/* Backdrop */}
-                    <div 
-                        className="absolute inset-0 bg-[#0A110F]/80 backdrop-blur-md animate-in fade-in duration-300" 
+                    <div
+                        className="absolute inset-0 bg-[#0A110F]/80 backdrop-blur-md animate-in fade-in duration-300"
                         onClick={() => !isSubmitting && setIsModalOpen(false)}
                     />
-                    
+
                     {/* Modal Content */}
                     <div className="bg-[#15201D] border border-white/10 w-full max-w-2xl rounded-[40px] overflow-hidden relative shadow-2xl animate-in zoom-in-95 duration-300">
                         {/* Header Image/Pattern */}
                         <div className="h-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500" />
-                        
+
                         <div className="p-8 md:p-10">
-                            <button 
+                            <button
                                 onClick={() => !isSubmitting && setIsModalOpen(false)}
                                 className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/5 text-slate-500 hover:text-white transition-all"
                             >
@@ -412,10 +425,10 @@ export default function MisCotizacionesPage() {
                                                 <Car className="w-3 h-3" />
                                                 Modelo de Interés
                                             </label>
-                                            <select 
+                                            <select
                                                 required
                                                 value={formData.modelId}
-                                                onChange={(e) => setFormData({...formData, modelId: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, modelId: e.target.value })}
                                                 className="w-full bg-[#0A110F] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all appearance-none cursor-pointer"
                                             >
                                                 <option value="" disabled>Selecciona un vehículo...</option>
@@ -434,14 +447,28 @@ export default function MisCotizacionesPage() {
                                                 </label>
                                                 <div className="relative">
                                                     <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                                    <input 
+                                                    <input
                                                         type="text"
                                                         placeholder="Ej: 20,000,000"
                                                         value={formData.initialPayment}
-                                                        onChange={(e) => setFormData({...formData, initialPayment: e.target.value})}
-                                                        className="w-full bg-[#0A110F] border border-white/5 rounded-2xl pl-12 pr-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all"
+                                                        onKeyDown={(e) => {
+                                                            if (!/[0-9]/.test(e.key) && !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key)) {
+                                                                e.preventDefault();
+                                                            }
+                                                        }}
+                                                        onChange={(e) => {
+                                                            const formatted = formatCurrency(e.target.value);
+                                                            setFormData({ ...formData, initialPayment: formatted });
+                                                        }}
+                                                        className={`w-full bg-[#0A110F] border rounded-2xl pl-12 pr-6 py-4 text-sm text-white focus:outline-none transition-all ${paymentError ? 'border-red-500/50 focus:border-red-500' : 'border-white/5 focus:border-[#10B981]/30'
+                                                            }`}
                                                     />
                                                 </div>
+                                                {paymentError && (
+                                                    <p className="text-[10px] text-red-500 font-bold mt-2 animate-in fade-in slide-in-from-top-1">
+                                                        {paymentError}
+                                                    </p>
+                                                )}
                                             </div>
 
                                             {/* Financing installments */}
@@ -450,9 +477,9 @@ export default function MisCotizacionesPage() {
                                                     <TimerIcon className="w-3 h-3" />
                                                     Plazo (Meses)
                                                 </label>
-                                                <select 
+                                                <select
                                                     value={formData.installments}
-                                                    onChange={(e) => setFormData({...formData, installments: e.target.value})}
+                                                    onChange={(e) => setFormData({ ...formData, installments: e.target.value })}
                                                     className="w-full bg-[#0A110F] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all appearance-none cursor-pointer"
                                                 >
                                                     <option value="12">12 Meses</option>
@@ -470,16 +497,16 @@ export default function MisCotizacionesPage() {
                                                 <Info className="w-3 h-3" />
                                                 Comentarios Adicionales
                                             </label>
-                                            <textarea 
+                                            <textarea
                                                 rows={3}
                                                 placeholder="Ej: Color preferido, trade-in, etc."
                                                 value={formData.comments}
-                                                onChange={(e) => setFormData({...formData, comments: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
                                                 className="w-full bg-[#0A110F] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all resize-none"
                                             />
                                         </div>
 
-                                        <button 
+                                        <button
                                             type="submit"
                                             disabled={isSubmitting}
                                             className="w-full bg-[#10B981] hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-[#0A110F] font-black py-5 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 shadow-[0_15px_40px_rgba(16,185,129,0.2)] mt-4"

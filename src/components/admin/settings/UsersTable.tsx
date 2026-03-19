@@ -1,30 +1,42 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Search, User, CheckCircle2, XCircle } from 'lucide-react';
-import { clientsData, ClientUser } from '@/mocks/clientsData';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, User, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { userAdminService, AdminUser } from '@/services/user_admin.service';
 import UserSlideOver from './UserSlideOver';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export default function UsersTable() {
-    const [users, setUsers] = useState<ClientUser[]>(clientsData);
+    const [users, setUsers] = useState<AdminUser[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const debouncedSearch = useDebounce(searchTerm, 500);
     
     // SlideOver State
     const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<ClientUser | null>(null);
+    const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
-    const filteredUsers = useMemo(() => {
-        return users.filter(user => {
-            const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                  user.email.toLowerCase().includes(searchTerm.toLowerCase());
-            return matchesSearch;
-        });
-    }, [users, searchTerm]);
+    const fetchData = useCallback(async (search?: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await userAdminService.getUsers({ search, limit: 100 });
+            setUsers(response.data);
+        } catch (err: any) {
+            setError(err.message || "Error al cargar usuarios");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
-    const getStatusBadge = (status: string) => {
-        return status === 'active' 
-            ? <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400"><CheckCircle2 className="w-3.5 h-3.5" /> Activo</span>
-            : <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-500/10 text-slate-400"><XCircle className="w-3.5 h-3.5" /> Inactivo</span>;
+    useEffect(() => {
+        fetchData(debouncedSearch);
+    }, [debouncedSearch, fetchData]);
+
+    const getStatusBadge = (user: AdminUser) => {
+        // En el backend actual no hay un campo 'status', lo simulamos o usamos info real si existe
+        return <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400"><CheckCircle2 className="w-3.5 h-3.5" /> {user.role}</span>;
     };
 
     const formatDate = (dateString: string) => {
@@ -35,7 +47,7 @@ export default function UsersTable() {
 
 
 
-    const handleEditUser = (user: ClientUser) => {
+    const handleEditUser = (user: AdminUser) => {
         setSelectedUser(user);
         setIsSlideOverOpen(true);
     };
@@ -70,14 +82,23 @@ export default function UsersTable() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {filteredUsers.length > 0 ? (
-                                filteredUsers.map((user) => (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-20 text-center">
+                                        <div className="flex flex-col items-center justify-center">
+                                            <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-2" />
+                                            <p className="text-sm text-slate-500">Cargando usuarios...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : users.length > 0 ? (
+                                users.map((user) => (
                                     <tr key={user.id} onClick={() => handleEditUser(user)} className="hover:bg-white/[0.02] cursor-pointer transition-colors group">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                {user.avatar ? (
+                                                {user.avatarUrl ? (
                                                     <img 
-                                                        src={user.avatar} 
+                                                        src={user.avatarUrl} 
                                                         alt={user.name} 
                                                         className="h-10 w-10 rounded-full object-cover border border-white/10"
                                                     />
@@ -93,16 +114,16 @@ export default function UsersTable() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="text-sm text-slate-300">{user.phone}</span>
+                                            <span className="text-sm text-slate-300">{user.phone || 'N/A'}</span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="text-sm text-slate-300">{user.city || 'No especificada'}</span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {getStatusBadge(user.status)}
+                                            {getStatusBadge(user)}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="text-sm text-slate-400">{formatDate(user.registrationDate)}</span>
+                                            <span className="text-sm text-slate-400">{formatDate(user.createdAt)}</span>
                                         </td>
                                     </tr>
                                 ))
@@ -111,7 +132,7 @@ export default function UsersTable() {
                                     <td colSpan={5} className="px-6 py-20 text-center">
                                         <div className="flex flex-col items-center justify-center text-slate-500">
                                             <Search className="w-8 h-8 mb-3 opacity-50" />
-                                            <p className="text-sm">No se encontraron clientes</p>
+                                            <p className="text-sm">{error || "No se encontraron clientes"}</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -126,6 +147,7 @@ export default function UsersTable() {
                 isOpen={isSlideOverOpen} 
                 onClose={() => setIsSlideOverOpen(false)} 
                 user={selectedUser} 
+                onUserUpdated={() => fetchData(debouncedSearch)}
             />
         </>
     );
