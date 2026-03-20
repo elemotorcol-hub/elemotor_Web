@@ -4,9 +4,9 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { 
     Search, Plus, FileText, Shield, 
     CreditCard, BookOpen, MoreVertical, 
-    Download, Eye, Filter, X, 
+    Download, Eye, X, 
     Upload, Check, ChevronRight,
-    RefreshCcw, Info, AlertCircle
+    RefreshCcw, AlertCircle
 } from 'lucide-react';
 
 import { ClientDocument } from '@/types/dashboard';
@@ -58,7 +58,7 @@ export default function DocumentosPage() {
     const [activeTab, setActiveTab] = useState<TabType>('Todos');
     const [documents, setDocuments] = useState<ClientDocument[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [myOrders, setMyOrders] = useState<any[]>([]);
+    const [myOrders, setMyOrders] = useState<{ id: number }[]>([]);
     
     // Upload Modal State
     const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -136,34 +136,30 @@ export default function DocumentosPage() {
     };
 
     const handlePreview = async (docId: string, title: string, fileUrl?: string) => {
+        // If we already have the fileUrl stored locally, use it directly for inline preview
         if (fileUrl) {
             setPreviewDoc({ url: fileUrl, title });
             return;
         }
 
         try {
-            const { url } = await documentService.getDownloadUrl(docId);
-            setPreviewDoc({ url, title });
+            const { previewUrl } = await documentService.getDocumentUrls(docId);
+            setPreviewDoc({ url: previewUrl, title });
         } catch (err) {
-            console.error("Error getting preview URL:", err);
-            alert("Error al intentar previsualizar el documento.");
+            console.error('Error getting preview URL:', err);
+            alert('Error al intentar previsualizar el documento.');
         }
     };
 
-    const handleDownload = async (docId: string, fileUrl?: string) => {
+    const handleDownload = async (docId: string) => {
         try {
-            const url = fileUrl || (await documentService.getDownloadUrl(docId)).url;
-            
-            // Create a temporary link to force download
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', '');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const { downloadUrl, documentName } = await documentService.getDocumentUrls(docId);
+            // The signed URL from Cloudinary already includes Content-Disposition: attachment
+            // so opening it in a new tab will trigger a save-dialog with the correct .pdf filename
+            window.open(downloadUrl, '_blank', 'noopener,noreferrer');
         } catch (err) {
-            console.error("Error getting download URL:", err);
-            alert("Error al intentar descargar el documento.");
+            console.error('Error getting download URL:', err);
+            alert('Error al intentar descargar el documento. Revisa tu conexión.');
         }
     };
 
@@ -282,9 +278,9 @@ export default function DocumentosPage() {
                     {/* Upload Card */}
                     <button 
                         onClick={() => setIsUploadOpen(true)}
-                        className="h-[280px] rounded-[32px] border-2 border-dashed border-[#10B981]/20 bg-[#10B981]/[0.02] hover:bg-[#10B981]/[0.05] hover:border-[#10B981]/40 transition-all duration-500 flex flex-col items-center justify-center gap-6 group relative overflow-hidden"
+                        className="h-[280px] rounded-[32px] border-2 border-dashed border-[#10B981]/20 bg-[#10B981]/2 hover:bg-[#10B981]/5 hover:border-[#10B981]/40 transition-all duration-500 flex flex-col items-center justify-center gap-6 group relative overflow-hidden"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute inset-0 bg-linear-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="relative">
                             <div className="w-16 h-16 rounded-full bg-[#10B981] flex items-center justify-center text-[#0A110F] shadow-[0_10px_30px_rgba(16,185,129,0.3)] group-hover:scale-110 group-hover:rotate-90 transition-all duration-500">
                                 <Plus className="w-8 h-8" />
@@ -298,9 +294,9 @@ export default function DocumentosPage() {
 
                     {/* Document Cards */}
                     {filteredDocuments.map((doc) => (
-                        <div 
+                        <div
                             key={doc.id} 
-                            className="h-[280px] bg-[#15201D] border border-white/5 rounded-[32px] p-8 flex flex-col hover:border-[#10B981]/30 hover:bg-white/[0.01] transition-all duration-500 group relative overflow-hidden shadow-xl"
+                            className="h-[280px] bg-[#15201D] border border-white/5 rounded-[32px] p-8 flex flex-col hover:border-[#10B981]/30 hover:bg-white/1 transition-all duration-500 group relative overflow-hidden shadow-xl"
                         >
                             {/* Decorative Background */}
                             <div className={`absolute -top-10 -right-10 w-32 h-32 blur-[60px] opacity-20 group-hover:opacity-40 transition-opacity ${doc.colorTheme.split(' ')[0]}`} />
@@ -346,7 +342,7 @@ export default function DocumentosPage() {
                                         <Eye className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
                                     </button>
                                     <button 
-                                        onClick={() => handleDownload(doc.id, doc.fileUrl)}
+                                        onClick={() => handleDownload(doc.id)}
                                         className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-500 hover:text-emerald-400 hover:border-emerald-500/30 transition-all flex items-center justify-center group/btn shadow-inner"
                                     >
                                         <Download className="w-4 h-4 group-hover/btn:translate-y-0.5 transition-transform" />
@@ -400,7 +396,7 @@ export default function DocumentosPage() {
                                         <div className="w-20 h-20 rounded-[24px] bg-[#10B981]/10 flex items-center justify-center mb-6 mx-auto text-[#10B981]">
                                             <Upload className="w-10 h-10" />
                                         </div>
-                                        <h2 className="text-3xl font-black text-white mb-2 tracking-tighter uppercase tracking-widest">Cargar <span className="text-[#10B981]">Expediente</span></h2>
+                                        <h2 className="text-3xl font-black text-white mb-2 tracking-widest uppercase">Cargar <span className="text-[#10B981]">Expediente</span></h2>
                                         <p className="text-slate-500 font-bold text-xs uppercase">Solo archivos PDF (Máx 10MB)</p>
                                     </div>
 
@@ -428,7 +424,7 @@ export default function DocumentosPage() {
                                             className={`border-2 border-dashed rounded-[32px] p-8 flex flex-col items-center justify-center text-center group cursor-pointer transition-all duration-300 ${
                                                 selectedFile 
                                                 ? 'border-[#10B981] bg-[#10B981]/5' 
-                                                : 'border-white/5 bg-[#0A110F]/50 hover:border-[#10B981]/30 hover:bg-white/[0.01]'
+                                                : 'border-white/5 bg-[#0A110F]/50 hover:border-[#10B981]/30 hover:bg-white/1'
                                             }`}
                                         >
                                             <input 
@@ -495,14 +491,14 @@ export default function DocumentosPage() {
 
             {/* Preview Modal */}
             {previewDoc && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
                     <div 
                         className="absolute inset-0 bg-[#0A110F]/90 backdrop-blur-xl animate-in fade-in duration-300" 
                         onClick={() => setPreviewDoc(null)}
                     />
                     
                     <div className="bg-[#15201D] border border-white/10 w-full max-w-5xl h-[85vh] rounded-[40px] overflow-hidden relative shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col">
-                        <div className="h-2 bg-gradient-to-r from-[#10B981] via-teal-500 to-[#10B981]" />
+                        <div className="h-2 bg-linear-to-r from-[#10B981] via-teal-500 to-[#10B981]" />
                         
                         <div className="p-6 flex items-center justify-between border-b border-white/5 bg-[#0A110F]/50">
                             <div>
@@ -520,11 +516,19 @@ export default function DocumentosPage() {
                         </div>
 
                         <div className="flex-1 bg-white overflow-hidden">
-                            <iframe 
-                                src={`${previewDoc.url}#toolbar=0`} 
-                                className="w-full h-full border-none"
-                                title="Ficha Técnica PDF"
-                            />
+                            {previewDoc.url.includes('/raw/upload/') ? (
+                                <iframe 
+                                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewDoc.url)}&embedded=true`} 
+                                    className="w-full h-full border-none"
+                                    title="Ficha Técnica PDF"
+                                />
+                            ) : (
+                                <iframe 
+                                    src={`${previewDoc.url}#toolbar=0`} 
+                                    className="w-full h-full border-none"
+                                    title="Ficha Técnica PDF"
+                                />
+                            )}
                         </div>
 
                         <div className="p-6 bg-[#0A110F]/80 border-t border-white/5 flex justify-center">

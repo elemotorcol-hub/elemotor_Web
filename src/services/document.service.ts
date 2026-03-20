@@ -55,9 +55,9 @@ export const documentService = {
     },
 
     /**
-     * [Generales] Obtener URL firmada para descarga — GET /api/documents/:id/download
+     * [Generales] Obtener URLs de previsualización y descarga firmada — GET /api/documents/:id/download
      */
-    async getDownloadUrl(id: number | string): Promise<{ url: string; expiresAt: string | null; documentName: string }> {
+    async getDocumentUrls(id: number | string): Promise<{ previewUrl: string; downloadUrl: string; expiresAt: string | null; documentName: string }> {
         return fetchApi(`/api/documents/${id}/download`);
     }
 };
