@@ -1,63 +1,128 @@
+'use client';
 
-import { MaintenanceHistoryItem } from '@/types/dashboard';
-import { CheckCircle2, Clock, AlertCircle, Wrench } from 'lucide-react';
+import { CheckCircle2, Wrench, AlertCircle, Clock, Star } from 'lucide-react';
+import { MaintenanceRecord } from '@/types/maintenance';
 
 interface MaintenanceHistoryListProps {
-    history: MaintenanceHistoryItem[];
+  records: MaintenanceRecord[];
+  totalCost: number;
 }
 
-export function MaintenanceHistoryList({ history }: MaintenanceHistoryListProps) {
-    return (
-        <div className="bg-[#15201D] border border-white/5 rounded-3xl p-8">
-            <div className="flex items-center gap-6 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-[#10B981]/10 flex items-center justify-center text-[#10B981]">
-                    <Wrench className="w-6 h-6" />
-                </div>
-                <div>
-                    <h3 className="text-2xl font-bold text-white">Cronograma de Servicio</h3>
-                    <p className="text-slate-500 text-sm">Registro de mantenimientos calculados según fecha de adquisición.</p>
-                </div>
-            </div>
+function StarRating({ rating }: { rating: number | null }) {
+  if (rating === null) return null;
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`w-3.5 h-3.5 ${star <= rating ? 'text-amber-400 fill-amber-400' : 'text-slate-600'}`}
+        />
+      ))}
+    </div>
+  );
+}
 
-            <div className="relative pl-20 md:pl-28 border-l-2 border-slate-800/60 ml-4 space-y-16">
-                {history.map((item) => {
-                    const isCompleted = item.status === 'completed';
-                    const isOverdue = item.status === 'overdue';
+function formatDate(dateStr: string): string {
+  return new Intl.DateTimeFormat('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(dateStr));
+}
 
-                    return (
-                        <div key={item.id} className={`relative ${!isCompleted && !isOverdue ? 'opacity-60' : 'opacity-100'}`}>
-                            {/* Dot/Icon */}
-                            <div className={`absolute -left-[45px] md:-left-[58px] top-0 w-10 md:w-11 h-10 md:h-11 rounded-full bg-[#0A110F] border-2 flex items-center justify-center shadow-lg ${
-                                isCompleted ? 'border-[#10B981]' : isOverdue ? 'border-red-500' : 'border-slate-700'
-                            }`}>
-                                {isCompleted ? (
-                                    <CheckCircle2 className="w-5 h-5 text-[#10B981]" />
-                                ) : isOverdue ? (
-                                    <AlertCircle className="w-5 h-5 text-red-500" />
-                                ) : (
-                                    <Clock className="w-5 h-5 text-slate-500" />
-                                )}
-                            </div>
-
-                            <div className="flex flex-col">
-                                <div className="flex flex-wrap items-center gap-3 mb-1">
-                                    <h4 className={`font-bold text-lg ${isCompleted ? 'text-slate-400' : 'text-white'}`}>
-                                        En el <span className={isCompleted ? 'text-slate-400' : 'text-[#10B981]'}>{item.date}</span> tienes que ir por tu mantenimiento de los {item.mileage} km
-                                    </h4>
-                                    {isCompleted && (
-                                        <span className="px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-500 text-[10px] font-bold tracking-widest uppercase">
-                                            Realizado
-                                        </span>
-                                    )}
-                                </div>
-                                <p className={`text-sm mb-2 leading-relaxed ${isCompleted ? 'text-slate-500' : 'text-slate-300'}`}>
-                                    {item.description}
-                                </p>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
+export function MaintenanceHistoryList({ records, totalCost }: MaintenanceHistoryListProps) {
+  return (
+    <div className="bg-[#15201D] border border-white/5 rounded-3xl p-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#10B981]/10 flex items-center justify-center text-[#10B981]">
+            <Wrench className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">Historial de Mantenimientos</h3>
+            <p className="text-slate-500 text-sm">
+              {records.length === 0
+                ? 'Aún no has registrado mantenimientos'
+                : `${records.length} registro${records.length !== 1 ? 's' : ''}`}
+            </p>
+          </div>
         </div>
-    );
+        {totalCost > 0 && (
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total gastado</span>
+            <span className="text-xl font-black text-white">
+              {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(totalCost)}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Empty state */}
+      {records.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-[#0A110F] border border-white/5 flex items-center justify-center mb-4">
+            <Clock className="w-8 h-8 text-slate-600" />
+          </div>
+          <p className="text-slate-400 font-semibold mb-1">Aún no has registrado mantenimientos</p>
+          <p className="text-slate-600 text-sm">
+            Cuando realices tu primer servicio, aparecerá aquí.
+          </p>
+        </div>
+      ) : (
+        /* Timeline */
+        <div className="relative pl-10 border-l-2 border-slate-800/60 ml-3 space-y-10">
+          {records.map((record) => (
+            <div key={record.id} className="relative">
+              {/* Timeline dot */}
+              <div className="absolute -left-[2.85rem] top-0 w-10 h-10 rounded-full bg-[#0A110F] border-2 border-[#10B981] flex items-center justify-center shadow-lg">
+                <CheckCircle2 className="w-5 h-5 text-[#10B981]" />
+              </div>
+
+              {/* Card */}
+              <div className="bg-[#0A110F]/60 border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors">
+                <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h4 className="text-white font-bold text-base">{record.type}</h4>
+                    <p className="text-slate-500 text-xs mt-0.5">{formatDate(record.date)}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <StarRating rating={record.rating} />
+                    {record.cost != null && record.cost > 0 && (
+                      <span className="text-[#10B981] font-bold text-sm">
+                        {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(record.cost)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3 text-xs">
+                  {record.workshop && (
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-400 border border-white/5">
+                      📍 {record.workshop.name}{record.workshop.city ? `, ${record.workshop.city}` : ''}
+                    </span>
+                  )}
+                </div>
+
+                {record.comment && (
+                  <p className="mt-3 text-slate-400 text-sm leading-relaxed border-t border-white/5 pt-3">
+                    {record.comment}
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {/* End marker */}
+          <div className="relative">
+            <div className="absolute -left-[2.85rem] top-0 w-10 h-10 rounded-full bg-[#0A110F] border-2 border-slate-700 flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-slate-600" />
+            </div>
+            <p className="text-slate-600 text-sm pt-2 pl-2">Inicio del historial</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

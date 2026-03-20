@@ -109,4 +109,20 @@ export const orderService = {
     async fetchMyVehicle(): Promise<any> {
         return fetchApi('/api/orders/my-vehicle');
     },
+
+    /**
+     * [Cliente] Obtener el pedido entregado (para módulo de mantenimiento)
+     */
+    async fetchMyDeliveredOrder(): Promise<{
+        orderId: number;
+        status: string;
+        trackingCode: string | null;
+        deliveredAt: string | null;
+    } | null> {
+        try {
+            return await fetchApi('/api/orders/my-delivery');
+        } catch {
+            return null;
+        }
+    },
 };
