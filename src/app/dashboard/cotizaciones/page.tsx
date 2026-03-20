@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import {
     Car, ArrowRight, Search, FileText,
@@ -8,19 +8,166 @@ import {
     Calendar, Filter, ChevronRight,
     ArrowUpRight, DollarSign, RefreshCcw,
     X, Wallet, Timer as TimerIcon, Info,
-    Check, Download, Eye, MapPin, Smartphone
+    Check, Download, Eye, MapPin, Smartphone,
+    ChevronLeft, Mail, MessageCircle, Phone
 } from 'lucide-react';
-import { MOCK_QUOTES_DATA as mockQuotes } from '@/mocks/clientPortalData';
 import { useRouter } from 'next/navigation';
-import { vehiclesData } from '@/data/models';
-import { QuoteData } from '@/types/dashboard';
+import { fetchActiveCatalogModels, CatalogModel } from '@/services/catalogModels.service';
+import { ExtendedQuoteData, ApiQuoteResponse } from '@/types/dashboard';
 import { formatCurrency, sanitizeHTML, deformatCurrency } from '@/lib/utils/sanitizationUtils';
+import { getMyQuotesAction, submitQuoteAction } from '@/actions/quote';
+import { getSession } from '@/lib/auth.client';
+import { downloadQuotePDF } from '@/lib/utils/pdfGenerator';
+
+// ─── Sub-Component: Quote Card with Image Carousel ────────────────────────────
+function QuoteCard({ quote, onDownload, onViewDetail }: { quote: ExtendedQuoteData, onDownload: () => void, onViewDetail: () => void }) {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    const images = quote.images?.length > 0 ? quote.images : [quote.imageUrl || 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=400&auto=format&fit=crop'];
+
+    const renderStatusIcon = (statusCode: string) => {
+        switch (statusCode) {
+            case 'approved': return <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />;
+            case 'pending': return <Clock className="w-3.5 h-3.5 text-blue-400" />;
+            case 'expired': return <AlertCircle className="w-3.5 h-3.5 text-slate-500" />;
+            default: return null;
+        }
+    };
+
+    const getChannelIcon = (channel: string) => {
+        switch (channel) {
+            case 'whatsapp': return <MessageCircle className="w-3 h-3 text-emerald-400" />;
+            case 'phone': return <Phone className="w-3 h-3 text-blue-400" />;
+            case 'email':
+            default: return <Mail className="w-3 h-3 text-slate-400" />;
+        }
+    };
+
+    return (
+        <div className="bg-[#15201D] border border-white/5 rounded-[32px] p-6 lg:p-8 hover:border-[#10B981]/30 hover:bg-white/1 transition-all duration-500 group flex flex-col lg:flex-row lg:items-center gap-8 relative overflow-hidden shadow-xl">
+            {/* Decorative Background */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#10B981]/5 blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+            {/* Vehicle Visual Carousel */}
+            <div className="w-full lg:w-56 h-40 relative bg-[#0A110F] border border-white/5 rounded-2xl overflow-hidden shadow-inner shrink-0 group/carousel isolate">
+                <img
+                    src={images[currentImageIndex]}
+                    alt={quote.model}
+                    className="w-full h-full object-contain p-4 transform transition-transform duration-700 ease-out group-hover:scale-105"
+                />
+
+                {/* Carousel Controls */}
+                {images.length > 1 && (
+                    <>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1)); }}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 text-white opacity-0 group-hover/carousel:opacity-100 hover:bg-[#10B981] transition-all duration-300 backdrop-blur-md border border-white/10 z-20"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1)); }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 text-white opacity-0 group-hover/carousel:opacity-100 hover:bg-[#10B981] transition-all duration-300 backdrop-blur-md border border-white/10 z-20"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+
+                        {/* Indicators */}
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 z-20 bg-black/30 px-2 py-1 rounded-full backdrop-blur-md">
+                            {images.map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(idx); }}
+                                    className={`h-1 rounded-full transition-all duration-300 ${currentImageIndex === idx ? 'w-4 bg-[#10B981]' : 'w-1.5 bg-white/40 hover:bg-white/70'}`}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {/* Main Info */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[10px] font-black text-[#10B981] tracking-[0.2em]">{quote.id}</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-700" />
+                    <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1.5 tracking-widest">
+                        <Calendar className="w-3 h-3" />
+                        {quote.date}
+                    </span>
+                    {quote.city && (
+                        <>
+                            <span className="w-1 h-1 rounded-full bg-slate-700" />
+                            <span className="text-[10px] font-bold text-slate-400 capitalize tracking-widest">{quote.city}</span>
+                        </>
+                    )}
+                </div>
+                
+                <h3 className="text-xl md:text-2xl font-black text-white leading-tight tracking-tighter">
+                    {quote.model}
+                    {quote.trimName && <span className="text-slate-500 font-bold text-lg ml-2">{quote.trimName}</span>}
+                </h3>
+
+                {quote.message && (
+                    <p className="text-slate-400 text-xs mt-2 line-clamp-1 italic max-w-md">"{quote.message}"</p>
+                )}
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-4">
+                    <div className="flex flex-col">
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Presupuesto</span>
+                        <div className="flex items-center gap-1.5 text-slate-100 font-bold text-sm">
+                            <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                            {quote.amount}
+                        </div>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Estado</span>
+                        <div className={`flex items-center gap-1.5 text-sm font-bold ${quote.statusCode === 'approved' ? 'text-[#10B981]' :
+                            quote.statusCode === 'pending' ? 'text-blue-400' : 'text-slate-400'
+                            }`}>
+                            {renderStatusIcon(quote.statusCode)}
+                            {quote.status}
+                        </div>
+                    </div>
+                    <div className="hidden md:flex flex-col">
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Contacto Preferido</span>
+                        <div className="flex items-center gap-1.5 text-sm font-medium text-slate-300 capitalize">
+                            {getChannelIcon(quote.preferredChannel || 'email')}
+                            {quote.preferredChannel || 'Email'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center lg:flex-col justify-between lg:justify-center gap-4 lg:pl-8 lg:border-l border-white/5 z-10">
+                <button
+                    onClick={onDownload}
+                    className="p-4 rounded-xl bg-[#0A110F] border border-white/5 text-slate-400 hover:text-[#10B981] hover:border-[#10B981]/30 transition-all group/action"
+                    title="Descargar PDF"
+                >
+                    <Download className="w-5 h-5" />
+                </button>
+                <button
+                    onClick={onViewDetail}
+                    className="flex-1 lg:flex-none py-4 px-8 rounded-xl bg-white/5 border border-white/10 hover:bg-[#10B981] hover:text-[#0A110F] hover:border-[#10B981] text-xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap"
+                >
+                    Ver Detalle
+                </button>
+            </div>
+        </div>
+    );
+}
+
+// ─── Main Page Component ────────────────────────────────────────────────────────
 
 export default function MisCotizacionesPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending' | 'expired'>('all');
-    const [quotes, setQuotes] = useState<QuoteData[]>(mockQuotes);
+    const [quotes, setQuotes] = useState<ExtendedQuoteData[]>([]);
+    const [modelsData, setModelsData] = useState<CatalogModel[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Modal New Quote State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,16 +175,84 @@ export default function MisCotizacionesPage() {
     const [isSuccess, setIsSuccess] = useState(false);
 
     // Details Modal State
-    const [selectedQuote, setSelectedQuote] = useState<QuoteData | null>(null);
+    const [selectedQuote, setSelectedQuote] = useState<ExtendedQuoteData | null>(null);
     const [paymentError, setPaymentError] = useState<string | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
         modelId: '',
+        trimId: '',
         initialPayment: '',
         installments: '12',
-        comments: ''
+        comments: '',
+        city: '',
+        preferredChannel: 'email'
     });
+
+    const fetchQuotes = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const result = await getMyQuotesAction({ page: 1, limit: 50 });
+            if (result.success && result.data?.data) {
+                const apiQuotes = result.data.data;
+                const mappedQuotes: ExtendedQuoteData[] = apiQuotes.map((apiQuote: ApiQuoteResponse) => {
+                    const dateObj = new Date(apiQuote.createdAt);
+                    
+                    let statusCode = apiQuote.status;
+                    let statusText = 'En Revisión';
+                    let uiStatusCode = 'pending';
+                    
+                    switch (statusCode) {
+                        case 'pending': 
+                        case 'contacted': 
+                        case 'responded': 
+                        case 'negotiation': 
+                            statusText = 'En Revisión'; uiStatusCode = 'pending'; break;
+                        case 'closed_won': 
+                            statusText = 'Aprobada'; uiStatusCode = 'approved'; break;
+                        case 'closed_lost': 
+                            statusText = 'Expirada'; uiStatusCode = 'expired'; break;
+                    }
+
+                    const modelName = apiQuote.model ? `${apiQuote.model.brand?.name || ''} ${apiQuote.model.name}`.trim() : 'Vehículo Genérico';
+                    const trimImages = apiQuote.trim?.images || [];
+                    const fallbackImages = apiQuote.model?.trims?.[0]?.images || [];
+                    const imagesList = trimImages.length > 0 ? trimImages : fallbackImages;
+                    const images = imagesList.length > 0 
+                        ? imagesList.map(i => i.url) 
+                        : ['https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=400&auto=format&fit=crop'];
+                    
+                    return {
+                        id: apiQuote.referenceCode || `COT-${apiQuote.id}`,
+                        model: modelName,
+                        trimName: apiQuote.trim?.name,
+                        amount: apiQuote.budgetRange ? `$${Number(apiQuote.budgetRange).toLocaleString('es-CO')}` : 'Sin definir',
+                        date: dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+                        status: statusText,
+                        statusCode: uiStatusCode,
+                        statusColor: uiStatusCode === 'approved' ? 'text-[#10B981]' : uiStatusCode === 'pending' ? 'text-blue-400' : 'text-slate-400',
+                        validUntil: new Date(dateObj.getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+                        imageUrl: images[0],
+                        images: images,
+                        city: apiQuote.city,
+                        preferredChannel: apiQuote.preferredChannel,
+                        message: apiQuote.message
+                    };
+                });
+                setQuotes(mappedQuotes);
+            }
+        } catch (error) {
+            console.error('Error fetching quotes block:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchQuotes();
+        // Cargar modelos reales para el Modal de Nueva Cotización
+        fetchActiveCatalogModels().then(data => setModelsData(data)).catch(console.error);
+    }, [fetchQuotes]);
 
     const filteredQuotes = useMemo(() => {
         return quotes.filter(quote => {
@@ -48,91 +263,73 @@ export default function MisCotizacionesPage() {
         });
     }, [searchQuery, statusFilter, quotes]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const availableTrims = useMemo(() => {
+        if (!formData.modelId) return [];
+        const selectedModel = modelsData.find(m => m.id.toString() === formData.modelId);
+        return selectedModel?.trims || [];
+    }, [formData.modelId, modelsData]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         const numericValue = deformatCurrency(formData.initialPayment);
 
-        if (numericValue < 100000000) {
+        if (numericValue < 5000000) {
             setPaymentError('La cuota inicial mínima es de $5,000,000');
-            return;
-        }
-        if (numericValue > 500000000) {
-            setPaymentError('La cuota inicial máxima es de $500,000,000');
             return;
         }
 
         setPaymentError(null);
         setIsSubmitting(true);
 
-        const sanitizedComments = sanitizeHTML(formData.comments);
-        const vehicle = vehiclesData.find(v => v.id === formData.modelId);
+        try {
+            const session = await getSession();
+            if (!session) {
+                alert('Sesión expirada. Por favor inicie sesión nuevamente.');
+                setIsSubmitting(false);
+                return;
+            }
 
-        setTimeout(() => {
-            const newQuote: QuoteData = {
-                id: `COT-${Math.floor(1000 + Math.random() * 9000)}`,
-                model: vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Vehículo Genérico',
-                amount: vehicle ? `$${(vehicle.price * 4000).toLocaleString()}` : `$45.900.000`,
-                date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
-                status: 'En Revisión',
-                statusCode: 'pending',
-                statusColor: 'text-blue-400',
-                validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
-                imageUrl: vehicle?.image || 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=400&auto=format&fit=crop'
+            // Extract UTMs from current URL context
+            const searchParams = new URLSearchParams(window.location.search);
+            const utmSource = searchParams.get('utm_source') || null;
+            const utmMedium = searchParams.get('utm_medium') || null;
+            const utmCampaign = searchParams.get('utm_campaign') || null;
+
+            const backendData = {
+                name: session.user?.name || 'Usuario',
+                email: session.user?.email || 'email@example.com',
+                phone: session.user?.phone || undefined,
+                city: formData.city || 'No especificada',
+                modelId: formData.modelId ? parseInt(formData.modelId) : undefined,
+                trimId: formData.trimId ? parseInt(formData.trimId) : undefined,
+                budgetRange: numericValue,
+                preferredChannel: formData.preferredChannel,
+                message: `Plazo: ${formData.installments} meses. ${formData.comments ? `Obs: ${sanitizeHTML(formData.comments)}` : ''}`.trim(),
+                utmSource,
+                utmMedium,
+                utmCampaign,
+                source: 'web',
             };
 
-            setQuotes(prev => [newQuote, ...prev]);
+            const result = await submitQuoteAction(backendData);
+
+            if (result.success) {
+                setIsSuccess(true);
+                await fetchQuotes(); // Refresh automatico del listado
+                setTimeout(() => {
+                    setIsModalOpen(false);
+                    setIsSuccess(false);
+                    setFormData({ modelId: '', trimId: '', initialPayment: '', installments: '12', comments: '', city: '', preferredChannel: 'email' });
+                }, 2000);
+            } else {
+                alert(result.error || 'Error al enviar la cotización.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error inesperado procesando la cotización');
+        } finally {
             setIsSubmitting(false);
-            setIsSuccess(true);
-
-            setTimeout(() => {
-                setIsModalOpen(false);
-                setIsSuccess(false);
-                setFormData({ modelId: '', initialPayment: '', installments: '12', comments: '' });
-            }, 2000);
-        }, 1500);
-    };
-
-    const downloadQuotePDF = (quote: QuoteData) => {
-        const content = `
-        ──────────────────────────────────────────
-                   ELEMOTOR COLOMBIA
-                  COTIZACIÓN OFICIAL
-        ──────────────────────────────────────────
-        ID Cotización: ${quote.id}
-        Fecha: ${quote.date}
-        ──────────────────────────────────────────
-        CLIENTE: Juan Pérez (Session User)
-        VEHÍCULO: ${quote.model}
-        PRECIO BASE: ${quote.amount}
-        ESTADO: ${quote.status}
-        ──────────────────────────────────────────
-        PLAN FINANCIERO ESTIMADO:
-        Cuota Inicial: $20.000.000 (Simulación)
-        Plazo: 36 Meses
-        Tasa: 1.2% N.M.
-        ──────────────────────────────────────────
-        WWW.ELEMOTOR.COM.CO
-        ──────────────────────────────────────────
-        `;
-
-        const blob = new Blob([content], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Cotizacion-${quote.id}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    };
-
-    const renderStatusIcon = (statusCode: string) => {
-        switch (statusCode) {
-            case 'approved': return <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />;
-            case 'pending': return <Clock className="w-3.5 h-3.5 text-blue-400" />;
-            case 'expired': return <AlertCircle className="w-3.5 h-3.5 text-slate-500" />;
-            default: return null;
         }
     };
 
@@ -198,83 +395,26 @@ export default function MisCotizacionesPage() {
 
             {/* List Section */}
             <div className="grid grid-cols-1 gap-6">
-                {filteredQuotes.length > 0 ? (
+                {isLoading ? (
+                    <div className="flex justify-center items-center py-20">
+                        <RefreshCcw className="w-10 h-10 text-[#10B981] animate-spin" />
+                    </div>
+                ) : filteredQuotes.length > 0 ? (
                     filteredQuotes.map((quote) => (
-                        <div
-                            key={quote.id}
-                            className="bg-[#15201D] border border-white/5 rounded-[32px] p-6 lg:p-8 hover:border-[#10B981]/30 hover:bg-white/[0.01] transition-all duration-500 group flex flex-col lg:flex-row lg:items-center gap-8 relative overflow-hidden shadow-xl"
-                        >
-                            {/* Decorative Background */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-[#10B981]/5 blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-                            {/* Vehicle Visual */}
-                            <div className="w-full lg:w-48 h-32 relative bg-[#0A110F] border border-white/5 rounded-2xl overflow-hidden shadow-inner flex-shrink-0 group-hover:scale-105 transition-transform duration-500">
-                                <Image
-                                    src={quote.imageUrl || 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=400&auto=format&fit=crop'}
-                                    alt={quote.model}
-                                    fill
-                                    className="object-contain p-4"
-                                    unoptimized
-                                />
-                            </div>
-
-                            {/* Main Info */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-[10px] font-black text-[#10B981] tracking-[0.2em]">{quote.id}</span>
-                                    <span className="w-1 h-1 rounded-full bg-slate-700" />
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1.5 tracking-widest">
-                                        <Calendar className="w-3 h-3" />
-                                        {quote.date}
-                                    </span>
-                                </div>
-                                <h3 className="text-2xl font-black text-white mb-4 tracking-tighter leading-tight">{quote.model}</h3>
-
-                                <div className="flex items-center gap-6">
-                                    <div className="flex flex-col">
-                                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Inversión</span>
-                                        <div className="flex items-center gap-1.5 text-slate-100 font-bold">
-                                            <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-                                            {quote.amount}
-                                        </div>
-                                    </div>
-                                    <div className="w-px h-8 bg-white/5" />
-                                    <div className="flex flex-col">
-                                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Estado</span>
-                                        <div className={`flex items-center gap-1.5 text-sm font-bold ${quote.statusCode === 'approved' ? 'text-[#10B981]' :
-                                            quote.statusCode === 'pending' ? 'text-blue-400' : 'text-slate-400'
-                                            }`}>
-                                            {renderStatusIcon(quote.statusCode)}
-                                            {quote.status}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex items-center lg:flex-col justify-between lg:justify-center gap-4 lg:pl-8 lg:border-l border-white/5">
-                                <button
-                                    onClick={() => downloadQuotePDF(quote)}
-                                    className="p-4 rounded-xl bg-[#0A110F] border border-white/5 text-slate-400 hover:text-[#10B981] hover:border-[#10B981]/30 transition-all group/action"
-                                >
-                                    <Download className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => setSelectedQuote(quote)}
-                                    className="flex-1 lg:flex-none py-4 px-8 rounded-xl bg-white/5 border border-white/10 hover:bg-[#10B981] hover:text-[#0A110F] hover:border-[#10B981] text-xs font-black uppercase tracking-widest transition-all duration-300"
-                                >
-                                    Ver Detalle
-                                </button>
-                            </div>
-                        </div>
+                        <QuoteCard 
+                            key={quote.id} 
+                            quote={quote} 
+                            onDownload={() => downloadQuotePDF(quote)}
+                            onViewDetail={() => setSelectedQuote(quote)}
+                        />
                     ))
                 ) : (
                     <div className="flex flex-col items-center justify-center py-20 bg-[#15201D]/50 border border-white/5 border-dashed rounded-[40px] text-center px-10">
                         <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
                             <RefreshCcw className="w-10 h-10 text-slate-600 animate-spin-slow" />
                         </div>
-                        <h4 className="text-xl font-black text-white mb-2">No encontramos coincidencias</h4>
-                        <p className="text-slate-500 max-w-xs text-sm">Prueba ajustando tus filtros o el término de búsqueda.</p>
+                        <h4 className="text-xl font-black text-white mb-2">Aún no has realizado cotizaciones</h4>
+                        <p className="text-slate-500 max-w-xs text-sm">Prueba creando tu primera solicitud para enviarla a tu asesor comercial.</p>
                         <button
                             onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
                             className="mt-6 text-[#10B981] font-black text-xs uppercase tracking-widest hover:text-emerald-400 transition-colors"
@@ -296,10 +436,10 @@ export default function MisCotizacionesPage() {
 
                         {/* Visual Side */}
                         <div className="w-full md:w-1/2 bg-[#0A110F] p-10 flex flex-col justify-center relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#10B981]/10 to-transparent pointer-events-none" />
+                            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-[#10B981]/10 to-transparent pointer-events-none" />
                             <div className="relative aspect-video scale-110 mb-8">
                                 <Image
-                                    src={selectedQuote.imageUrl || 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=400&auto=format&fit=crop'}
+                                    src={selectedQuote.images?.[0] || 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=400&auto=format&fit=crop'}
                                     alt={selectedQuote.model}
                                     fill
                                     className="object-contain"
@@ -309,7 +449,7 @@ export default function MisCotizacionesPage() {
                             <div className="space-y-4 relative z-10">
                                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] text-[10px] font-black uppercase tracking-widest">
                                     <Car className="w-3.5 h-3.5" />
-                                    Vehículo Premium
+                                    {selectedQuote.trimName || 'Vehículo'}
                                 </div>
                                 <h2 className="text-4xl font-black text-white leading-none">{selectedQuote.model}</h2>
                             </div>
@@ -334,15 +474,15 @@ export default function MisCotizacionesPage() {
                                     </div>
                                 </div>
 
-                                <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 space-y-4">
+                                <div className="p-6 rounded-3xl bg-white/5 border border-white/5 space-y-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-[#10B981]/10 flex items-center justify-center text-[#10B981]">
                                                 <MapPin className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Concesionario</p>
-                                                <p className="text-white text-xs font-bold">Elemotor Bogotá Norte</p>
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ciudad</p>
+                                                <p className="text-white text-xs font-bold">{selectedQuote.city || 'N/A'}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
@@ -350,8 +490,8 @@ export default function MisCotizacionesPage() {
                                                 <Smartphone className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Asesor</p>
-                                                <p className="text-white text-xs font-bold">Andrés G.</p>
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Canal</p>
+                                                <p className="text-white text-xs font-bold capitalize">{selectedQuote.preferredChannel || 'email'}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -380,9 +520,6 @@ export default function MisCotizacionesPage() {
                                     <Download className="w-4 h-4" />
                                     Descargar PDF
                                 </button>
-                                <button className="p-4 rounded-2xl border border-white/10 hover:bg-white/5 text-slate-400 transition-all">
-                                    <Search className="w-5 h-5" />
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -401,12 +538,12 @@ export default function MisCotizacionesPage() {
                     {/* Modal Content */}
                     <div className="bg-[#15201D] border border-white/10 w-full max-w-2xl rounded-[40px] overflow-hidden relative shadow-2xl animate-in zoom-in-95 duration-300">
                         {/* Header Image/Pattern */}
-                        <div className="h-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500" />
+                        <div className="h-2 bg-linear-to-r from-emerald-500 via-teal-500 to-emerald-500" />
 
-                        <div className="p-8 md:p-10">
+                        <div className="p-8 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
                             <button
                                 onClick={() => !isSubmitting && setIsModalOpen(false)}
-                                className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/5 text-slate-500 hover:text-white transition-all"
+                                className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/5 text-slate-500 hover:text-white transition-all z-20"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -419,23 +556,93 @@ export default function MisCotizacionesPage() {
                                     </div>
 
                                     <form onSubmit={handleSubmit} className="space-y-8">
-                                        {/* Vehicle Selection */}
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                                                <Car className="w-3 h-3" />
-                                                Modelo de Interés
-                                            </label>
-                                            <select
-                                                required
-                                                value={formData.modelId}
-                                                onChange={(e) => setFormData({ ...formData, modelId: e.target.value })}
-                                                className="w-full bg-[#0A110F] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all appearance-none cursor-pointer"
-                                            >
-                                                <option value="" disabled>Selecciona un vehículo...</option>
-                                                {vehiclesData.map(v => (
-                                                    <option key={v.id} value={v.id}>{v.brand} {v.model}</option>
-                                                ))}
-                                            </select>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            {/* Vehicle Selection */}
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
+                                                    <Car className="w-3 h-3" />
+                                                    Modelo de Interés
+                                                </label>
+                                                <select
+                                                    required
+                                                    value={formData.modelId}
+                                                    onChange={(e) => setFormData({ ...formData, modelId: e.target.value, trimId: '' })}
+                                                    className="w-full bg-[#0A110F] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all appearance-none cursor-pointer"
+                                                >
+                                                    <option value="" disabled>Selecciona un vehículo...</option>
+                                                    {modelsData.map(v => (
+                                                        <option key={v.id} value={v.id}>{v.brand?.name} {v.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {/* Trim Selection */}
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
+                                                    <Filter className="w-3 h-3" />
+                                                    Versión (Configuración)
+                                                </label>
+                                                <select
+                                                    value={formData.trimId}
+                                                    onChange={(e) => setFormData({ ...formData, trimId: e.target.value })}
+                                                    disabled={availableTrims.length === 0}
+                                                    className="w-full bg-[#0A110F] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all appearance-none cursor-pointer disabled:opacity-50"
+                                                >
+                                                    <option value="">Cualquier versión</option>
+                                                    {availableTrims.map(t => (
+                                                        <option key={t.id} value={t.id}>
+                                                            {t.name} {t.price ? `- $${Number(t.price).toLocaleString('es-CO')}` : ''}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            {/* City Selection */}
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
+                                                    <MapPin className="w-3 h-3" />
+                                                    Ciudad
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    placeholder="Ej: Bogotá"
+                                                    value={formData.city}
+                                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                                    className="w-full bg-[#0A110F] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all"
+                                                />
+                                            </div>
+
+                                            {/* Preferred Channel */}
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
+                                                    <Smartphone className="w-3 h-3" />
+                                                    Canal Preferido
+                                                </label>
+                                                <div className="grid grid-cols-3 gap-2 h-14">
+                                                    {[
+                                                        { id: 'whatsapp', icon: MessageCircle, color: 'hover:text-emerald-400 hover:border-emerald-400/50', active: 'border-[#10B981] text-[#10B981] bg-[#10B981]/10' },
+                                                        { id: 'phone', icon: Phone, color: 'hover:text-blue-400 hover:border-blue-400/50', active: 'border-blue-400 text-blue-400 bg-blue-400/10' },
+                                                        { id: 'email', icon: Mail, color: 'hover:text-white hover:border-white/50', active: 'border-white text-white bg-white/10' }
+                                                    ].map(channel => (
+                                                        <button
+                                                            key={channel.id}
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, preferredChannel: channel.id })}
+                                                            className={`flex items-center justify-center border rounded-xl transition-all ${
+                                                                formData.preferredChannel === channel.id 
+                                                                ? channel.active 
+                                                                : `border-white/5 text-slate-500 bg-[#0A110F] ${channel.color}`
+                                                            }`}
+                                                            title={channel.id}
+                                                        >
+                                                            <channel.icon className="w-4 h-4" />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -443,7 +650,7 @@ export default function MisCotizacionesPage() {
                                             <div className="space-y-3">
                                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
                                                     <Wallet className="w-3 h-3" />
-                                                    Cuota Inicial (Estimada)
+                                                    Presupuesto Inicial
                                                 </label>
                                                 <div className="relative">
                                                     <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -509,7 +716,7 @@ export default function MisCotizacionesPage() {
                                         <button
                                             type="submit"
                                             disabled={isSubmitting}
-                                            className="w-full bg-[#10B981] hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-[#0A110F] font-black py-5 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 shadow-[0_15px_40px_rgba(16,185,129,0.2)] mt-4"
+                                            className="w-full bg-[#10B981] hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-[#0A110F] font-black py-5 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 shadow-[0_15px_40px_rgba(16,185,129,0.2)] mt-4 z-10 relative"
                                         >
                                             {isSubmitting ? (
                                                 <>

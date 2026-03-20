@@ -21,3 +21,19 @@ export async function submitQuoteAction(backendData: any) {
         };
     }
 }
+
+export async function getMyQuotesAction(query?: { page?: number; limit?: number }) {
+    try {
+        const queryString = query ? `?page=${query.page || 1}&limit=${query.limit || 10}` : '';
+        const result = await fetchApi(`/api/quotes/my${queryString}`, {
+            method: 'GET',
+        });
+        return { success: true, data: result };
+    } catch (error: any) {
+        console.error('Error fetching my quotes:', error);
+        return {
+            success: false,
+            error: error.message || 'Error al obtener tus cotizaciones.'
+        };
+    }
+}
