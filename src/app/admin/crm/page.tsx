@@ -1,12 +1,34 @@
 'use client';
 
-import React, { useState } from 'react';
-import { KanbanSquare, ClipboardList } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { KanbanSquare, ClipboardList, Loader2 } from 'lucide-react';
 import LeadsKanbanBoard from '@/components/admin/crm/LeadsKanbanBoard';
 import QuotesTable from '@/components/admin/crm/QuotesTable';
+import { quoteService, QuoteStats } from '@/services/quote.service';
 
 export default function CRMPage() {
     const [activeTab, setActiveTab] = useState<'kanban' | 'cotizaciones'>('cotizaciones');
+    const [stats, setStats] = useState<any>(null); // Simplified for now since structure might vary
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const loadStats = async () => {
+            try {
+                const data = await quoteService.fetchStats();
+                if (data) setStats(data);
+            } catch (error) {
+                console.error('Error loading CRM stats:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadStats();
+    }, []);
+
+    const findStatusCount = (status: string) => {
+        if (!stats?.byStatus) return 0;
+        return stats.byStatus.find((s: any) => s.status === status)?.count || 0;
+    };
 
     return (
         <div className="flex flex-col gap-8 max-w-[1400px] w-full pb-10">
@@ -21,34 +43,31 @@ export default function CRMPage() {
             {/* Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-[#15201D] border border-white/5 rounded-2xl p-5 flex flex-col justify-between h-28 hover:bg-[#15201D]/80 transition-colors">
-                    <span className="text-slate-500 text-xs font-bold tracking-wider uppercase">Pedidos Totales</span>
+                    <span className="text-slate-500 text-xs font-bold tracking-wider uppercase">Cotizaciones Totales</span>
                     <div className="flex items-end justify-between">
-                        <span className="text-3xl font-bold text-white">248</span>
-                        <span className="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-2 py-1 rounded-md">+12%</span>
+                        {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-slate-700" /> : <span className="text-3xl font-bold text-white">{stats?.total || 0}</span>}
                     </div>
                 </div>
 
                 <div className="bg-[#15201D] border border-white/5 rounded-2xl p-5 flex flex-col justify-between h-28 hover:bg-[#15201D]/80 transition-colors">
-                    <span className="text-slate-500 text-xs font-bold tracking-wider uppercase">En Tránsito</span>
+                    <span className="text-slate-500 text-xs font-bold tracking-wider uppercase">Entradas Hoy</span>
                     <div className="flex items-end justify-between">
-                        <span className="text-3xl font-bold text-white">34</span>
-                        <span className="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-2 py-1 rounded-md">+3%</span>
+                        {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-slate-700" /> : <span className="text-3xl font-bold text-white">{stats?.totalToday || 0}</span>}
+                        {!isLoading && <span className="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-2 py-1 rounded-md">Hoy</span>}
                     </div>
                 </div>
 
                 <div className="bg-[#15201D] border border-white/5 rounded-2xl p-5 flex flex-col justify-between h-28 hover:bg-[#15201D]/80 transition-colors">
-                    <span className="text-slate-500 text-xs font-bold tracking-wider uppercase">Prospectos Activos</span>
+                    <span className="text-slate-500 text-xs font-bold tracking-wider uppercase">En Negociación</span>
                     <div className="flex items-end justify-between">
-                        <span className="text-3xl font-bold text-white">87</span>
-                        <span className="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-2 py-1 rounded-md">+18%</span>
+                        {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-slate-700" /> : <span className="text-3xl font-bold text-white">{findStatusCount('negotiation')}</span>}
                     </div>
                 </div>
 
                 <div className="bg-[#15201D] border border-white/5 rounded-2xl p-5 flex flex-col justify-between h-28 hover:bg-[#15201D]/80 transition-colors">
-                    <span className="text-slate-500 text-xs font-bold tracking-wider uppercase">Ganados Este Mes</span>
+                    <span className="text-slate-500 text-xs font-bold tracking-wider uppercase">Cierres Exitosos</span>
                     <div className="flex items-end justify-between">
-                        <span className="text-3xl font-bold text-white">12</span>
-                        <span className="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-2 py-1 rounded-md">+25%</span>
+                        {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-slate-700" /> : <span className="text-3xl font-bold text-white">{findStatusCount('closed_won')}</span>}
                     </div>
                 </div>
             </div>

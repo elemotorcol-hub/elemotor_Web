@@ -102,4 +102,20 @@ export const orderService = {
     async fetchMyOrderDetail(id: number | string): Promise<any> {
         return fetchApi(`/api/orders/my/${id}`);
     },
+
+    /**
+     * [Público] Rastrear pedido por código de seguimiento e identidad (cédula o email).
+     * Usa fetch directo (sin JWT) para que funcione sin autenticación.
+     */
+    async trackOrder(trackingCode: string, identity: string): Promise<any> {
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        const params = new URLSearchParams({ trackingCode, identity });
+        const response = await fetch(`${API_BASE_URL}/api/orders/track?${params.toString()}`);
+        const data = await response.json();
+        if (!response.ok) {
+            const errorMsg = data?.message || data?.error || 'Pedido no encontrado';
+            throw new Error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+        }
+        return data;
+    },
 };

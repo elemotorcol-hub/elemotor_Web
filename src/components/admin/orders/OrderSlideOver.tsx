@@ -67,18 +67,18 @@ export default function OrderSlideOver({ onClose, mode, initialData, onSave }: O
         setError(null);
 
         if (mode === 'add') {
-            if (!userId || !trimId || !colorId) {
-                setError('Cliente, versión y color son obligatorios.');
+            if (!trimId || !colorId) {
+                setError('Versión y color son obligatorios.');
                 return;
             }
             setSubmitting(true);
             try {
                 // Build an exact payload matching CreateOrderDto — no extra fields
                 const payload: Record<string, any> = {
-                    userId: Number(userId),
                     trimId: Number(trimId),
                     colorId: Number(colorId),
                 };
+                if (userId) payload.userId = Number(userId);
                 if (vin.trim()) payload.vin = vin.trim();
                 if (notes.trim()) payload.notes = notes.trim();
                 if (estimatedDelivery) payload.estimatedDelivery = estimatedDelivery;
@@ -172,11 +172,10 @@ export default function OrderSlideOver({ onClose, mode, initialData, onSave }: O
 
                                     {/* Cliente */}
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-400 mb-2">Cliente *</label>
+                                        <label className="block text-xs font-bold text-slate-400 mb-2">Cliente</label>
                                         <select
                                             value={userId}
                                             onChange={e => setUserId(Number(e.target.value))}
-                                            required
                                             className={inputCls}
                                         >
                                             <option value="">Selecciona un cliente</option>

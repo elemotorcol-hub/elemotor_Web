@@ -6,20 +6,81 @@ import Link from 'next/link';
 import { Share2, Plus, X, ArrowRight, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VehicleModel } from '@/types/comparison';
-import { availableModels, SPEC_KEYS } from '@/mocks/comparisonData';
+import { fetchActiveCatalogModels, CatalogModel } from '@/services/catalogModels.service';
 
-
+const SPEC_LABELS: { key: keyof VehicleModel['specs'] | 'price'; label: string }[] = [
+    { key: 'price', label: 'Precio desde' },
+    { key: 'range', label: 'Autonomía (WLTP/CLTC)' },
+    { key: 'battery', label: 'Batería' },
+    { key: 'power', label: 'Potencia' },
+    { key: 'zeroToHundred', label: '0-100 km/h' },
+    { key: 'fastCharge', label: 'Carga Rápida (30-80%)' },
+    { key: 'bodyType', label: 'Tipo de Carrocería' },
+    { key: 'trunk', label: 'Capacidad Maletero' },
+    { key: 'dimensions', label: 'Dimensiones (L x A x A)' },
+    { key: 'adas', label: 'Nivel Autonomía (ADAS)' },
+    { key: 'kwhPer100', label: 'Consumo (kWh/100km)' },
+];
 
 export function VehicleComparison() {
-    // Estado para los 3 slots de comparación. Inicialmente 1 seleccionado para mostrar cómo luce.
+    const [availableModels, setAvailableModels] = React.useState<VehicleModel[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+
+    // Estado para los 3 slots de comparación. 
     const [selectedModels, setSelectedModels] = React.useState<(VehicleModel | null)[]>([
-        availableModels[0],
+        null,
         null,
         null,
     ]);
 
     // Estado para el modal de selección de vehículo
     const [isSelectingForSlot, setIsSelectingForSlot] = React.useState<number | null>(null);
+
+    React.useEffect(() => {
+        const loadModels = async () => {
+            try {
+                const catalog = await fetchActiveCatalogModels();
+                const mapped: VehicleModel[] = catalog.map(m => {
+                    const trim = m.trims[0];
+                    const spec = trim?.spec;
+
+                    return {
+                        id: m.id.toString(),
+                        name: m.name.toUpperCase(),
+                        type: m.type,
+                        price: m.basePrice 
+                            ? new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number(m.basePrice))
+                            : 'Consultar',
+                        image: trim?.images[0]?.url || '/placeholder.png',
+                        specs: {
+                            range: `${spec?.rangeWltpKm || spec?.rangeCltcKm || '--'} km`,
+                            battery: `${spec?.batteryKwh || '--'} kWh`,
+                            power: `${spec?.horsepower || '--'} HP`,
+                            zeroToHundred: `${spec?.zeroTo100 || '--'} s`,
+                            fastCharge: spec?.chargeTime3080 || '--',
+                            bodyType: m.type,
+                            trunk: `${spec?.trunkLiters || '--'} L`,
+                            dimensions: spec ? `${spec.lengthMm || '--'} x ${spec.widthMm || '--'} x ${spec.heightMm || '--'} mm` : '--',
+                            adas: spec?.adasLevel ? `Nivel ${spec.adasLevel}` : '--',
+                            kwhPer100: `${spec?.kwhPer100km || '--'} kWh/100`,
+                        }
+                    };
+                });
+                setAvailableModels(mapped);
+                
+                // Inicializar con el primer modelo si existe
+                if (mapped.length > 0) {
+                    setSelectedModels([mapped[0], null, null]);
+                }
+            } catch (error) {
+                console.error('Error loading comparison models:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadModels();
+    }, []);
 
     const handleRemoveModel = (index: number) => {
         const newModels = [...selectedModels];
@@ -38,6 +99,14 @@ export function VehicleComparison() {
     const validModels = selectedModels.filter(m => m !== null);
     const hasMultipleModels = validModels.length > 1;
     const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+
+    if (isLoading) {
+        return (
+            <div className="py-24 flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00D4AA]"></div>
+            </div>
+        );
+    }
 
     return (
         <section id="comparar" className="py-24 bg-[#0a111a] relative">
@@ -135,7 +204,7 @@ export function VehicleComparison() {
 
                         {/* Filas de Datos */}
                         <div className="divide-y divide-white/5">
-                            {SPEC_KEYS.map((spec, rowIndex) => (
+                            {SPEC_LABELS.map((spec) => (
                                 <div key={spec.key} className="grid grid-cols-1 md:grid-cols-4 p-6 hover:bg-white/[0.02] transition-colors">
                                     <div className="text-sm font-medium text-[#00D4AA] mb-2 md:mb-0 flex items-center">
                                         {spec.label}

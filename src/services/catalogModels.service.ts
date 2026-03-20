@@ -19,6 +19,14 @@ export interface CatalogTrimSpec {
     horsepower: number | null;
     zeroTo100: string | null;    // Decimal comes as string from Prisma/JSON
     topSpeed: number | null;
+    chargeTime3080: string | null;
+    trunkLiters: number | null;
+    lengthMm: number | null;
+    widthMm: number | null;
+    heightMm: number | null;
+    wheelbaseMm: number | null;
+    adasLevel: number | null;
+    kwhPer100km: string | null;  // Decimal comes as string from Prisma/JSON
 }
 
 export interface CatalogTrimImage {
