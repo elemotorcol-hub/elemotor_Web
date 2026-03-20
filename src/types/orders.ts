@@ -19,6 +19,7 @@ export interface Order {
     trim?: {
         id: number;
         name: string;
+        images?: { url: string; public_url?: string }[];
         model?: {
             id: number;
             name: string;
