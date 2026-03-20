@@ -79,6 +79,36 @@ export interface QuoteData {
     imageUrl?: string;
 }
 
+export interface ExtendedQuoteData extends QuoteData {
+    city?: string;
+    preferredChannel?: string;
+    message?: string;
+    images: string[];
+    trimName?: string;
+}
+
+export interface ApiQuoteResponse {
+    id: number;
+    referenceCode: string;
+    status: string;
+    budgetRange?: number;
+    city?: string;
+    message?: string;
+    preferredChannel?: string;
+    createdAt: string;
+    model: {
+        id: number;
+        name: string;
+        brand?: { name: string; slug?: string; id?: number };
+        trims?: Array<{ images: Array<{ url: string }> }>;
+    };
+    trim?: {
+        id: number;
+        name: string;
+        images: Array<{ url: string }>;
+    };
+}
+
 export interface ClientDocument {
     id: string;
     title: string;
