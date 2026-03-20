@@ -1,5 +1,5 @@
-export type QuoteStatus = 'nuevo' | 'contactado' | 'negociacion' | 'ganado' | 'perdido';
-export type LeadSource = 'organico' | 'ads' | 'referido';
+export type QuoteStatus = 'pending' | 'contacted' | 'responded' | 'negotiation' | 'closed_won' | 'closed_lost';
+export type LeadSource = string; // El backend lo maneja como string flexible
 export type DateRange = 'hoy' | 'semana' | 'mes';
 
 export interface Note {
@@ -10,25 +10,39 @@ export interface Note {
 }
 
 export interface UTMData {
-    source: string;
-    medium: string;
-    campaign: string;
+    source?: string;
+    medium?: string;
+    campaign?: string;
 }
 
 export interface Quote {
-    id: string;
-    clientName: string;
-    clientEmail: string;
-    clientPhone: string;
-    modelInterest: string;
-    budget: string;
-    date: string; // ISO string
-    advisor: string;
-    source: LeadSource;
+    id: number;
+    referenceCode: string;
+    name: string;
+    email: string;
+    phone: string;
+    city?: string;
+    modelInterest?: string;
+    budgetRange?: number;
+    model?: {
+        id: number;
+        name: string;
+        slug?: string;
+    };
+    message?: string;
+    notes?: Note[];
+    source?: string;
     status: QuoteStatus;
-    utm: UTMData;
-    notes: Note[];
-    contactPreference?: 'tel' | 'email' | 'chat';
+    assignedToId?: number;
+    assignedTo?: {
+        name: string;
+    };
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    createdAt: string; // ISO string
+    updatedAt: string; // ISO string
+    preferredChannel: 'whatsapp' | 'call' | 'email';
 }
 
 // Para compatibilidad con componentes existentes que usan 'Lead'

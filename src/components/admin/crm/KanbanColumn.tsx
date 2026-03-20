@@ -7,9 +7,10 @@ interface KanbanColumnProps {
     count: number;
     leads: Lead[];
     dotColor: string;
+    onLeadClick?: (lead: Lead) => void;
 }
 
-export default function KanbanColumn({ title, count, leads, dotColor }: KanbanColumnProps) {
+export default function KanbanColumn({ title, count, leads, dotColor, onLeadClick }: KanbanColumnProps) {
     return (
         <div className="flex flex-col w-[320px] min-w-[320px] bg-transparent border border-white/5 rounded-2xl overflow-hidden shrink-0">
             {/* Header Column */}
@@ -26,7 +27,7 @@ export default function KanbanColumn({ title, count, leads, dotColor }: KanbanCo
             {/* List Body */}
             <div className="flex flex-col gap-4 p-4 min-h-[500px] h-full overflow-y-auto custom-scrollbar">
                 {leads.map((lead) => (
-                    <LeadCard key={lead.id} lead={lead} />
+                    <LeadCard key={lead.id} lead={lead} onClick={() => onLeadClick?.(lead)} />
                 ))}
             </div>
         </div>
