@@ -1,5 +1,4 @@
-import Image from 'next/image';
-import { Button } from '@/components/Button';
+import Link from 'next/link';
 
 export function Hero() {
     return (
@@ -25,22 +24,21 @@ export function Hero() {
                     Traemos a Colombia la vanguardia de la movilidad global.
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Button
-                        size="lg"
-                        className="bg-[#00D4AA] hover:bg-[#00B38F] text-slate-900 font-bold px-8 py-7 text-lg min-w-[200px]"
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4 sm:px-0">
+                    <Link
+                        href="/modelos"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 transition-colors bg-[#00D4AA] hover:bg-[#00B38F] text-slate-900 font-bold px-8 py-5 text-lg w-full sm:w-[260px]"
                         aria-label="Ir a la sección para explorar todos los modelos de vehículos eléctricos"
                     >
                         EXPLORAR MODELOS
-                    </Button>
-                    <Button
-                        size="lg"
-                        variant="ghost"
-                        className="border-2 border-white text-white hover:bg-white/10 font-bold px-8 py-7 text-lg min-w-[200px]"
+                    </Link>
+                    <Link
+                        href="/showroom"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 transition-colors border-2 border-white text-white hover:bg-white/10 font-bold px-8 py-5 text-lg w-full sm:w-[260px]"
                         aria-label="Ver el showroom interactivo en 3D de los vehículos"
                     >
                         VER SHOWROOM
-                    </Button>
+                    </Link>
                 </div>
             </div>
 

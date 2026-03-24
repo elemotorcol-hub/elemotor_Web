@@ -1,7 +1,4 @@
-'use client';
-
 import * as React from 'react';
-import { MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export function CTABanner() {
@@ -33,7 +30,7 @@ export function CTABanner() {
                                 COTIZAR AHORA
                             </Link>
                             <Link
-                                href="#modelos"
+                                href="/showroom"
                                 className="border border-white/20 text-white hover:bg-white/10 font-bold text-sm md:text-base px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto text-center"
                             >
                                 VER SHOWROOM 3D
