@@ -6,23 +6,31 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { User, Mail, Phone, Hash, Save, Camera } from 'lucide-react';
 import { Button } from '@/components/Button';
-import { MOCK_DASHBOARD_DATA } from '@/mocks/dashboardData';
+import { UserProfile, userService } from '@/services/user.service';
+import { uploadService } from '@/services/upload.service';
+import { useSWRConfig } from 'swr';
 
 const profileSchema = z.object({
-    name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
-    email: z.string().email('Dirección de correo inválida'),
-    phone: z.string().min(10, 'El teléfono debe ser válido'),
-    document: z.string().min(5, 'Documento inválido'),
+    name: z.string().min(3, 'Mínimo 3 caracteres').max(60, 'Máximo 60 caracteres'),
+    email: z.string().email('Correo inválido'),
+    phone: z.string().regex(/^\d{10}$/, 'Debe tener exactamente 10 dígitos numéricos'),
+    document: z.string().regex(/^\d{10}$/, 'Debe tener exactamente 10 dígitos numéricos'),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-export function ProfileForm() {
-    const { user } = MOCK_DASHBOARD_DATA;
+interface ProfileFormProps {
+    user: UserProfile;
+    onUserUpdate: (user: UserProfile) => void;
+}
+
+export function ProfileForm({ user, onUserUpdate }: ProfileFormProps) {
     const [isSaving, setIsSaving] = React.useState(false);
     const [savedSuccess, setSavedSuccess] = React.useState(false);
     const [avatarPreview, setAvatarPreview] = React.useState<string | null>(null);
+    const [avatarToDelete, setAvatarToDelete] = React.useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const { mutate } = useSWRConfig();
 
     const {
         register,
@@ -30,11 +38,12 @@ export function ProfileForm() {
         formState: { errors, isDirty },
     } = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
+        mode: 'onChange',
         defaultValues: {
             name: user.name,
             email: user.email,
-            phone: user.phone || '+57 300 000 0000',
-            document: '123456789', // Simulated data
+            phone: user.phone || '',
+            document: user.cedula || '',
         },
     });
 
@@ -45,6 +54,7 @@ export function ProfileForm() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            setAvatarToDelete(false);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setAvatarPreview(reader.result as string);
@@ -53,17 +63,46 @@ export function ProfileForm() {
         }
     };
 
-    const onSubmit = (data: ProfileFormValues) => {
+    const onSubmit = async (data: ProfileFormValues) => {
         setIsSaving(true);
         setSavedSuccess(false);
-        // Simulate API call
-        setTimeout(() => {
-            console.log('Profile updated:', { ...data, avatar: avatarPreview });
-            setIsSaving(false);
+
+        try {
+            let newUrl: string | undefined | null = user.avatarUrl;
+            let newPublicId: string | undefined | null = user.avatarPublicId;
+
+            // 1. Si seleccionó un archivo nuevo, lo sube
+            if (fileInputRef.current?.files?.[0]) {
+                const uploadRes = await uploadService.uploadImage(fileInputRef.current.files[0], 'avatars');
+                newUrl = uploadRes.publicUrl;
+                newPublicId = uploadRes.publicId;
+            } else if (avatarToDelete) {
+                // 2. Si eligió usar el botón "Eliminar foto" explícitamente sin subir otra.
+                newUrl = null;
+                newPublicId = null;
+            }
+
+            // 3. Envía el update, el Backend se encargará silenciosamente de cazar los huérfanos.
+            const updatedProfile = await userService.updateProfile({
+                name: data.name,
+                phone: data.phone,
+                cedula: data.document,
+                avatarUrl: newUrl,
+                avatarPublicId: newPublicId
+            });
+
+            // Update parent state
+            onUserUpdate(updatedProfile);
+            mutate('/api/users/me');
+
             setSavedSuccess(true);
-            
             setTimeout(() => setSavedSuccess(false), 3000);
-        }, 1000);
+        } catch (error) {
+            console.error('Error updating profile', error);
+            alert('Hubo un error al actualizar el perfil.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -78,8 +117,8 @@ export function ProfileForm() {
                         onClick={handleAvatarClick}
                         className="relative w-20 h-20 rounded-full bg-[#15201D] border-2 border-white/10 flex items-center justify-center cursor-pointer group overflow-hidden transition-all hover:border-[#10B981]/50"
                     >
-                        {avatarPreview ? (
-                            <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                        {avatarPreview || (user.avatarUrl && !avatarToDelete) ? (
+                            <img src={avatarPreview || user.avatarUrl || ''} alt="Preview" className="w-full h-full object-cover" />
                         ) : (
                             <span className="text-2xl font-black text-[#10B981]">
                                 {user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
@@ -96,16 +135,31 @@ export function ProfileForm() {
                             accept="image/*"
                         />
                     </div>
-                    <div>
-                        <Button 
-                            type="button" 
-                            onClick={handleAvatarClick}
-                            variant="ghost" 
-                            className="text-xs font-bold border border-white/10 hover:bg-white/5 text-slate-300 rounded-lg h-9"
-                        >
-                            Cambiar imagen
-                        </Button>
-                        <p className="text-[10px] text-slate-500 mt-2">JPG, GIF o PNG. Máx 2MB.</p>
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-3">
+                            <Button 
+                                type="button" 
+                                onClick={handleAvatarClick}
+                                variant="ghost" 
+                                className="text-xs font-bold border border-white/10 hover:bg-white/5 text-slate-300 rounded-lg h-9"
+                            >
+                                Cambiar imagen
+                            </Button>
+                            {(user.avatarUrl && !avatarToDelete) || avatarPreview ? (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setAvatarToDelete(true);
+                                        setAvatarPreview(null);
+                                        if (fileInputRef.current) fileInputRef.current.value = '';
+                                    }}
+                                    className="text-xs font-medium text-red-400 hover:text-red-300 transition-colors"
+                                >
+                                    Eliminar foto
+                                </button>
+                            ) : null}
+                        </div>
+                        <p className="text-[10px] text-slate-500">JPG, GIF o PNG. Máx 2MB.</p>
                     </div>
                 </div>
             </div>
@@ -141,7 +195,8 @@ export function ProfileForm() {
                         </div>
                         <input
                             {...register('email')}
-                            className={`w-full bg-[#15201D] border ${errors.email ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-[#10B981]'} text-white rounded-xl py-3 pl-11 pr-4 outline-none transition-all placeholder:text-slate-600 focus:bg-[#0A110F]`}
+                            disabled={true}
+                            className={`w-full bg-[#15201D] border border-white/10 text-white/50 cursor-not-allowed rounded-xl py-3 pl-11 pr-4 outline-none transition-all`}
                             placeholder="tu@correo.com"
                         />
                     </div>
@@ -194,7 +249,7 @@ export function ProfileForm() {
                 
                 <Button 
                     type="submit" 
-                    disabled={!isDirty || isSaving}
+                    disabled={(!isDirty && !avatarPreview && !avatarToDelete) || isSaving}
                     className="bg-[#10B981] hover:bg-[#0E9F6E] disabled:bg-[#10B981]/50 text-slate-900 font-bold px-8 py-3 h-auto"
                 >
                     {isSaving ? (

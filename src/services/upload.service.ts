@@ -36,6 +36,25 @@ export const uploadService = {
         return response.json();
     },
 
+    deleteImage: async (publicId: string): Promise<any> => {
+        const session = await getSession();
+        const response = await fetch(`${API_BASE_URL}/api/upload/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(session?.accessToken && { 'Authorization': `Bearer ${session.accessToken}` })
+            },
+            body: JSON.stringify({ publicId, resourceType: 'image' }),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Delete failed: ${errorText}`);
+        }
+
+        return response.json();
+    },
+
     uploadTrimImages: async (files: File[], trimId: number, type: string, altText?: string, sortOrder?: number) => {
         const session = await getSession();
         const formData = new FormData();

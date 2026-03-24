@@ -1,14 +1,8 @@
 import { Settings, Mail, Phone, CalendarDays } from 'lucide-react';
+import { UserProfile } from '@/services/user.service';
 
 interface UserProfileBannerProps {
-    user: {
-        name: string;
-        role: string;
-        email?: string;
-        phone?: string;
-        memberSince?: string;
-        clientId?: string;
-    },
+    user: UserProfile;
     onEditClick?: () => void;
 }
 
@@ -31,10 +25,14 @@ export function UserProfileBanner({ user, onEditClick }: UserProfileBannerProps)
                 {/* Avatar / Initials Circle */}
                 <div className="relative shrink-0">
                     <div className="w-28 h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-[#0A110F] to-[#15201D] border-2 border-white/10 p-1 flex items-center justify-center shadow-2xl overflow-hidden group">
-                        <div className="w-full h-full bg-white/5 rounded-full flex items-center justify-center">
-                            <span className="text-4xl md:text-5xl font-black text-white tracking-tighter shadow-sm group-hover:scale-110 transition-transform">
-                                {generateInitials(user.name)}
-                            </span>
+                        <div className="w-full h-full bg-white/5 rounded-full flex items-center justify-center overflow-hidden">
+                            {user.avatarUrl ? (
+                                <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover shadow-sm group-hover:scale-110 transition-transform" />
+                            ) : (
+                                <span className="text-4xl md:text-5xl font-black text-white tracking-tighter shadow-sm group-hover:scale-110 transition-transform">
+                                    {generateInitials(user.name)}
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -78,9 +76,8 @@ export function UserProfileBanner({ user, onEditClick }: UserProfileBannerProps)
             <div className="bg-[#0A110F]/50 border-t border-white/5 px-6 py-4 flex flex-col sm:flex-row justify-between items-center text-xs font-semibold text-slate-500 gap-3">
                 <div className="flex items-center gap-2">
                     <CalendarDays className="w-4 h-4 text-slate-400" />
-                    Miembro Elemotor desde {user.memberSince || 'N/A'}
+                    Miembro Elemotor desde {new Date(user.createdAt).toLocaleDateString()}
                 </div>
-                <div>ID Cliente: {user.clientId || 'N/A'}</div>
             </div>
         </div>
     );

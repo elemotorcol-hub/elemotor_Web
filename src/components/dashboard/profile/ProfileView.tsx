@@ -1,17 +1,38 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldCheck, ChevronRight, ArrowLeft, Settings as SettingsIcon } from 'lucide-react';
 import { UserProfileBanner } from '@/components/dashboard/profile/UserProfileBanner';
 import { AdvisorCard } from '@/components/dashboard/profile/AdvisorCard';
 import { SettingsTabs } from '@/components/dashboard/settings/SettingsTabs';
+import { userService, UserProfile } from '@/services/user.service';
 
-interface ProfileViewProps {
-    user: any;
-}
-
-export function ProfileView({ user }: ProfileViewProps) {
+export function ProfileView() {
     const [view, setView] = useState<'profile' | 'settings'>('profile');
+    const [user, setUser] = useState<UserProfile | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const data = await userService.getProfile();
+                setUser(data);
+            } catch (error) {
+                console.error('Error fetching profile:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUser();
+    }, []);
+
+    if (loading || !user) {
+        return (
+            <div className="max-w-6xl mx-auto space-y-8 pb-10 flex items-center justify-center min-h-[50vh]">
+                <div className="w-8 h-8 border-4 border-[#10B981] border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 pb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -61,7 +82,7 @@ export function ProfileView({ user }: ProfileViewProps) {
                 </div>
             ) : (
                 <div className="max-w-4xl mx-auto">
-                    <SettingsTabs />
+                    <SettingsTabs user={user} onUserUpdate={setUser} />
                 </div>
             )}
         </div>

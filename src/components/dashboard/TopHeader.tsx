@@ -1,6 +1,8 @@
 'use client';
 
 import { Bell, Menu, ChevronLeft, ChevronRight } from 'lucide-react';
+import useSWR from 'swr';
+import { userService } from '@/services/user.service';
 
 interface Props {
     userName: string;
@@ -12,6 +14,8 @@ interface Props {
 }
 
 export function TopHeader({ userName, userLastName = '', role, onToggleSidebar, onToggleMobile, isSidebarCollapsed }: Props) {
+    const { data: profile } = useSWR('/api/users/me', () => userService.getProfile());
+
     // Solución estricta según requerimientos para iniciales:
     const safeFirst = userName && userName.length > 0 ? userName[0] : '';
     const safeLast = userLastName && userLastName.length > 0 ? userLastName[0] : '';
@@ -65,7 +69,11 @@ export function TopHeader({ userName, userLastName = '', role, onToggleSidebar, 
                         <p className="text-[11px] font-medium text-slate-400">{role}</p>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-[#15201D] border border-white/10 flex items-center justify-center overflow-hidden">
-                        <span className="text-[#10B981] font-bold text-sm">{initials}</span>
+                        {profile?.avatarUrl ? (
+                            <img src={profile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                            <span className="text-[#10B981] font-bold text-sm">{initials}</span>
+                        )}
                     </div>
                 </div>
             </div>
