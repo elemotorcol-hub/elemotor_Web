@@ -17,9 +17,9 @@ export function useQuoteFilters(initialQuotes: Quote[]) {
 
     const today = useMemo(() => new Date().toDateString(), []);
 
-    /* ── Derived KPIs ── */
+    /* ── Derived KPIs (Solo sobre lo filtrado/cargado localmente) ── */
     const stats = useMemo(() => {
-        const todayCount = quotes.filter((q) => new Date(q.date).toDateString() === today).length;
+        const todayCount = quotes.filter((q) => q.createdAt && new Date(q.createdAt).toDateString() === today).length;
 
         // Top Status
         const statusCounts: Partial<Record<QuoteStatus, number>> = {};
@@ -28,18 +28,21 @@ export function useQuoteFilters(initialQuotes: Quote[]) {
         const statusPct = quotes.length ? Math.round(((topStatusCount as number) / quotes.length) * 100) : 0;
 
         // Top Source
-        const sourceCounts: Partial<Record<LeadSource, number>> = {};
-        quotes.forEach((q) => { sourceCounts[q.source] = (sourceCounts[q.source] ?? 0) + 1; });
+        const sourceCounts: Record<string, number> = {};
+        quotes.forEach((q) => { 
+            const src = q.source || 'web';
+            sourceCounts[src] = (sourceCounts[src] ?? 0) + 1; 
+        });
         const [topSourceKey] = Object.entries(sourceCounts).sort(([, a], [, b]) => (b as number) - (a as number))[0] ?? [''];
 
         // Conversion Rate
-        const wonCount = quotes.filter((q) => q.status === 'ganado').length;
+        const wonCount = quotes.filter((q) => q.status === 'closed_won').length;
         const conversionRate = quotes.length ? ((wonCount / quotes.length) * 100).toFixed(1) : '0.0';
 
         return {
             todayCount,
             topStatus: { label: STATUS_CONFIG[topStatusKey as QuoteStatus]?.label ?? '—', pct: statusPct },
-            topSource: SOURCE_LABELS[topSourceKey as LeadSource] ?? '—',
+            topSource: SOURCE_LABELS[topSourceKey] || topSourceKey || '—',
             conversionRate
         };
     }, [quotes, today]);
@@ -48,14 +51,20 @@ export function useQuoteFilters(initialQuotes: Quote[]) {
     const filteredQuotes = useMemo(() => {
         const now = new Date();
         return quotes.filter((q) => {
-            const qDate = new Date(q.date);
+            const qDate = q.createdAt ? new Date(q.createdAt) : new Date();
 
-            if (search && !q.clientName.toLowerCase().includes(search.toLowerCase()) &&
-                !q.clientEmail.toLowerCase().includes(search.toLowerCase())) return false;
+            if (search && !q.name.toLowerCase().includes(search.toLowerCase()) &&
+                !q.email.toLowerCase().includes(search.toLowerCase())) return false;
 
             if (filterStatus && q.status !== filterStatus) return false;
-            if (filterAdvisor && q.advisor !== filterAdvisor) return false;
-            if (filterSource && q.source !== filterSource) return false;
+            
+            // Filtro por asesor (por nombre si está disponible)
+            if (filterAdvisor) {
+                const advisorName = q.assignedTo?.name || '';
+                if (!advisorName.toLowerCase().includes(filterAdvisor.toLowerCase())) return false;
+            }
+
+            if (filterSource && (q.source || 'web') !== filterSource) return false;
 
             if (filterDate === 'hoy' && qDate.toDateString() !== today) return false;
             if (filterDate === 'semana') {

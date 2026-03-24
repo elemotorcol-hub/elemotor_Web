@@ -2,68 +2,135 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Zap, Navigation, X, Target, Layers } from 'lucide-react';
+import { Search, Zap, Navigation, X, Target, Layers } from 'lucide-react';
 import Image from 'next/image';
 import { workshopService } from '@/services/workshop.service';
 import { WorkshopDetailsModal } from '@/components/talleres/WorkshopDetailsModal';
 
+// ── Module-level constants — defined ONCE, not re-created on every render ──
+
 const WORKSHOP_FILTERS = ['Todos', 'Mantenimiento', 'Cargadores', 'Frenos', 'General'];
 
+/** Maps backend ServiceType enum values to UI metadata */
+const SERVICE_TYPE_MAP: Record<string, { id: string; icon: string; title: string; description: string }> = {
+    maintenance:          { id: 'm',  icon: 'wrench',     title: 'Mantenimiento General',   description: 'Servicio preventivo'     },
+    chargers:             { id: 'c',  icon: 'zap',        title: 'Estación de Carga',       description: 'Carga rápida disponible' },
+    body_paint:           { id: 'b',  icon: 'palette',    title: 'Carrocería y Pintura',    description: 'Pintura especializada'   },
+    electric_diagnostics: { id: 'e',  icon: 'activity',   title: 'Diagnóstico Eléctrico',   description: 'Sistemas HV'             },
+    tires:                { id: 't',  icon: 'tire',       title: 'Llantas y Alineación',   description: 'Especial EVs'            },
+    brakes:               { id: 'br', icon: 'circle-dot', title: 'Frenos y Suspensión',    description: 'Seguridad garantizada'   },
+    general:              { id: 'g',  icon: 'wrench',     title: 'Mecánica General',        description: 'Servicio integral'       },
+};
+
+const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+const mapDays = (dayOfWeek: number): string => DAY_NAMES[dayOfWeek % 7];
+
+// ── Strict types ────────────────────────────────────────────────────────────
+
+interface WorkshopHour {
+    day: string;
+    open_time: string;
+    close_time: string;
+    is_closed: boolean;
+}
+
+interface MappedWorkshop {
+    id: string;
+    name: string;
+    address: string;
+    latitude?: number;
+    longitude?: number;
+    type: string;
+    rating: number;
+    reviews: number;
+    isOpen: boolean;
+    images: { url: string }[] | string[];
+    services: { id: string; icon: string; title: string; description: string }[];
+    hoursList: WorkshopHour[];
+}
+
+// ── Component ───────────────────────────────────────────────────────────────
+
 export function WorkshopsMap() {
-// ... existing states and effect ...
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('Todos');
     const [activeWorkshopId, setActiveWorkshopId] = useState<string | null>(null);
     const [modalWorkshopId, setModalWorkshopId] = useState<string | null>(null);
-    const [workshops, setWorkshops] = useState<any[]>([]);
+    const [workshops, setWorkshops] = useState<MappedWorkshop[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Coordinate mapping: real world to percentage UI
-    // Bbox de Colombia: Lng [-82, -66.5], Lat [-4.5, 13.5]
-    const mapToCoordinates = (lat: number | null, lng: number | null) => {
-        if (!lat || !lng) return { x: 50, y: 50 }; // Fallback central
-        const x = ((lng + 82.0) / 15.5) * 100;
-        const y = ((13.5 - lat) / 18.0) * 100;
-        return { x, y };
-    };
+    const mapRef = React.useRef<any>(null);
+    const markersRef = React.useRef<Record<string, any>>({});
 
-    // Mapping service types to UI icons/titles
-    const serviceTypeMap: Record<string, any> = {
-        'chargers': { id: 'c', icon: 'zap', title: 'Estación de Carga', description: 'Carga rápida disponible' },
-        'maintenance': { id: 'm', icon: 'wrench', title: 'Mantenimiento General', description: 'Servicio preventivo' },
-        'tires': { id: 't', icon: 'tire', title: 'Llantas y Alineación', description: 'Especial EVs' },
-        'electric_diagnostics': { id: 'e', icon: 'zap', title: 'Diagnóstico Eléctrico', description: 'Sistemas HV' },
-        'body_paint': { id: 'b', icon: 'wrench', title: 'Carrocería', description: 'Pintura especializada' }
-    };
+    // Initialize Leaflet Map
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
 
-    const mapDays = (dayOfWeek: number) => {
-        const days = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
-        return days[dayOfWeek % 7];
-    };
+        const initMap = async () => {
+            const L = (await import('leaflet')).default;
 
+            const container = document.getElementById('workshops-map-root');
+            if (!container || (container as any)._leaflet_id) return;
+
+            const map = L.map('workshops-map-root', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([4.6097, -74.0817], 6);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {
+                maxZoom: 20,
+            }).addTo(map);
+
+            // Filtro CSS para modo oscuro premium
+            const mapPane = map.getPane('tilePane');
+            if (mapPane) {
+                mapPane.style.filter = 'invert(100%) hue-rotate(180deg) brightness(95%) contrast(105%) opacity(0.8)';
+            }
+
+            mapRef.current = map;
+        };
+
+        initMap();
+
+        return () => {
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
+        };
+    }, []);
+
+    // Load Workshops Data
     useEffect(() => {
         const loadWorkshops = async () => {
             try {
                 const response = await workshopService.fetchWorkshops();
-                if (response.success && response.result.data) {
-                    const mapped = response.result.data.map((w: any) => ({
-                        ...w,
-                        id: String(w.id), // UI expects string
-                        x: mapToCoordinates(w.latitude, w.longitude).x,
-                        y: mapToCoordinates(w.latitude, w.longitude).y,
-                        type: w.services.includes('chargers') ? 'Cargadores' : 'Mantenimiento',
-                        services: w.services.map((type: string) => serviceTypeMap[type] || serviceTypeMap['maintenance']),
-                        hoursList: w.hours.map((h: any) => ({
-                            day: mapDays(h.dayOfWeek),
-                            open_time: h.openTime || '--:--',
-                            close_time: h.closeTime || '--:--',
-                            is_closed: h.isClosed
-                        })),
-                        reviews: 40 + Math.floor(Math.random() * 100), // Mock reviews if not in DB
-                        rating: w.rating || 4.5,
-                        estimatedDistance: 'Calculando...',
-                        estimatedTime: '--'
-                    }));
+                if (response && response.data) {
+                    const mapped = response.data.map((w: any) => {
+                        const serviceTypes = w.services.map((s: any) => s.serviceType || s);
+
+                        let derivedType = 'General';
+                        if (serviceTypes.includes('chargers')) derivedType = 'Cargadores';
+                        else if (serviceTypes.includes('brakes')) derivedType = 'Frenos';
+                        else if (serviceTypes.includes('maintenance')) derivedType = 'Mantenimiento';
+                        else if (serviceTypes.includes('general')) derivedType = 'General';
+
+                        return {
+                            ...w,
+                            id: String(w.id),
+                            type: derivedType,
+                            services: serviceTypes.map((type: string) => SERVICE_TYPE_MAP[type] ?? SERVICE_TYPE_MAP.maintenance),
+                            hoursList: w.hours.map((h: any) => ({
+                                day: mapDays(h.dayOfWeek),
+                                open_time: h.openTime || '--:--',
+                                close_time: h.closeTime || '--:--',
+                                is_closed: h.isClosed
+                            })),
+                            reviews: w.reviewsCount || 0,
+                            rating: w.rating || 0,
+                            isOpen: true
+                        };
+                    });
                     setWorkshops(mapped);
                 }
             } catch (error) {
@@ -75,25 +142,92 @@ export function WorkshopsMap() {
         loadWorkshops();
     }, []);
 
+    // Render Markers on Map
+    useEffect(() => {
+        if (!mapRef.current || workshops.length === 0) return;
+
+        const renderMarkers = async () => {
+            const L = (await import('leaflet')).default;
+            
+            Object.values(markersRef.current).forEach(m => m.remove());
+            markersRef.current = {};
+
+            workshops.forEach(w => {
+                if (!w.latitude || !w.longitude) return;
+
+                const isCharger = w.type === 'Cargadores';
+                const iconHtml = `
+                    <div class="relative group">
+                        <div class="w-8 h-10 transition-transform hover:scale-110">
+                            <svg viewBox="0 0 24 32" class="w-8 h-10 drop-shadow-xl text-slate-500 hover:text-[#00D4AA]" fill="none">
+                                <path d="M12 0C5.373 0 0 5.373 0 12C0 21 12 32 12 32C12 32 24 21 24 12C24 5.373 18.627 0 12 0Z" fill="currentColor" opacity="0.1" />
+                                <path d="M12 2C6.477 2 2 6.477 2 12C2 19.5 12 29 12 29C12 29 22 19.5 22 12C22 6.477 17.523 2 12 2Z" fill="currentColor" stroke="#00D4AA" stroke-width="2" />
+                                <circle cx="12" cy="12" r="4" fill="#1e293b" />
+                            </svg>
+                            <div class="absolute top-[8px] left-[10px] z-20 text-white pointer-events-none">
+                                ${isCharger 
+                                    ? '<svg viewBox="0 0 24 24" class="w-3 h-3" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' 
+                                    : '<svg viewBox="0 0 24 24" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const icon = L.divIcon({
+                    className: 'custom-pin',
+                    html: iconHtml,
+                    iconSize: [32, 40],
+                    iconAnchor: [16, 40]
+                });
+
+                const marker = L.marker([w.latitude, w.longitude], { icon })
+                    .addTo(mapRef.current)
+                    .on('click', () => {
+                        setActiveWorkshopId(w.id);
+                        mapRef.current.flyTo([w.latitude, w.longitude], 14);
+                    });
+                
+                markersRef.current[w.id] = marker;
+            });
+        };
+
+        renderMarkers();
+    }, [workshops]);
+
+    // Pan to active workshop from outer state
+    useEffect(() => {
+        if (activeWorkshopId && mapRef.current && markersRef.current[activeWorkshopId]) {
+            const workshop = workshops.find(w => w.id === activeWorkshopId);
+            if (workshop && workshop.latitude && workshop.longitude) {
+                mapRef.current.flyTo([workshop.latitude, workshop.longitude], 15);
+            }
+        }
+    }, [activeWorkshopId, workshops]);
+
     // Filter Logic
     const filteredWorkshops = useMemo(() => {
-        return workshops.filter(workshop => {
+        const filtered = workshops.filter(workshop => {
             const matchesSearch = workshop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (workshop.address || '').toLowerCase().includes(searchQuery.toLowerCase());
             const matchesFilter = selectedFilter === 'Todos' || workshop.type === selectedFilter;
             return matchesSearch && matchesFilter;
         });
+
+        Object.keys(markersRef.current).forEach(id => {
+            const isVisible = filtered.some(w => w.id === id);
+            if (isVisible) {
+                markersRef.current[id].addTo(mapRef.current);
+            } else {
+                markersRef.current[id].remove();
+            }
+        });
+
+        return filtered;
     }, [searchQuery, selectedFilter, workshops]);
 
     const activeWorkshop = useMemo(() => {
         return workshops.find(w => w.id === activeWorkshopId);
     }, [activeWorkshopId, workshops]);
-
-    // Handle map pin click
-    const handlePinClick = (id: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setActiveWorkshopId(id);
-    };
 
     return (
         <div className="w-full h-screen bg-[#111618] flex flex-col md:flex-row relative overflow-hidden font-sans pt-[72px]">
@@ -123,7 +257,7 @@ export function WorkshopsMap() {
                         </button>
                     </div>
 
-                    {/* Filtros Horizontales Scrollables */}
+                    {/* Filtros Horizontales */}
                     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                         {WORKSHOP_FILTERS.map(filter => (
                             <button
@@ -155,16 +289,14 @@ export function WorkshopsMap() {
                                     : 'bg-[#111A1F] border-[#1e293b] hover:border-slate-600'
                                 }`}
                         >
-                            {/* Borde activo lateral */}
                             {activeWorkshopId === workshop.id && (
                                 <motion.div layoutId="activeBorder" className="absolute left-0 top-0 bottom-0 w-1 bg-[#00D4AA]" />
                             )}
 
                             <div className="flex gap-4">
-                                {/* Imagen miniatura */}
                                 <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 relative bg-slate-800">
                                     <Image
-                                        src={workshop.images[0]}
+                                        src={workshop.images && workshop.images.length > 0 ? (typeof workshop.images[0] === 'string' ? workshop.images[0] : workshop.images[0].url) : '/img/workshop-placeholder.jpg'}
                                         alt={workshop.name}
                                         fill
                                         className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -173,8 +305,6 @@ export function WorkshopsMap() {
 
                                 <div className="flex-1">
                                     <h3 className="text-white font-bold text-sm mb-1">{workshop.name}</h3>
-
-                                    {/* Rating */}
                                     <div className="flex items-center gap-1 mb-2">
                                         <div className="flex text-[#00D4AA]">
                                             {[...Array(5)].map((_, i) => (
@@ -186,7 +316,6 @@ export function WorkshopsMap() {
                                         <span className="text-[10px] text-slate-500">({workshop.reviews} reviews)</span>
                                     </div>
 
-                                    {/* Estado y Tipo */}
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider
@@ -197,7 +326,6 @@ export function WorkshopsMap() {
                                         </div>
                                     </div>
 
-                                    {/* Botón Acción Card */}
                                     <div className="mt-3 flex justify-end">
                                         <button className="text-[#00D4AA] text-[10px] font-bold flex items-center gap-1 hover:text-white transition-colors">
                                             <Navigation className="w-3 h-3" /> Cómo Llegar
@@ -217,27 +345,16 @@ export function WorkshopsMap() {
             </div>
 
             {/* --- MAPA AREA DERECHA --- */}
-            <div
-                className="flex-1 h-full min-h-[500px] bg-[#111618] relative overflow-hidden"
-                onClick={() => setActiveWorkshopId(null)}
-            >
-                {/* Mapa Real de Fondo (Con filtros CSS para Dark Mode Premium) */}
-                <div className="absolute inset-0 z-0 opacity-60 pointer-events-none">
-                    <iframe
-                        width="100%"
-                        height="100%"
-                        style={{ border: 0, filter: 'invert(100%) hue-rotate(180deg) brightness(95%) contrast(105%) opacity(0.8)' }}
-                        src="https://www.openstreetmap.org/export/embed.html?bbox=-82.0%2C-4.5%2C-66.5%2C13.5&amp;layer=mapnik"
-                        title="Mapa de Colombia Talleres"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#111618] via-transparent to-[#111618]/50" />
-                </div>
-                {/* Controles flotantes en el mapa */}
+            <div className="flex-1 h-full min-h-[500px] bg-[#111618] relative overflow-hidden" onClick={() => setActiveWorkshopId(null)}>
+                <div id="workshops-map-root" className="absolute inset-0 z-0" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#111618] via-transparent to-[#111618]/50 pointer-events-none z-[5]" />
+
+                {/* Controles flotantes */}
                 <div className="absolute top-6 right-6 flex flex-col gap-2 z-10">
-                    <button className="w-10 h-10 bg-[#0A1114] border border-[#2b3a42] rounded-lg flex items-center justify-center text-white hover:bg-[#1e293b] transition-colors shadow-lg">
+                    <button onClick={(e) => { e.stopPropagation(); mapRef.current?.zoomIn(); }} className="w-10 h-10 bg-[#0A1114] border border-[#2b3a42] rounded-lg flex items-center justify-center text-white hover:bg-[#1e293b] transition-colors shadow-lg">
                         <span className="text-xl">+</span>
                     </button>
-                    <button className="w-10 h-10 bg-[#0A1114] border border-[#2b3a42] rounded-lg flex items-center justify-center text-white hover:bg-[#1e293b] transition-colors shadow-lg">
+                    <button onClick={(e) => { e.stopPropagation(); mapRef.current?.zoomOut(); }} className="w-10 h-10 bg-[#0A1114] border border-[#2b3a42] rounded-lg flex items-center justify-center text-white hover:bg-[#1e293b] transition-colors shadow-lg">
                         <span className="text-xl">-</span>
                     </button>
                     <div className="w-10 h-[10px]"></div>
@@ -246,63 +363,7 @@ export function WorkshopsMap() {
                     </button>
                 </div>
 
-                {/* Marcadores / Pines (Basados en datos reales) */}
-                {workshops.map(workshop => {
-                    const isActive = activeWorkshopId === workshop.id;
-                    const isFiltered = filteredWorkshops.some(w => w.id === workshop.id);
-
-                    if (!isFiltered && !isActive) return null;
-
-                    return (
-                        <div
-                            key={`pin-${workshop.id}`}
-                            className="absolute z-10 transform -translate-x-1/2 -translate-y-full cursor-pointer"
-                            style={{ left: `${workshop.x}%`, top: `${workshop.y}%` }}
-                            onClick={(e) => handlePinClick(workshop.id, e)}
-                        >
-                            {/* Pin Graphics */}
-                            <div className="relative group">
-                                {/* Glow radar if active */}
-                                {isActive && (
-                                    <>
-                                        <motion.div
-                                            initial={{ scale: 0.5, opacity: 0 }}
-                                            animate={{ scale: 2.5, opacity: [0.5, 0] }}
-                                            transition={{ duration: 1.5, repeat: Infinity }}
-                                            className="absolute inset-0 bg-[#00D4AA] rounded-full z-0"
-                                        />
-                                        <motion.div
-                                            initial={{ scale: 0.5, opacity: 0 }}
-                                            animate={{ scale: 3.5, opacity: [0.3, 0] }}
-                                            transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
-                                            className="absolute inset-0 border border-[#00D4AA] rounded-full z-0"
-                                        />
-                                    </>
-                                )}
-
-                                <div className={`relative z-10 w-8 h-10 transition-transform ${isActive ? 'scale-125' : 'group-hover:scale-110'}`}>
-                                    {/* Icono Custom SVG Pin invertido */}
-                                    <svg viewBox="0 0 24 32" className={`w-8 h-10 drop-shadow-xl ${isActive ? 'text-[#00D4AA]' : 'text-slate-500 group-hover:text-[#00D4AA]'}`} fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12 0C5.373 0 0 5.373 0 12C0 21 12 32 12 32C12 32 24 21 24 12C24 5.373 18.627 0 12 0Z" fill="currentColor" opacity="0.1" />
-                                        <path d="M12 2C6.477 2 2 6.477 2 12C2 19.5 12 29 12 29C12 29 22 19.5 22 12C22 6.477 17.523 2 12 2Z" fill="currentColor" stroke="#00D4AA" strokeWidth="2" />
-                                        <circle cx="12" cy="12" r="4" fill={isActive ? '#0A1114' : '#1e293b'} />
-                                    </svg>
-
-                                    {/* Inner icon depending on type */}
-                                    <div className="absolute top-[8px] left-[10px] z-20 pointer-events-none">
-                                        {workshop.type === 'Cargadores' ? (
-                                            <Zap className={`w-3 h-3 ${isActive ? 'text-[#00D4AA]' : 'text-white'}`} fill="currentColor" />
-                                        ) : (
-                                            <WrenchIcon className={`w-3 h-3 ${isActive ? 'text-[#00D4AA]' : 'text-white'}`} />
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-
-                {/* Popup de Detalle (Absolute sobre el pin) */}
+                {/* Popup de Detalle */}
                 <AnimatePresence>
                     {activeWorkshop && (
                         <motion.div
@@ -310,23 +371,19 @@ export function WorkshopsMap() {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 10 }}
                             className="absolute z-20 w-[280px] bg-[#0A1114] border border-[#1e293b] rounded-xl shadow-2xl overflow-hidden"
-                            style={{
-                                // Posicionar sobre el pin activo (heurística simple para este mockup)
-                                left: `calc(${activeWorkshop.x}% - 140px)`,
-                                top: `calc(${activeWorkshop.y}% - 220px)`,
-                                // Evitar que se salga por arriba si el pin está muy alto
-                                marginTop: activeWorkshop.y < 30 ? '250px' : '0'
-                            }}
+                            style={{ left: '50%', bottom: '40px', transform: 'translateX(-50%)' }}
                         >
-                            <button
-                                onClick={() => setActiveWorkshopId(null)}
-                                className="absolute top-2 right-2 z-10 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/80"
-                            >
+                            <button onClick={(e) => { e.stopPropagation(); setActiveWorkshopId(null); }} className="absolute top-2 right-2 z-10 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/80">
                                 <X className="w-3 h-3" />
                             </button>
 
                             <div className="h-32 relative bg-slate-800">
-                                <Image src={activeWorkshop.images[0]} alt={activeWorkshop.name} fill className="object-cover" />
+                                <Image 
+                                    src={activeWorkshop.images && activeWorkshop.images.length > 0 ? (typeof activeWorkshop.images[0] === 'string' ? activeWorkshop.images[0] : activeWorkshop.images[0].url) : '/img/workshop-placeholder.jpg'} 
+                                    alt={activeWorkshop.name} 
+                                    fill 
+                                    className="object-cover" 
+                                />
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#0A1114] via-transparent to-transparent" />
                             </div>
 
@@ -350,7 +407,7 @@ export function WorkshopsMap() {
                     )}
                 </AnimatePresence>
 
-                {/* Modal de Detalles a Pantalla Completa */}
+                {/* Modal */}
                 <AnimatePresence>
                     {modalWorkshopId && (
                         <WorkshopDetailsModal
@@ -364,7 +421,6 @@ export function WorkshopsMap() {
     );
 }
 
-// Simple custom Wrench icon since lucide might render differently
 function WrenchIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -372,4 +428,3 @@ function WrenchIcon(props: React.SVGProps<SVGSVGElement>) {
         </svg>
     );
 }
-
