@@ -18,7 +18,8 @@ export default function WorkshopsTable() {
             'srv-3': 'tires',
             'srv-4': 'chargers',
             'srv-5': 'general',
-            'srv-6': 'body_paint'
+            'srv-6': 'body_paint',
+            'srv-7': 'brakes'
         };
 
         // ScheduleGrid usa nombres de día ('monday', 'tuesday'...) → backend espera número (1=Lun...7=Dom)

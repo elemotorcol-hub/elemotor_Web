@@ -1,26 +1,108 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Fuel, Zap, Leaf, Wrench, BadgeDollarSign, ArrowRight } from 'lucide-react';
+import { Fuel, Zap, Leaf, Wrench, BadgeDollarSign, ArrowRight, MapPin, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { fetchActiveCatalogModels, CatalogModel } from '@/services/catalogModels.service';
+import { fetchElectricityRates, fetchFuelPrices, ElectricityRate, FuelPrice } from '@/services/calculator.service';
 
-// Models mock for the selector
-const ELEMOTOR_MODELS = [
+// Fallback models in case API fails
+const FALLBACK_MODELS = [
     { id: 'gt', name: 'Elemotor Sport GT', efficiency: 6.5 },
     { id: 'suv', name: 'Elemotor E-SUV', efficiency: 5.8 },
     { id: 'sedan', name: 'Elemotor Sedan Pro', efficiency: 7.2 },
 ];
 
 export function SavingsCalculator() {
-    // Current Vehicle State (Gasoline)
+    // Data states
+    const [models, setModels] = useState<any[]>(FALLBACK_MODELS);
+    const [electricityRates, setElectricityRates] = useState<ElectricityRate[]>([]);
+    const [fuelPrices, setFuelPrices] = useState<FuelPrice[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Filter states
+    const [selectedCity, setSelectedCity] = useState<string>('Bogotá');
+    const [fuelType, setFuelType] = useState<'regular' | 'premium' | 'diesel'>('regular');
+
+    // Current Vehicle State (Gasoline/Diesel)
     const [monthlyKm, setMonthlyKm] = useState<number>(1500);
     const [fuelConsumption, setFuelConsumption] = useState<number>(40); // km/gal
     const [fuelPrice, setFuelPrice] = useState<number>(16000); // COP
 
     // EV State (Elemotor)
-    const [selectedModelId, setSelectedModelId] = useState<string>('gt');
+    const [selectedModelId, setSelectedModelId] = useState<string>('');
     const [electricityPrice, setElectricityPrice] = useState<number>(850); // COP / kWh
+
+    // Initial data fetch
+    useEffect(() => {
+        async function loadData() {
+            try {
+                const [modelsData, eRates, fPrices] = await Promise.all([
+                    fetchActiveCatalogModels(),
+                    fetchElectricityRates(),
+                    fetchFuelPrices()
+                ]);
+
+                // Map catalog models to calculator models
+                const mappedModels = modelsData.map(m => {
+                    const firstTrim = m.trims[0];
+                    const kwhPer100 = firstTrim?.spec?.kwhPer100km ? parseFloat(firstTrim.spec.kwhPer100km) : 15;
+                    // efficiency = km / kWh = 100 / (kWh/100km)
+                    const efficiency = kwhPer100 > 0 ? 100 / kwhPer100 : 6.0;
+
+                    return {
+                        id: String(m.id),
+                        name: m.name,
+                        efficiency: parseFloat(efficiency.toFixed(2))
+                    };
+                });
+
+                if (mappedModels.length > 0) {
+                    setModels(mappedModels);
+                    setSelectedModelId(mappedModels[0].id);
+                } else {
+                    setSelectedModelId(FALLBACK_MODELS[0].id);
+                }
+
+                setElectricityRates(eRates);
+                setFuelPrices(fPrices);
+
+                // Initial price update for default city (Bogotá)
+                updatePrices('Bogotá', fPrices, eRates, fuelType);
+
+            } catch (error) {
+                console.error('Error loading calculator data:', error);
+                setModels(FALLBACK_MODELS);
+                setSelectedModelId(FALLBACK_MODELS[0].id);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        loadData();
+    }, []);
+
+    // Update prices when city or fuel type changes
+    useEffect(() => {
+        if (!isLoading) {
+            updatePrices(selectedCity, fuelPrices, electricityRates, fuelType);
+        }
+    }, [selectedCity, fuelType, isLoading, fuelPrices, electricityRates]);
+
+    const updatePrices = (city: string, fPrices: FuelPrice[], eRates: ElectricityRate[], fType: string) => {
+        const cityFuelPrice = fPrices.find(p => p.city === city && p.fuelType === fType);
+        const cityElecRate = eRates.find(p => p.city === city);
+
+        if (cityFuelPrice) setFuelPrice(parseFloat(cityFuelPrice.pricePerGallonCop));
+        if (cityElecRate) setElectricityPrice(parseFloat(cityElecRate.pricePerKwhCop));
+    };
+
+    const cities = useMemo(() => {
+        const fuelCities = fuelPrices.map(p => p.city);
+        const elecCities = electricityRates.map(p => p.city);
+        const allCities = Array.from(new Set([...fuelCities, ...elecCities, 'Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Bucaramanga', 'Cartagena', 'Montería', 'Villavicencio', 'Pereira', 'Manizales', 'Ibagué', 'Pasto', 'Cúcuta']));
+        return allCities.sort();
+    }, [fuelPrices, electricityRates]);
 
     const handleNumberValidation = (
         value: string,
@@ -41,17 +123,17 @@ export function SavingsCalculator() {
     };
 
     const selectedModel = useMemo(() => {
-        return ELEMOTOR_MODELS.find(m => m.id === selectedModelId) || ELEMOTOR_MODELS[0];
-    }, [selectedModelId]);
+        return models.find(m => m.id === selectedModelId) || models[0];
+    }, [selectedModelId, models]);
 
     // Calculate Costs
     const gasolineMonthlyCost = useMemo(() => {
-        return (monthlyKm / fuelConsumption) * fuelPrice;
+        return (monthlyKm / (fuelConsumption || 1)) * fuelPrice;
     }, [monthlyKm, fuelConsumption, fuelPrice]);
 
     const electricMonthlyCost = useMemo(() => {
-        return (monthlyKm / selectedModel.efficiency) * electricityPrice;
-    }, [monthlyKm, selectedModel.efficiency, electricityPrice]);
+        return (monthlyKm / (selectedModel?.efficiency || 1)) * electricityPrice;
+    }, [monthlyKm, selectedModel?.efficiency, electricityPrice]);
 
     // Calculate Savings
     const monthlySavings = Math.max(0, gasolineMonthlyCost - electricMonthlyCost);
@@ -73,6 +155,23 @@ export function SavingsCalculator() {
     const savingsPercentage = gasolineMonthlyCost > 0
         ? Math.round(((gasolineMonthlyCost - electricMonthlyCost) / gasolineMonthlyCost) * 100)
         : 0;
+
+    const currentFuelData = useMemo(() => {
+        return fuelPrices.find(p => p.city === selectedCity && p.fuelType === fuelType);
+    }, [fuelPrices, selectedCity, fuelType]);
+
+    const currentElecData = useMemo(() => {
+        return electricityRates.find(r => r.city === selectedCity);
+    }, [electricityRates, selectedCity]);
+
+    if (isLoading) {
+        return (
+            <div className="w-full bg-[#050B09] py-32 flex flex-col items-center justify-center text-white">
+                <Loader2 className="w-10 h-10 text-[#00D4AA] animate-spin mb-4" />
+                <p className="text-slate-400 font-medium tracking-wide">Cargando tarifas y modelos...</p>
+            </div>
+        );
+    }
 
     return (
         <section className="w-full bg-[#050B09] py-16 md:py-24 font-sans relative overflow-hidden">
@@ -98,6 +197,46 @@ export function SavingsCalculator() {
                     </p>
                 </div>
 
+                {/* City & Global Settings Toolbar */}
+                <div className="mb-10 flex flex-col md:flex-row gap-6 justify-center items-center">
+                    <div className="relative group w-full md:w-64">
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00D4AA] z-10" />
+                        <select
+                            value={selectedCity}
+                            onChange={(e) => setSelectedCity(e.target.value)}
+                            className="w-full bg-[#0A110F] border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white font-bold text-sm focus:outline-none focus:border-[#00D4AA]/50 transition-all appearance-none cursor-pointer hover:bg-[#121c19]"
+                        >
+                            {cities.map(city => (
+                                <option key={city} value={city}>{city}</option>
+                            ))}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <ArrowRight className="w-4 h-4 text-slate-500 rotate-90" />
+                        </div>
+                    </div>
+
+                    <div className="flex bg-[#0A110F] rounded-xl p-1 border border-white/10 w-full md:w-auto overflow-x-auto">
+                        <button
+                            onClick={() => setFuelType('regular')}
+                            className={`whitespace-nowrap px-4 py-3 rounded-lg text-[10px] md:text-xs font-black transition-all ${fuelType === 'regular' ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'text-slate-500 hover:text-white'}`}
+                        >
+                            GASOLINA CORRIENTE
+                        </button>
+                        <button
+                            onClick={() => setFuelType('premium')}
+                            className={`whitespace-nowrap px-4 py-3 rounded-lg text-[10px] md:text-xs font-black transition-all ${fuelType === 'premium' ? 'bg-red-700 text-white shadow-lg shadow-red-700/20' : 'text-slate-500 hover:text-white'}`}
+                        >
+                            GASOLINA EXTRA
+                        </button>
+                        <button
+                            onClick={() => setFuelType('diesel')}
+                            className={`whitespace-nowrap px-4 py-3 rounded-lg text-[10px] md:text-xs font-black transition-all ${fuelType === 'diesel' ? 'bg-slate-600 text-white shadow-lg shadow-slate-600/20' : 'text-slate-500 hover:text-white'}`}
+                        >
+                            DIESEL / ACPM
+                        </button>
+                    </div>
+                </div>
+
                 {/* Main Cards Container */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
 
@@ -116,14 +255,14 @@ export function SavingsCalculator() {
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-white">Tu Vehículo Actual</h3>
-                                <p className="text-xs font-bold text-red-500 tracking-wider">GASOLINA</p>
+                                <p className="text-xs font-bold text-red-500 tracking-wider uppercase">Motor a Combustión</p>
                             </div>
                         </div>
 
                         {/* Slider: Kilometers */}
                         <div className="mb-8">
                             <div className="flex justify-between items-end mb-4">
-                                <label className="text-sm font-semibold text-slate-300">Kilómetros al mes</label>
+                                <label className="text-sm font-semibold text-slate-300">Uso mensual (estimado)</label>
                                 <div className="text-2xl font-bold text-white">
                                     {new Intl.NumberFormat('es-CO').format(monthlyKm)} <span className="text-sm text-slate-500 font-medium">km</span>
                                 </div>
@@ -146,7 +285,7 @@ export function SavingsCalculator() {
                         {/* Inputs: Consumo & Precio */}
                         <div className="grid grid-cols-2 gap-4 mb-10">
                             <div>
-                                <label className="text-xs font-semibold text-slate-400 block mb-2">Consumo</label>
+                                <label className="text-xs font-semibold text-slate-400 block mb-2">Rendimiento</label>
                                 <div className="relative">
                                     <input
                                         type="number"
@@ -160,7 +299,7 @@ export function SavingsCalculator() {
                                 </div>
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-slate-400 block mb-2">Precio Galón</label>
+                                <label className="text-xs font-semibold text-slate-400 block mb-2">Precio Combustible</label>
                                 <div className="relative">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
                                     <input
@@ -173,6 +312,11 @@ export function SavingsCalculator() {
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500">COP</span>
                                 </div>
+                                {currentFuelData?.source && (
+                                    <p className="text-[10px] text-slate-500 mt-2 italic flex items-center gap-1">
+                                        Fuente: {currentFuelData.source}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -203,7 +347,7 @@ export function SavingsCalculator() {
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-white">Tu Nuevo Elemotor</h3>
-                                <p className="text-xs font-bold text-[#00D4AA] tracking-wider">ELÉCTRICO</p>
+                                <p className="text-xs font-bold text-[#00D4AA] tracking-wider uppercase">100% Eléctrico</p>
                             </div>
                         </div>
 
@@ -215,7 +359,7 @@ export function SavingsCalculator() {
                                 onChange={(e) => setSelectedModelId(e.target.value)}
                                 className="w-full bg-[#15201D] border border-slate-800 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#00D4AA]/50 transition-colors appearance-none cursor-pointer"
                             >
-                                {ELEMOTOR_MODELS.map(model => (
+                                {models.map(model => (
                                     <option key={model.id} value={model.id}>{model.name}</option>
                                 ))}
                             </select>
@@ -224,7 +368,7 @@ export function SavingsCalculator() {
                         {/* Inputs: Costo Electricidad & Eficiencia */}
                         <div className="grid grid-cols-2 gap-4 mb-8 relative z-10">
                             <div>
-                                <label className="text-xs font-semibold text-slate-400 block mb-2">Costo Electricidad</label>
+                                <label className="text-xs font-semibold text-slate-400 block mb-2">Tarifa kWh ({selectedCity})</label>
                                 <div className="relative">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
                                     <input
@@ -233,18 +377,23 @@ export function SavingsCalculator() {
                                         max="5000"
                                         value={electricityPrice}
                                         onChange={(e) => handleNumberValidation(e.target.value, setElectricityPrice, 5000, "Costo Electricidad")}
-                                        className="w-full bg-[#15201D] border border-slate-800 rounded-lg pl-8 pr-4 py-3 text-white text-sm focus:outline-none focus:border-[#00D4AA]/50 transition-colors"
+                                        className="w-full bg-[#15201D] border border-slate-800 rounded-lg pl-8 pr-4 py-3 text-white text-sm focus:outline-none focus:border-[#00D4AA]/50 transition-all"
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500">/kWh</span>
                                 </div>
+                                {currentElecData?.source && (
+                                    <p className="text-[10px] text-slate-500 mt-2 italic flex items-center gap-1">
+                                        Fuente: {currentElecData.source}
+                                    </p>
+                                )}
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-slate-400 block mb-2">Eficiencia</label>
+                                <label className="text-xs font-semibold text-slate-400 block mb-2">Eficiencia Real</label>
                                 <div className="relative">
                                     <input
                                         type="number"
                                         readOnly
-                                        value={selectedModel.efficiency}
+                                        value={selectedModel?.efficiency || 0}
                                         className="w-full bg-[#15201D] opacity-80 border border-slate-800 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#00D4AA]/50 transition-colors"
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500">km/kWh</span>
@@ -255,8 +404,8 @@ export function SavingsCalculator() {
                         {/* Progress Bar Comparison */}
                         <div className="mb-8 relative z-10">
                             <div className="flex justify-between text-[10px] font-bold mb-2">
-                                <span className="text-red-500">Gasolina</span>
-                                <span className="text-[#00D4AA]">Eléctrico</span>
+                                <span className="text-red-500">Costo Combustible</span>
+                                <span className="text-[#00D4AA]">Costo Eléctrico</span>
                             </div>
                             <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden flex relative">
                                 {/* Base red bar */}
@@ -275,13 +424,13 @@ export function SavingsCalculator() {
                                 />
                             </div>
                             <div className="text-right mt-2 text-[10px] text-slate-400 font-medium">
-                                ~{savingsPercentage}% menos costo operativo
+                                ~{savingsPercentage}% de ahorro mensual
                             </div>
                         </div>
 
                         {/* Result Box */}
                         <div className="bg-[#0b1a16] border border-[#00D4AA]/30 rounded-xl p-6 text-center relative z-10">
-                            <p className="text-[11px] font-bold text-[#00D4AA] tracking-widest uppercase mb-1">Gasto Mensual Estimado</p>
+                            <p className="text-[11px] font-bold text-[#00D4AA] tracking-widest uppercase mb-1">Costo Operativo Mensual</p>
                             <div className="text-4xl font-extrabold text-[#00D4AA]">
                                 {formatCurrency(electricMonthlyCost)} <span className="text-sm text-[#00D4AA]/60 font-medium">COP</span>
                             </div>
@@ -297,7 +446,7 @@ export function SavingsCalculator() {
                 >
                     <div className="flex-1 w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
                         <div>
-                            <h3 className="text-2xl font-bold text-white mb-6">Tu Ahorro Potencial</h3>
+                            <h3 className="text-2xl font-bold text-white mb-6">Proyección de Ahorro</h3>
                             <div className="flex flex-col sm:flex-row gap-8 sm:gap-16">
                                 <div>
                                     <p className="text-sm font-semibold text-slate-400 mb-1">Ahorro Mensual</p>
@@ -305,7 +454,7 @@ export function SavingsCalculator() {
                                 </div>
                                 <div>
                                     <p className="text-sm font-semibold text-[#00D4AA] mb-1 flex items-center gap-2">
-                                        <Zap className="w-3.5 h-3.5" /> Ahorro Anual
+                                        <Zap className="w-3.5 h-3.5" /> Ahorro Anual Proyectado
                                     </p>
                                     <p className="text-4xl font-extrabold text-[#00D4AA] drop-shadow-[0_0_15px_rgba(0,212,170,0.3)]">
                                         {formatCurrency(annualSavings)}
@@ -315,8 +464,15 @@ export function SavingsCalculator() {
                         </div>
 
                         <div className="w-full md:w-auto flex flex-col items-center md:items-end gap-3 text-center md:text-right">
+                            <Link
+                                href="/cotizar"
+                                className="w-full md:w-auto bg-[#00D4AA] hover:bg-[#00B38F] text-[#0A0F1C] font-black px-8 py-4 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+                            >
+                                Cotizar mi Elemotor
+                                <ArrowRight className="w-4 h-4" />
+                            </Link>
                             <p className="text-[10px] text-slate-500">
-                                *Cálculos estimados basados en promedios del mercado.
+                                * Cálculos basados en tarifas de {selectedCity} administradas por EleMotor.
                             </p>
                         </div>
                     </div>
@@ -359,4 +515,3 @@ export function SavingsCalculator() {
         </section>
     );
 }
-

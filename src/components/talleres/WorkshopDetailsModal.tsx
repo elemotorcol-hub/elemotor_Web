@@ -1,30 +1,103 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Share2, Bookmark, X, Info, Zap, Wrench, Navigation, Clock, Phone, MessageCircle, CalendarDays, BatteryCharging, CircleDot, Wifi, Coffee, Armchair, MapPin } from 'lucide-react';
+import { Share2, Bookmark, X, Info, Zap, Wrench, Navigation, Clock, Phone, MessageCircle, CalendarDays, BatteryCharging, CircleDot, Wifi, Coffee, Armchair, MapPin, Activity, Palette } from 'lucide-react';
 import Image from 'next/image';
-import { Workshop, ServiceItem } from '@/mocks/talleresData';
+import { WorkshopResponse } from '@/services/workshop.service';
 
 interface WorkshopDetailsModalProps {
-    workshop: Workshop;
+    workshop: any; // Using any temporarily if types have minor mismatches, but aligning fields below
     onClose: () => void;
 }
 
 const iconMap: Record<string, React.ReactNode> = {
-    'zap': <Zap className="w-5 h-5 text-[#00D4AA]" />,
-    'wrench': <Wrench className="w-5 h-5 text-[#00D4AA]" />,
-    'tire': <CircleDot className="w-5 h-5 text-[#00D4AA]" />, // fallback for tires
-    'battery': <BatteryCharging className="w-5 h-5 text-[#00D4AA]" />
+    'chargers': <Zap className="w-5 h-5 text-[#00D4AA]" />,
+    'maintenance': <Wrench className="w-5 h-5 text-[#00D4AA]" />,
+    'tires': <CircleDot className="w-5 h-5 text-[#00D4AA]" />,
+    'electric_diagnostics': <Activity className="w-5 h-5 text-[#00D4AA]" />,
+    'body_paint': <Palette className="w-5 h-5 text-[#00D4AA]" />,
+    'brakes': <CircleDot className="w-5 h-5 text-[#00D4AA]" />,
+    'general': <Wrench className="w-5 h-5 text-[#00D4AA]" />
 };
 
 const amenityIconMap: Record<string, React.ReactNode> = {
     'Wi-Fi Gratis': <Wifi className="w-3.5 h-3.5" />,
     'Cafetería': <Coffee className="w-3.5 h-3.5" />,
-    'Sala de Espera VIP': <Armchair className="w-3.5 h-3.5" />
+    'Sala de Espera VIP': <Armchair className="w-3.5 h-3.5" />,
+    'Cajeros ATM': <CalendarDays className="w-3.5 h-3.5" />, // generic fallback
+    'Minimarket': <CalendarDays className="w-3.5 h-3.5" />,
+    'Baños': <Info className="w-3.5 h-3.5" />
 };
-
 export function WorkshopDetailsModal({ workshop, onClose }: WorkshopDetailsModalProps) {
     // Evitar propagación de clics al overlay para no cerrar accidentalmente al interactuar con el modal
     const handleContentClick = (e: React.MouseEvent) => e.stopPropagation();
+    const mapContainerRef = React.useRef<HTMLDivElement>(null);
+    const mapInstanceRef = React.useRef<any>(null);
+
+    React.useEffect(() => {
+        if (typeof window === 'undefined' || !workshop.latitude || !workshop.longitude || !mapContainerRef.current) return;
+
+        const initMiniMap = async () => {
+            const L = (await import('leaflet')).default;
+            
+            // Si ya existe una instancia en este contenedor, la removemos para evitar duplicados
+            if (mapInstanceRef.current) {
+                mapInstanceRef.current.remove();
+            }
+
+            const map = L.map(mapContainerRef.current!, {
+                zoomControl: false,
+                attributionControl: false,
+                dragging: false,
+                scrollWheelZoom: false,
+                doubleClickZoom: false,
+                boxZoom: false,
+                touchZoom: false
+            }).setView([workshop.latitude, workshop.longitude], 15);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {
+                maxZoom: 20,
+            }).addTo(map);
+
+            const mapPane = map.getPane('tilePane');
+            if (mapPane) {
+                mapPane.style.filter = 'invert(100%) hue-rotate(180deg) brightness(95%) contrast(105%) opacity(0.8)';
+            }
+
+            const iconHtml = `
+                <div class="relative">
+                    <svg viewBox="0 0 24 32" class="w-6 h-8 text-[#00D4AA]" fill="none">
+                        <path d="M12 0C5.373 0 0 5.373 0 12C0 21 12 32 12 32C12 32 24 21 24 12C24 5.373 18.627 0 12 0Z" fill="currentColor" opacity="0.1" />
+                        <path d="M12 2C6.477 2 2 6.477 2 12C2 19.5 12 29 12 29C12 29 22 19.5 22 12C22 6.477 17.523 2 12 2Z" fill="currentColor" stroke="#00D4AA" stroke-width="2" />
+                        <circle cx="12" cy="12" r="3" fill="#1e293b" />
+                    </svg>
+                </div>
+            `;
+
+            const icon = L.divIcon({
+                className: 'mini-pin',
+                html: iconHtml,
+                iconSize: [24, 32],
+                iconAnchor: [12, 32]
+            });
+
+            L.marker([workshop.latitude, workshop.longitude], { icon }).addTo(map);
+            
+            // Invalidate size after a bit to ensure it fits the container which might be animating
+            setTimeout(() => map.invalidateSize(), 300);
+            
+            mapInstanceRef.current = map;
+        };
+
+        const timer = setTimeout(initMiniMap, 200);
+
+        return () => {
+            clearTimeout(timer);
+            if (mapInstanceRef.current) {
+                mapInstanceRef.current.remove();
+                mapInstanceRef.current = null;
+            }
+        };
+    }, [workshop]);
 
     return (
         <motion.div
@@ -44,7 +117,12 @@ export function WorkshopDetailsModal({ workshop, onClose }: WorkshopDetailsModal
             >
                 {/* --- HERO HEADER --- */}
                 <div className="relative h-[250px] shrink-0">
-                    <Image src={workshop.images[0]} alt={workshop.name} fill className="object-cover" />
+                    <Image 
+                        src={workshop.images && workshop.images.length > 0 ? (typeof workshop.images[0] === 'string' ? workshop.images[0] : workshop.images[0].url) : '/img/workshop-placeholder.jpg'} 
+                        alt={workshop.name} 
+                        fill 
+                        className="object-cover" 
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#111618] via-[#111618]/70 to-black/20" />
 
                     {/* Close Button X */}
@@ -113,14 +191,14 @@ export function WorkshopDetailsModal({ workshop, onClose }: WorkshopDetailsModal
                                 <Wrench className="w-5 h-5 flex-shrink-0" /> Servicios Ofrecidos
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {workshop.services?.map((service) => (
-                                    <div key={service.id} className="bg-[#0A1114] border border-[#1e293b] p-4 rounded-xl flex gap-3 group hover:border-slate-700 transition-colors">
+                                {workshop.services?.map((service: any, idx: number) => (
+                                    <div key={idx} className="bg-[#0A1114] border border-[#1e293b] p-4 rounded-xl flex gap-3 group hover:border-slate-700 transition-colors">
                                         <div className="bg-[#1A2327] w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
-                                            {iconMap[service.icon] || <Zap className="w-5 h-5 text-[#00D4AA]" />}
+                                            {service.icon ? iconMap[service.icon] : (iconMap[service] || <Wrench className="w-5 h-5 text-[#00D4AA]" />)}
                                         </div>
                                         <div>
-                                            <h4 className="text-white font-bold text-sm mb-1">{service.title}</h4>
-                                            <p className="text-slate-500 text-xs">{service.description}</p>
+                                            <h4 className="text-white font-bold text-sm mb-1">{service.title || service}</h4>
+                                            <p className="text-slate-500 text-xs">{service.description || 'Servicio especializado'}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -131,7 +209,7 @@ export function WorkshopDetailsModal({ workshop, onClose }: WorkshopDetailsModal
                         <div>
                             <h3 className="text-white font-bold text-base mb-4">Amenidades</h3>
                             <div className="flex flex-wrap gap-3">
-                                {workshop.amenities?.map((amenity, idx) => (
+                                {workshop.amenities?.map((amenity: any, idx: number) => (
                                     <div key={idx} className="bg-[#1A2327] px-4 py-2 rounded-full border border-white/5 flex items-center gap-2 text-slate-300 text-xs font-semibold">
                                         {amenityIconMap[amenity] || <CircleDot className="w-3.5 h-3.5" />} {amenity}
                                     </div>
@@ -146,15 +224,10 @@ export function WorkshopDetailsModal({ workshop, onClose }: WorkshopDetailsModal
                         {/* Mini Mapa Interactivo */}
                         <div className="bg-[#0A1114] border border-[#1e293b] rounded-xl overflow-hidden shadow-lg border-t-4 border-t-slate-800">
                             <div className="h-32 relative bg-slate-800">
-                                {/* Dummy Map Image background logic */}
-                                <div className="absolute inset-0 opacity-50" style={{ backgroundImage: `url('https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${workshop.x},${workshop.y},12,0/600x300?access_token=none')`, backgroundSize: 'cover' }}>
-                                    <iframe
-                                        width="100%" height="100%"
-                                        style={{ border: 0, filter: 'invert(100%) hue-rotate(180deg) brightness(85%) opacity(0.5)' }}
-                                        src={`https://www.openstreetmap.org/export/embed.html?bbox=-74.2%2C4.5%2C-74.0%2C4.8&amp;layer=mapnik&amp;marker=${workshop.y}%2C${workshop.x}`}
-                                    />
-                                </div>
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                {/* Mini-map container */}
+                                <div ref={mapContainerRef} className="absolute inset-0" />
+                                
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[5]">
                                     <button className="bg-[#0A1114] border border-[#1e293b] text-white flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold shadow-xl pointer-events-auto hover:bg-[#1A2327]">
                                         <Navigation className="w-4 h-4" /> Cómo Llegar
                                     </button>
@@ -178,7 +251,7 @@ export function WorkshopDetailsModal({ workshop, onClose }: WorkshopDetailsModal
                                 <Clock className="w-4 h-4 text-[#00D4AA]" /> Horarios
                             </h3>
                             <div className="flex flex-col gap-3">
-                                {workshop.hoursList?.map((h, idx) => (
+                                {workshop.hoursList?.map((h: any, idx: number) => (
                                     <div key={idx} className={`flex justify-between items-center text-xs ${idx !== workshop.hoursList!.length - 1 ? 'pb-3 border-b border-[#1e293b]' : ''}`}>
                                         <span className="text-slate-400">{h.day}</span>
                                         <span className={`font-bold ${!h.is_closed ? 'text-[#00D4AA]' : 'text-red-400'}`}>

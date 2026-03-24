@@ -11,6 +11,8 @@ const quoteSchema = z.object({
     email: z.string().email('Ingresa un correo válido').min(1, 'Requerido'),
     phone: z.string().regex(/^\d{7,}$/, 'Debe contener al menos 7 números'),
     city: z.string().min(1, 'Selecciona una ciudad'),
+    country: z.string().min(1, 'Selecciona un país'),
+    trackingCode: z.string().optional(),
     model_id: z.string().min(1, 'Selecciona un modelo'),
     budget_range: z.string().min(1, 'Selecciona un presupuesto'),
     preferred_channel: z.enum(['whatsapp', 'call', 'email']),
@@ -35,6 +37,8 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
             email: '',
             phone: '',
             city: '',
+            country: 'Colombia',
+            trackingCode: '',
             model_id: vehicles[0]?.id || '',
             budget_range: '',
             preferred_channel: 'whatsapp',
@@ -51,22 +55,17 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
 
     const onSubmit = async (data: QuoteFormValues) => {
         try {
-            // Mapping frontend fields to backend DTO
-            const BUDGET_MAPPING: Record<string, number> = {
-                '100-150': 150000000,
-                '150-200': 200000000,
-                '200-250': 250000000,
-                '250+': 300000000
-            };
 
             const modelId = parseInt(data.model_id);
-            const budgetRangeValue = BUDGET_MAPPING[data.budget_range];
+            const budgetRangeValue = data.budget_range ? parseInt(data.budget_range) : undefined;
 
             const backendData: any = {
                 name: data.fullName,
                 email: data.email,
                 phone: data.phone ? `+57${data.phone}` : undefined,
                 city: data.city || undefined,
+                country: data.country,
+                trackingCode: data.trackingCode || undefined,
                 preferredChannel: data.preferred_channel,
                 message: data.message || undefined,
                 source: 'web'
@@ -74,7 +73,7 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
 
             // Only add optional numeric fields if they are valid
             if (!isNaN(modelId)) backendData.modelId = modelId;
-            if (budgetRangeValue) backendData.budgetRange = budgetRangeValue;
+            if (budgetRangeValue && !isNaN(budgetRangeValue)) backendData.budgetRange = budgetRangeValue;
 
             const result = await submitQuoteAction(backendData);
 
@@ -135,6 +134,35 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
                             <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                         {errors.city && <p className="text-xs text-red-500 mt-1 font-medium">{errors.city.message}</p>}
+                    </div>
+                </div>
+
+                {/* Country and Tracking Code */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label className={labelClasses}>País</label>
+                        <div className="relative">
+                            <select {...register('country')} className={`${inputClasses} appearance-none cursor-pointer`}>
+                                <option value="Colombia">Colombia</option>
+                                <option value="China">China</option>
+                                <option value="Brasil">Brasil</option>
+                                <option value="Mexico">México</option>
+                                <option value="Panama">Panamá</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        {errors.country && <p className="text-xs text-red-500 mt-1 font-medium">{errors.country.message}</p>}
+                    </div>
+                    <div>
+                        <label className={labelClasses}>Código de Seguimiento (Opcional)</label>
+                        <input 
+                            {...register('trackingCode')} 
+                            type="text" 
+                            placeholder="Ej: ELE-2026-00001" 
+                            className={inputClasses} 
+                        />
+                        <p className="text-[9px] text-slate-500 mt-1">Si ya tienes un pedido asignado por un asesor, ingrésalo aquí.</p>
                     </div>
                 </div>
 
