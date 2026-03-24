@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { KeyRound, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/Button';
+import { userService } from '@/services/user.service';
 
 const securitySchema = z.object({
     currentPassword: z.string().min(1, 'La contraseña actual es requerida'),
@@ -33,9 +34,12 @@ export function SecurityForm() {
         register,
         handleSubmit,
         reset,
+        watch,
+        setError,
         formState: { errors, isDirty },
     } = useForm<SecurityFormValues>({
         resolver: zodResolver(securitySchema),
+        mode: 'onChange',
         defaultValues: {
             currentPassword: '',
             newPassword: '',
@@ -43,18 +47,37 @@ export function SecurityForm() {
         },
     });
 
-    const onSubmit = (data: SecurityFormValues) => {
+    const newPasswordVal = watch('newPassword');
+    const requirements = [
+        { regex: /.{8,}/, text: 'Mínimo 8 caracteres' },
+        { regex: /[A-Z]/, text: 'Al menos una mayúscula' },
+        { regex: /[0-9]/, text: 'Al menos un número' },
+        { regex: /[^A-Za-z0-9]/, text: 'Al menos un carácter especial' },
+    ];
+
+    const onSubmit = async (data: SecurityFormValues) => {
         setIsSaving(true);
         setSavedSuccess(false);
-        // Simulate API call
-        setTimeout(() => {
-            console.log('Password updated', data);
+
+        try {
+            await userService.changePassword({
+                currentPassword: data.currentPassword,
+                newPassword: data.newPassword,
+            });
             setIsSaving(false);
             setSavedSuccess(true);
             reset(); // Clear form
             
             setTimeout(() => setSavedSuccess(false), 3000);
-        }, 1000);
+        } catch (error: any) {
+            console.error('Password error', error);
+            if (error?.message?.includes('actual es incorrecta') || error?.status === 401 || error?.statusCode === 401) {
+                setError('currentPassword', { type: 'manual', message: 'La contraseña actual es incorrecta' });
+            } else {
+                setError('root', { type: 'manual', message: error.message || 'Error al cambiar la contraseña' });
+            }
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -120,7 +143,6 @@ export function SecurityForm() {
 
                 <div className="border-t border-white/5 py-2"></div>
 
-                {/* New Password */}
                 <div className="space-y-2">
                     <label className="text-xs uppercase tracking-widest font-bold text-slate-400 ml-1">
                         Nueva Contraseña
@@ -143,7 +165,23 @@ export function SecurityForm() {
                             {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                     </div>
-                    {errors.newPassword && <p className="text-xs text-red-400 ml-1">{errors.newPassword.message}</p>}
+                    {/* Dynamic checklist */}
+                    <div className="space-y-2 mt-3 p-3 rounded-lg bg-[#15201D]/50 border border-white/5">
+                        {requirements.map((req, i) => {
+                            const isMet = req.regex.test(newPasswordVal || '');
+                            return (
+                                <div key={i} className="flex items-center gap-2 text-xs transition-colors">
+                                    <div className={`w-3 h-3 rounded-full flex items-center justify-center transition-colors ${isMet ? 'bg-[#10B981]' : 'bg-white/10'}`}>
+                                        {isMet && <ShieldCheck className="w-2 h-2 text-white" />}
+                                    </div>
+                                    <span className={isMet ? 'text-[#10B981]' : 'text-slate-500'}>
+                                        {req.text}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {errors.newPassword && <p className="text-xs text-red-400 ml-1 mt-1">{errors.newPassword.message}</p>}
                 </div>
 
                 {/* Confirm Password */}
