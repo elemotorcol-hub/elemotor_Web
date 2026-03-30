@@ -19,7 +19,7 @@ export function ModelCard({ vehicle, priority = false }: ModelCardProps) {
             </div>
 
             {/* Vehículo Image */}
-            <div className="relative h-64 w-full bg-[#050B14] flex items-center justify-center p-6 overflow-hidden">
+            <div className="relative h-64 w-full bg-[#050B14] flex items-center justify-center p-6 overflow-hidden mt-10">
                 {/* Generador de Brillo en Hover */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0A0F1C] via-transparent to-transparent opacity-90 z-10" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] bg-[#00D4AA]/10 rounded-full blur-[70px] group-hover:bg-[#00D4AA]/30 transition-all duration-700 pointer-events-none" />

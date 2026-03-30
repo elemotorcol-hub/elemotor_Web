@@ -82,7 +82,7 @@ export function ProfileView() {
                 </div>
             ) : (
                 <div className="max-w-4xl mx-auto">
-                    <SettingsTabs user={user} onUserUpdate={setUser} />
+                    <SettingsTabs />
                 </div>
             )}
         </div>

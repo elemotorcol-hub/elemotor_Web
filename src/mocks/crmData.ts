@@ -1,6 +1,5 @@
-import { Lead } from '@/types/crm';
-
-export const MOCK_LEADS: Lead[] = [
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const MOCK_LEADS: any[] = [
     // Nuevos
     {
         id: 'L-001',
