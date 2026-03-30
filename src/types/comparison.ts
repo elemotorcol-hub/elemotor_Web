@@ -7,8 +7,8 @@ export interface VehicleSpecs {
     bodyType: string;
     trunk: string;
     dimensions: string;
-    adas: string;
-    kwhPer100: string;
+    adas?: string;
+    kwhPer100?: string;
     equipment?: string;
 }
 

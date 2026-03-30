@@ -4,15 +4,17 @@ import * as React from 'react';
 import { UserCircle, Shield } from 'lucide-react';
 import { ProfileForm } from './ProfileForm';
 import { SecurityForm } from './SecurityForm';
-import { UserProfile } from '@/services/user.service';
+import { UserProfile, userService } from '@/services/user.service';
 
-interface SettingsTabsProps {
-    user: UserProfile;
-    onUserUpdate: (user: UserProfile) => void;
-}
-
-export function SettingsTabs({ user, onUserUpdate }: SettingsTabsProps) {
+export function SettingsTabs() {
     const [activeTab, setActiveTab] = React.useState<'profile' | 'security'>('profile');
+    const [user, setUser] = React.useState<UserProfile | null>(null);
+
+    React.useEffect(() => {
+        userService.getProfile().then(setUser).catch(() => setUser(null));
+    }, []);
+
+    const onUserUpdate = (updated: UserProfile) => setUser(updated);
 
     return (
         <div className="bg-[#15201D] border border-white/5 rounded-[32px] overflow-hidden shadow-xl">
@@ -50,7 +52,7 @@ export function SettingsTabs({ user, onUserUpdate }: SettingsTabsProps) {
                             <h3 className="text-xl font-bold text-white mb-2">Información Personal</h3>
                             <p className="text-sm text-slate-400">Actualiza tus datos de contacto para mantener tu perfil al día con tu asesor.</p>
                         </div>
-                        <ProfileForm user={user} onUserUpdate={onUserUpdate} />
+                        {user && <ProfileForm user={user} onUserUpdate={onUserUpdate} />}
                     </div>
                 )}
                 {activeTab === 'security' && (

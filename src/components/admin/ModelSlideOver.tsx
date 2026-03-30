@@ -273,11 +273,14 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
         await processUploads(data.trims);
 
         const modelPayload = {
-            ...data,
             brandId: Number(data.brand_id),
+            name: data.name,
+            slug: data.slug,
             type: formatModelType(data.type),
             year: Number(data.year),
+            description: data.description || undefined,
             basePrice: Number(data.basePrice),
+            featured: data.featured,
             active: data.status === 'Active',
             trims: data.trims.map(trim => ({
                 ...trim,
