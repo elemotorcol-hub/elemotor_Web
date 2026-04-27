@@ -4,6 +4,8 @@ import { Footer } from '@/components/Footer';
 import { Metadata } from 'next';
 import { modelService } from '@/services/model.service';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
     title: 'Solicita Tu Cotización - Elemotor',
     description: 'Solicita una cotización para tu vehículo eléctrico de Elemotor.'

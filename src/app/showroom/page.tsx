@@ -13,7 +13,8 @@
  */
 
 import dynamic from 'next/dynamic';
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { HelpCircle, Share2, RefreshCw, Sun, Moon } from 'lucide-react';
 
 import { Navbar } from '@/components/Navbar';
@@ -42,8 +43,10 @@ const ThreeViewer = dynamic(
 
 // ─── Page Component ───────────────────────────────────────────────────────────
 
-export default function ShowroomPage() {
+function ShowroomPageInner() {
     const viewerRef = useRef<ThreeViewerHandle>(null);
+    const searchParams = useSearchParams();
+    const initialSlug = searchParams.get('modelo');
 
     // 3D model loading state
     const [loadProgress, setLoadProgress] = useState(0);
@@ -73,7 +76,7 @@ export default function ShowroomPage() {
         selectIntColor,
         toggleViewMode,
         getQuoteParams,
-    } = useShowroomData();
+    } = useShowroomData(initialSlug);
 
     // Derived accent color (from selected exterior color or fallback to emerald)
     const accentColor = selectedExtColor?.hexCode ?? '#10B981';
@@ -421,5 +424,13 @@ export default function ShowroomPage() {
                 </div>
             </div>
         </>
+    );
+}
+
+export default function ShowroomPage() {
+    return (
+        <Suspense>
+            <ShowroomPageInner />
+        </Suspense>
     );
 }

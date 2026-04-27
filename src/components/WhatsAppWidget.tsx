@@ -13,7 +13,7 @@ export function WhatsAppWidget() {
 
     return (
         <a
-            href="https://wa.me/573208930578?text=Hola,%20quiero%20dar%20el%20salto%20eléctrico.%20¿Me%20ayudan%20con%20una%20cotización?"
+            href="https://wa.me/573117762260?text=Hola,%20quiero%20dar%20el%20salto%20eléctrico.%20¿Me%20ayudan%20con%20una%20cotización?"
             target="_blank"
             rel="noopener noreferrer"
             className="fixed bottom-8 right-8 z-[90] w-16 h-16 bg-[#25D366] rounded-full flex items-center justify-center shadow-2xl shadow-[#25D366]/20 hover:scale-110 transition-transform hover:bg-[#128C7E] group"
