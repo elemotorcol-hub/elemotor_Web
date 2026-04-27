@@ -509,7 +509,10 @@ function SpecInput({
             <input
                 type={type}
                 step={step}
-                {...register(name as any, type === 'number' ? { valueAsNumber: true } : {})}
+                {...register(name as any, type === 'number'
+                    ? { setValueAs: (v) => v === '' || v === null ? undefined : Number(v) }
+                    : {}
+                )}
                 placeholder={placeholder}
                 onKeyDown={(e) => {
                     if (type === 'number' && ['e', 'E', '+', '-'].includes(e.key)) {

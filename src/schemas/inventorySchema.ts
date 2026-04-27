@@ -25,24 +25,24 @@ export const colorSchema = z.object({
 });
 
 export const specSchema = z.object({
-    battery_kwh: z.coerce.number().min(0, 'Min 0').max(9999, 'Máximo superado').optional().or(z.literal(0)),
-    range_cltc_km: z.coerce.number().min(0).max(9999).optional().or(z.literal(0)),
-    range_wltp_km: z.coerce.number().min(0).max(9999).optional().or(z.literal(0)),
-    horsepower: z.coerce.number().min(0).max(9999).optional().or(z.literal(0)),
-    torque: z.coerce.number().min(0).max(9999).optional().or(z.literal(0)),
-    zero_to_100: z.coerce.number().min(0).max(999.99, 'Máximo 999.99').optional().or(z.literal(0)),
-    top_speed: z.coerce.number().min(0).max(999).optional().or(z.literal(0)),
+    battery_kwh: z.number().min(0).max(9999).optional(),
+    range_cltc_km: z.number().min(0).max(9999).optional(),
+    range_wltp_km: z.number().min(0).max(9999).optional(),
+    horsepower: z.number().min(0).max(9999).optional(),
+    torque: z.number().min(0).max(9999).optional(),
+    zero_to_100: z.number().min(0).max(999.99).optional(),
+    top_speed: z.number().min(0).max(999).optional(),
     charge_time_30_80: z.string().max(100).optional(),
-    trunk_liters: z.coerce.number().min(0).max(9999).optional().or(z.literal(0)),
-    length_mm: z.coerce.number().min(0).max(99999).optional().or(z.literal(0)),
-    width_mm: z.coerce.number().min(0).max(99999).optional().or(z.literal(0)),
-    height_mm: z.coerce.number().min(0).max(99999).optional().or(z.literal(0)),
-    wheelbase_mm: z.coerce.number().min(0).max(99999).optional().or(z.literal(0)),
-    curb_weight_kg: z.coerce.number().min(0).max(99999).optional().or(z.literal(0)),
-    kwh_per_100km: z.coerce.number().min(0).max(9999.99).optional().or(z.literal(0)),
+    trunk_liters: z.number().min(0).max(9999).optional(),
+    length_mm: z.number().min(0).max(99999).optional(),
+    width_mm: z.number().min(0).max(99999).optional(),
+    height_mm: z.number().min(0).max(99999).optional(),
+    wheelbase_mm: z.number().min(0).max(99999).optional(),
+    curb_weight_kg: z.number().min(0).max(99999).optional(),
+    kwh_per_100km: z.number().min(0).max(9999.99).optional(),
     adas_level: z.string().max(50).optional(),
-    screen_size: z.coerce.number().min(0).max(100).optional().or(z.literal(0)), // Was string earlier, wait checking...
-    software_version: z.coerce.number().min(0).max(999).optional().or(z.literal(0)),
+    screen_size: z.number().min(0).max(100).optional(),
+    software_version: z.number().min(0).max(999).optional(),
 });
 
 export const trimImageSchema = z.object({

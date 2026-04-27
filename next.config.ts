@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   /* Production-ready config options */
   reactStrictMode: true,
   poweredByHeader: false,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error'] } : false,
+  },
   images: {
     unoptimized: true,
     formats: ['image/avif', 'image/webp'],

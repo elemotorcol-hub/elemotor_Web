@@ -6,7 +6,7 @@ export function Hero() {
             {/* Background Image Layer (Full Screen Width with Fixed/Parallax effect) */}
             <div 
                 className="absolute inset-0 z-0 bg-fixed bg-cover bg-center"
-                style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1619767886558-efdc259cde1a?q=80&w=2070&auto=format&fit=crop")' }}
+                style={{ backgroundImage: 'url("/hero-bg.webp")' }}
             >
                 {/* Overlay - Gradient for better readability */}
                 <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-900/40 to-slate-900 z-10" />

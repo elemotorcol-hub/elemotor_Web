@@ -95,10 +95,12 @@ export function VehicleHero({ model, activeTrim }: VehicleHeroProps) {
                                 Cotizar este modelo
                             </Button>
                         </Link>
-                        <Button variant="ghost" className="border border-white/20 hover:border-[#00D4AA]/50 bg-white/5 hover:bg-[#00D4AA]/10 text-white font-bold tracking-widest uppercase py-4 px-8 rounded-lg backdrop-blur-md w-full sm:w-auto h-[60px] transition-all">
-                            <View className="w-5 h-5 mr-3 inline text-slate-300" />
-                            Ver en 3D
-                        </Button>
+                        <Link href={`/showroom?modelo=${model.slug}`} className="w-full sm:w-auto">
+                            <Button variant="ghost" className="border border-white/20 hover:border-[#00D4AA]/50 bg-white/5 hover:bg-[#00D4AA]/10 text-white font-bold tracking-widest uppercase py-4 px-8 rounded-lg backdrop-blur-md w-full sm:w-auto h-[60px] transition-all">
+                                <View className="w-5 h-5 mr-3 inline text-slate-300" />
+                                Ver en 3D
+                            </Button>
+                        </Link>
                     </div>
 
                     {/* Trust badges */}

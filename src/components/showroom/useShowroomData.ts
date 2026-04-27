@@ -50,7 +50,7 @@ interface UseShowroomDataReturn {
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useShowroomData(): UseShowroomDataReturn {
+export function useShowroomData(initialSlug?: string | null): UseShowroomDataReturn {
     const [models, setModels] = useState<ShowroomModel[]>([]);
     const [selectedModel, setSelectedModel] = useState<ShowroomModel | null>(null);
     const [selectedTrim, setSelectedTrim] = useState<ShowroomTrim | null>(null);
@@ -120,10 +120,12 @@ export function useShowroomData(): UseShowroomDataReturn {
                 if (signal.aborted) return;
                 setModels(data);
 
-                // Auto-select the first model and its first trim
+                // Auto-select the model from initialSlug or fallback to first
                 if (data.length > 0) {
-                    const firstModel = data[0];
-                    const fullModel = await fetchShowroomModelBySlug(firstModel.slug, { signal });
+                    const targetSlug = initialSlug && data.find((m) => m.slug === initialSlug)
+                        ? initialSlug
+                        : data[0].slug;
+                    const fullModel = await fetchShowroomModelBySlug(targetSlug, { signal });
                     if (signal.aborted) return;
                     setSelectedModel(fullModel);
 
