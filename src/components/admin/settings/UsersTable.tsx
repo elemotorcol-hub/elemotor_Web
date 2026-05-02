@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, User, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Search, User, CheckCircle2, XCircle, Loader2, UserPlus } from 'lucide-react';
 import { userAdminService, AdminUser } from '@/services/user_admin.service';
 import UserSlideOver from './UserSlideOver';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -52,6 +52,11 @@ export default function UsersTable() {
         setIsSlideOverOpen(true);
     };
 
+    const handleCreateUser = () => {
+        setSelectedUser(null);
+        setIsSlideOverOpen(true);
+    };
+
     return (
         <>
             <div className="bg-[#15201D] border border-white/5 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[700px]">
@@ -61,12 +66,19 @@ export default function UsersTable() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input
                             type="text"
-                            placeholder="Buscar cliente por nombre o email..."
+                            placeholder="Buscar por nombre o email..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full bg-black/20 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/50 transition-all font-light"
                         />
                     </div>
+                    <button
+                        onClick={handleCreateUser}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-[#10B981]/20 whitespace-nowrap"
+                    >
+                        <UserPlus size={16} />
+                        Crear Usuario
+                    </button>
                 </div>
 
                 {/* Table */}

@@ -21,6 +21,16 @@ export interface UsersResponse {
     };
 }
 
+export interface CreateEmployeeData {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    role?: string;
+    cedula?: string;
+    city?: string;
+}
+
 export const userAdminService = {
     /**
      * Listar usuarios con filtros (solo para admins)
@@ -42,6 +52,16 @@ export const userAdminService = {
         return fetchApi(`/api/users/${userId}/role`, {
             method: 'PUT',
             body: JSON.stringify({ role }),
+        });
+    },
+
+    /**
+     * Crear un usuario empleado (solo para super_admins)
+     */
+    createEmployee: async (data: CreateEmployeeData) => {
+        return fetchApi(`/api/users`, {
+            method: 'POST',
+            body: JSON.stringify(data),
         });
     }
 };

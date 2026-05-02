@@ -1,15 +1,17 @@
 import { Navbar } from '@/components/Navbar';
 import QuoteRequestView from '@/components/quote/QuoteRequestView';
 import { Footer } from '@/components/Footer';
-import { Metadata } from 'next';
 import { modelService } from '@/services/model.service';
+import { buildMetadata } from '@/lib/metadata';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-    title: 'Solicita Tu Cotización - Elemotor',
-    description: 'Solicita una cotización para tu vehículo eléctrico de Elemotor.'
-};
+export const metadata = buildMetadata({
+    title: 'Solicita Tu Cotización',
+    description: 'Solicita una cotización personalizada para tu vehículo eléctrico importado. Asesores especializados en movilidad eléctrica en Colombia.',
+    path: '/cotizar',
+    keywords: ['cotizar carro eléctrico Colombia', 'precio vehículo eléctrico importado', 'cotización EleMotor'],
+});
 
 export default async function CotizarPage() {
     let models = [];

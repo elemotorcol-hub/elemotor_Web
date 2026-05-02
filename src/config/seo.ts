@@ -6,7 +6,7 @@
 
 export const siteConfig = {
   /** URL base de producción (sin trailing slash) */
-  url: 'https://www.elemotor.co',
+  url: 'https://elemotor.com.co',
 
   /** Nombre de la marca */
   name: 'EleMotor',
@@ -28,7 +28,7 @@ export const siteConfig = {
   logoPath: '/logo-elemotor.svg',
 
   /** Ruta a imagen OG por defecto (usada si la página no define una propia) */
-  defaultOgImage: '/og-default.png',
+  defaultOgImage: '/hero-bg.webp',
 
   /** Correo de contacto (usado en JSON-LD Organization) */
   contactEmail: 'info@elemotor.co',

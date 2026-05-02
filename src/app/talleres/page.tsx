@@ -1,11 +1,13 @@
 import { Navbar } from '@/components/Navbar';
 import { WorkshopsMap } from '@/components/talleres/WorkshopsMap';
-import { Metadata } from 'next';
+import { buildMetadata } from '@/lib/metadata';
 
-export const metadata: Metadata = {
-    title: 'Talleres Aliados | EleMotor',
-    description: 'Encuentra la red de servicio técnico certificado y estaciones de carga de Elemotor más cercana a ti.',
-};
+export const metadata = buildMetadata({
+    title: 'Talleres Aliados y Red de Servicio',
+    description: 'Encuentra la red de servicio técnico certificado y estaciones de carga de EleMotor más cercana a ti en Colombia.',
+    path: '/talleres',
+    keywords: ['taller vehículo eléctrico Colombia', 'servicio técnico eléctrico', 'carga eléctrica Colombia'],
+});
 
 export default function TalleresPage() {
     return (
