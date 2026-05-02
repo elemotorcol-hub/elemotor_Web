@@ -1,14 +1,16 @@
 import { Navbar } from '@/components/Navbar';
 import dynamic from 'next/dynamic';
-import { Metadata } from 'next';
+import { buildMetadata } from '@/lib/metadata';
 
 const VehicleComparison = dynamic(() => import('@/components/VehicleComparison').then(mod => mod.VehicleComparison));
 const Footer = dynamic(() => import('@/components/Footer').then(mod => mod.Footer));
 
-export const metadata: Metadata = {
-    title: 'Compara Modelos | EleMotor',
-    description: 'Compara especificaciones, rendimiento y precios de nuestros vehículos eléctricos premium.',
-};
+export const metadata = buildMetadata({
+    title: 'Comparador de Vehículos Eléctricos',
+    description: 'Compara especificaciones, rendimiento y precios de nuestros vehículos eléctricos premium importados a Colombia.',
+    path: '/comparar',
+    keywords: ['comparar carros eléctricos Colombia', 'comparador vehículos eléctricos'],
+});
 
 export default function CompararPage() {
     return (

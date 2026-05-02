@@ -1,12 +1,14 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { SavingsCalculator } from '@/components/calculator/SavingsCalculator';
-import { Metadata } from 'next';
+import { buildMetadata } from '@/lib/metadata';
 
-export const metadata: Metadata = {
-    title: 'Calculadora de Ahorro | EleMotor',
+export const metadata = buildMetadata({
+    title: 'Calculadora de Ahorro Eléctrico',
     description: 'Descubre cuánto puedes ahorrar al cambiarte a la movilidad eléctrica comparando tu vehículo actual de gasolina con un Elemotor.',
-};
+    path: '/calculadora',
+    keywords: ['ahorro vehículo eléctrico', 'calculadora eléctrico vs gasolina', 'costo movilidad eléctrica Colombia'],
+});
 
 export default function CalculadoraPage() {
     return (
