@@ -84,11 +84,7 @@ export function VehicleHero({ model, activeTrim }: VehicleHeroProps) {
                     <p className="text-sm text-slate-400 mb-4 uppercase tracking-widest font-bold">
                         {activeTrim.name} · {model.year}
                     </p>
-                    <p className="text-2xl md:text-3xl lg:text-4xl text-slate-300 font-bold mb-10 drop-shadow-md">
-                        <span className="text-[#00D4AA]">{priceLabel}</span>
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start w-full sm:w-auto">
+                    <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-center lg:justify-start w-full sm:w-auto">
                         <Link href={`/cotizar?modelo=${model.slug}`} className="w-full sm:w-auto">
                             <Button className="bg-[#00D4AA] hover:bg-[#00B38F] text-slate-900 font-black tracking-widest uppercase py-4 px-8 rounded-lg shadow-[0_0_20px_rgba(0,212,170,0.2)] hover:shadow-[0_0_40px_rgba(0,212,170,0.5)] transition-shadow w-full h-[60px]">
                                 <CalendarDays className="w-5 h-5 mr-3 inline" />

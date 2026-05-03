@@ -47,18 +47,12 @@ function ModelCardSkeleton() {
 // ─── CatalogGrid ──────────────────────────────────────────────────────────────
 
 export function CatalogGrid() {
-    const { vehicles, maxPrice, maxAutonomy, availableCategories, isLoading, isError } =
+    const { vehicles, maxAutonomy, availableCategories, isLoading, isError } =
         useCatalogModels();
 
     const [selectedCategory, setSelectedCategory] = React.useState('Todos');
-    const [priceRange, setPriceRange] = React.useState<[number, number]>([0, maxPrice]);
     const [autonomyRange, setAutonomyRange] = React.useState<[number, number]>([0, maxAutonomy]);
     const [currentPage, setCurrentPage] = React.useState(1);
-
-    // Sync slider upper bounds when data loads
-    React.useEffect(() => {
-        setPriceRange([0, maxPrice]);
-    }, [maxPrice]);
 
     React.useEffect(() => {
         setAutonomyRange([0, maxAutonomy]);
@@ -67,20 +61,18 @@ export function CatalogGrid() {
     // Reset pagination when filters change
     React.useEffect(() => {
         setCurrentPage(1);
-    }, [selectedCategory, priceRange, autonomyRange]);
+    }, [selectedCategory, autonomyRange]);
 
     // Derived State: Filtered Vehicles
     const filteredVehicles = React.useMemo(() => {
         return vehicles.filter((vehicle) => {
             const matchesCategory =
                 selectedCategory === 'Todos' || vehicle.category === selectedCategory;
-            const matchesPrice =
-                vehicle.price >= priceRange[0] && vehicle.price <= priceRange[1];
             const matchesAutonomy =
                 vehicle.range_wltp_km >= autonomyRange[0] && vehicle.range_wltp_km <= autonomyRange[1];
-            return matchesCategory && matchesPrice && matchesAutonomy;
+            return matchesCategory && matchesAutonomy;
         });
-    }, [vehicles, selectedCategory, priceRange, autonomyRange]);
+    }, [vehicles, selectedCategory, autonomyRange]);
 
     // Derived State: Pagination
     const totalPages = Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE);
@@ -96,11 +88,8 @@ export function CatalogGrid() {
                 categories={availableCategories}
                 selectedCategory={selectedCategory}
                 onSelectCategory={setSelectedCategory}
-                priceRange={priceRange}
-                onPriceChange={setPriceRange}
                 autonomyRange={autonomyRange}
                 onAutonomyChange={setAutonomyRange}
-                maxPrice={maxPrice}
                 maxAutonomy={maxAutonomy}
             />
 
