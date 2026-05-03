@@ -181,9 +181,9 @@ export function QuoteSlideOver({ onClose, quote, onUpdate }: QuoteSlideOverProps
                                     <DollarSign className="w-3 h-3 text-[#10B981]" />
                                     Presupuesto
                                 </label>
-                                <input 
+                                <input
                                     type="number"
-                                    {...register('budgetRange', { valueAsNumber: true })}
+                                    {...register('budgetRange', { setValueAs: (v) => v === '' || v === null ? undefined : Number(v) })}
                                     className="w-full bg-white/5 border border-white/5 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all"
                                 />
                                 {errors.budgetRange && <p className="text-[10px] text-red-400">{errors.budgetRange.message}</p>}
