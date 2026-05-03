@@ -144,6 +144,18 @@ export default function GeneralTab({ mode }: { mode?: 'add' | 'edit' }) {
                 )}
             </div>
 
+            {/* Destacado toggle */}
+            <div className="flex items-center justify-between bg-[#0f172a]/40 border border-[#1e293b] rounded-lg px-4 py-3">
+                <div>
+                    <p className="text-[13px] font-bold text-slate-300">Modelo Destacado</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Aparece en la sección "Modelos Destacados" de la página principal</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+                    <input type="checkbox" {...register('featured')} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]" />
+                </label>
+            </div>
+
             <div className="flex flex-col gap-2">
                 <label className="text-[13px] font-bold text-slate-300">Descripción</label>
                 <textarea

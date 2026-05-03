@@ -206,7 +206,14 @@ export default function InventoryTable() {
                                                 </div>
                                             </button>
                                             <div className="flex flex-col justify-center">
-                                                <div className="font-semibold text-slate-100">{model.name}</div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-semibold text-slate-100">{model.name}</span>
+                                                    {model.featured && (
+                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                                            ★ Dest.
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <div className="text-slate-500 text-xs mt-0.5">
                                                     {model.brand?.name || 'Sin Marca'}
                                                 </div>
