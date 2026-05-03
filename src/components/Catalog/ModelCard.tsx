@@ -73,16 +73,8 @@ export function ModelCard({ vehicle, priority = false }: ModelCardProps) {
                     </div>
                 </div>
 
-                {/* Footer: Price & Actions */}
+                {/* Footer: Actions */}
                 <div className="mt-auto">
-                    <div className="flex justify-between items-center mb-8">
-                        <span className="text-xs text-slate-400 font-bold uppercase tracking-[0.15em]">
-                            INVERSIÓN
-                        </span>
-                        <span className="text-3xl font-black text-[#00D4AA] leading-none tracking-tighter">
-                            ${vehicle.price.toLocaleString('en-US')}
-                        </span>
-                    </div>
                     <div className="grid grid-cols-2 gap-4">
                         <Link href={`/modelos/${vehicle.id}`} className="w-full">
                             <Button
