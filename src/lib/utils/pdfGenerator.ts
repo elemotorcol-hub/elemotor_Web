@@ -11,7 +11,9 @@ export const downloadQuotePDF = (quote: ExtendedQuoteData) => {
     doc.setTextColor(16, 185, 129);
     doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.text('ELEMOTOR COLOMBIA', 105, 20, { align: 'center' });
+    const country = process.env.NEXT_PUBLIC_SITE_COUNTRY ?? 'CO';
+    const countryName = country === 'EC' ? 'ECUADOR' : 'COLOMBIA';
+    doc.text(`ELEMOTOR ${countryName}`, 105, 20, { align: 'center' });
     
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(14);
@@ -41,7 +43,8 @@ export const downloadQuotePDF = (quote: ExtendedQuoteData) => {
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
     doc.text('Esta es una estimación sujeta a aprobación de crédito y disponibilidad de inventario.', 105, 280, { align: 'center' });
-    doc.text('www.elemotor.com.co', 105, 285, { align: 'center' });
+    const siteUrl = country === 'EC' ? 'www.elemotor.com.ec' : 'www.elemotor.com.co';
+    doc.text(siteUrl, 105, 285, { align: 'center' });
 
     doc.save(`Cotizacion-${quote.id}.pdf`);
 };
