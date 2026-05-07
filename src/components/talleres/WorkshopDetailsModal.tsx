@@ -10,13 +10,22 @@ interface WorkshopDetailsModalProps {
 }
 
 const iconMap: Record<string, React.ReactNode> = {
+    // Por tipo de servicio (backend enum)
     'chargers': <Zap className="w-5 h-5 text-[#00D4AA]" />,
     'maintenance': <Wrench className="w-5 h-5 text-[#00D4AA]" />,
     'tires': <CircleDot className="w-5 h-5 text-[#00D4AA]" />,
     'electric_diagnostics': <Activity className="w-5 h-5 text-[#00D4AA]" />,
     'body_paint': <Palette className="w-5 h-5 text-[#00D4AA]" />,
     'brakes': <CircleDot className="w-5 h-5 text-[#00D4AA]" />,
-    'general': <Wrench className="w-5 h-5 text-[#00D4AA]" />
+    'general': <Wrench className="w-5 h-5 text-[#00D4AA]" />,
+    // Por nombre de icono (SERVICE_TYPE_MAP)
+    'zap': <Zap className="w-5 h-5 text-[#00D4AA]" />,
+    'wrench': <Wrench className="w-5 h-5 text-[#00D4AA]" />,
+    'activity': <Activity className="w-5 h-5 text-[#00D4AA]" />,
+    'palette': <Palette className="w-5 h-5 text-[#00D4AA]" />,
+    'circle-dot': <CircleDot className="w-5 h-5 text-[#00D4AA]" />,
+    'tire': <CircleDot className="w-5 h-5 text-[#00D4AA]" />,
+    'battery-charging': <BatteryCharging className="w-5 h-5 text-[#00D4AA]" />,
 };
 
 const amenityIconMap: Record<string, React.ReactNode> = {
@@ -284,7 +293,13 @@ export function WorkshopDetailsModal({ workshop, onClose }: WorkshopDetailsModal
 
                 {/* --- FOOTER ACTIONS --- */}
                 <div className="border-t border-[#1e293b] p-6 bg-[#0A1114] shrink-0 flex justify-center">
-                    <button className="w-full md:w-1/2 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] border border-[#1da851] text-[#0A1114] font-bold py-3.5 rounded-xl transition-colors shadow-[0_0_20px_rgba(37,211,102,0.3)]">
+                    <button
+                        onClick={() => {
+                            const num = (workshop.phone || '').replace(/\D/g, '');
+                            if (num) window.open(`https://wa.me/${num}`, '_blank');
+                        }}
+                        className="w-full md:w-1/2 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] border border-[#1da851] text-[#0A1114] font-bold py-3.5 rounded-xl transition-colors shadow-[0_0_20px_rgba(37,211,102,0.3)]"
+                    >
                         <MessageCircle className="w-5 h-5 text-[#0A1114]" /> Escribir por WhatsApp
                     </button>
                 </div>

@@ -130,9 +130,9 @@ export const orderService = {
      * [Público] Rastrear pedido por código de seguimiento e identidad (cédula o email).
      * Usa fetch directo (sin JWT) para que funcione sin autenticación.
      */
-    async trackOrder(trackingCode: string, identity: string): Promise<any> {
+    async trackOrder(trackingCode: string): Promise<any> {
         const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-        const params = new URLSearchParams({ trackingCode, identity });
+        const params = new URLSearchParams({ trackingCode });
         const response = await fetch(`${API_BASE_URL}/api/orders/track?${params.toString()}`);
         const data = await response.json();
         if (!response.ok) {

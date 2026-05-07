@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { QuoteForm } from './QuoteForm';
 import { VehicleSummary } from './VehicleSummary';
 import { VehicleModel } from '@/types/inventory';
@@ -10,8 +11,14 @@ interface Props {
 }
 
 export default function QuoteRequestView({ models }: Props) {
-    // Inicializar el modelo seleccionado basado en el primer vehículo de la lista real
-    const [selectedVehicle, setSelectedVehicle] = useState<VehicleModel | undefined>(models[0]);
+    const searchParams = useSearchParams();
+    const modeloParam = searchParams.get('modelo');
+
+    const initialVehicle = modeloParam
+        ? models.find(v => String(v.id) === String(modeloParam)) ?? models[0]
+        : models[0];
+
+    const [selectedVehicle, setSelectedVehicle] = useState<VehicleModel | undefined>(initialVehicle);
 
     useEffect(() => {
         if (models.length > 0 && !selectedVehicle) {

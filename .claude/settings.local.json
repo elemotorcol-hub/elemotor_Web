@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(NEXT_PUBLIC_SITE_COUNTRY=EC NEXT_PUBLIC_API_URL=https://elemotor.com.ec npm run build)"
+    ]
+  }
+}

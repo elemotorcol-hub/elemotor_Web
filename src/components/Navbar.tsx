@@ -166,7 +166,7 @@ export function Navbar() {
                     {/* Controles Mobile */}
                     <div className="flex items-center gap-4 lg:hidden relative z-[60]">
                         <Link
-                            href="#cotizar"
+                            href="/cotizar"
                             className="bg-[#00D4AA] text-[#0A0F1C] font-black text-[10px] px-4 py-2 rounded-full uppercase tracking-tighter shadow-lg"
                         >
                             Cotizar
