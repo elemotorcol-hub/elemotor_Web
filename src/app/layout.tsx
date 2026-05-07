@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import 'leaflet/dist/leaflet.css';
 import dynamic from 'next/dynamic';
@@ -10,15 +11,6 @@ import { buildMetadata } from '@/lib/metadata';
 
 const WhatsAppWidget = dynamic(() => import('@/components/WhatsAppWidget').then(mod => mod.WhatsAppWidget));
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
 
 /**
  * metadataBase es requerido por Next.js para resolver URLs relativas
@@ -56,7 +48,7 @@ export default function RootLayout({
         modify the body's className attribute before React hydrates, causing a false-positive
         mismatch warning. This prop silences it safely at the body element level only.
       */}
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`} suppressHydrationWarning>
         {children}
         <WhatsAppWidget />
       </body>

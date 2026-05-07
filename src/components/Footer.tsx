@@ -1,8 +1,34 @@
-import { Facebook, Instagram, Twitter, MapPin, Phone, Mail } from 'lucide-react';
+import { Facebook, Instagram, MapPin, Phone, Mail } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
+const contactData: Record<string, {
+    address: string;
+    city: string;
+    phones: string[];
+    emails: string[];
+    mapSrc: string;
+}> = {
+    CO: {
+        address: 'Ak 27 #55-16',
+        city: 'Bucaramanga, Santander',
+        phones: ['+57 (300) 123-4567'],
+        emails: ['atencionalcliente@elemotor.com.co'],
+        mapSrc: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3959.13867767628!2d-73.11461229999999!3d7.1099231000000005!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e683f006f63e109%3A0x7c6503f27678a31e!2sELEMOTOR!5e0!3m2!1ses-419!2sco!4v1773678039061!5m2!1ses-419!2sco',
+    },
+    EC: {
+        address: 'Av. Pampite y Chimborazo, Centro Plaza Local 104',
+        city: 'Quito, Ecuador',
+        phones: ['0991897344', '+593 98 033 1363'],
+        emails: ['lorena.sanchez@elemotor.com.co', 'carlos.cadena@elemotor.com.co'],
+        mapSrc: 'https://maps.google.com/maps?q=Av+Pampite+y+Chimborazo,+Centro+Plaza,+Quito,+Ecuador&output=embed',
+    },
+};
+
 export function Footer() {
+    const country = process.env.NEXT_PUBLIC_SITE_COUNTRY ?? 'CO';
+    const contact = contactData[country] ?? contactData.CO;
+
     return (
         <footer id="contacto" className="bg-black text-white pt-24 pb-12 border-t border-white/5">
             <div className="container mx-auto px-6">
@@ -24,25 +50,33 @@ export function Footer() {
                         </p>
                         <div className="flex gap-4">
                             <a
-                                href="#"
+                                href="https://www.facebook.com/p/Electric-Motor-Colombia-SAS-61573094475720/"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 aria-label="Visitar nuestra página de Facebook"
                                 className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-[#00D4AA] hover:text-slate-900 transition-all hover:border-[#00D4AA]"
                             >
                                 <Facebook className="w-5 h-5" />
                             </a>
                             <a
-                                href="#"
+                                href="https://www.instagram.com/elemotor.co/"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 aria-label="Visitar nuestro perfil de Instagram"
                                 className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-[#00D4AA] hover:text-slate-900 transition-all hover:border-[#00D4AA]"
                             >
                                 <Instagram className="w-5 h-5" />
                             </a>
                             <a
-                                href="#"
-                                aria-label="Visitar nuestra cuenta de Twitter / X"
+                                href="https://www.tiktok.com/@elemotor.co"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Visitar nuestro perfil de TikTok"
                                 className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-[#00D4AA] hover:text-slate-900 transition-all hover:border-[#00D4AA]"
                             >
-                                <Twitter className="w-5 h-5" />
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/>
+                                </svg>
                             </a>
                         </div>
                     </div>
@@ -54,18 +88,22 @@ export function Footer() {
                             <div className="flex items-start gap-4">
                                 <MapPin className="w-5 h-5 text-gray-400 shrink-0 mt-1" />
                                 <p className="text-gray-400 text-sm">
-                                    Ak 27 #55-16, <br />
-                                    Bucaramanga, Santander
+                                    {contact.address}, <br />
+                                    {contact.city}
                                 </p>
                             </div>
-                            <div className="flex items-center gap-4">
-                                <Phone className="w-5 h-5 text-gray-400" />
-                                <p className="text-gray-400 text-sm">+57 (300) 123-4567</p>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <Mail className="w-5 h-5 text-gray-400" />
-                                <p className="text-gray-400 text-sm">info@elemotor.co</p>
-                            </div>
+                            {contact.phones.map((phone, i) => (
+                                <div key={i} className="flex items-center gap-4">
+                                    <Phone className="w-5 h-5 text-gray-400" />
+                                    <p className="text-gray-400 text-sm">{phone}</p>
+                                </div>
+                            ))}
+                            {contact.emails.map((email, i) => (
+                                <div key={i} className="flex items-center gap-4">
+                                    <Mail className="w-5 h-5 text-gray-400" />
+                                    <p className="text-gray-400 text-sm">{email}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
@@ -73,10 +111,13 @@ export function Footer() {
                     <div>
                         <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-[#00D4AA]">Enlaces</h4>
                         <nav className="flex flex-col gap-4">
-                            <Link href="#" className="text-gray-400 hover:text-white transition-colors">Modelos</Link>
-                            <Link href="#" className="text-gray-400 hover:text-white transition-colors">Términos y Condiciones</Link>
-                            <Link href="#" className="text-gray-400 hover:text-white transition-colors">Política de Privacidad</Link>
-                            <Link href="#" className="text-gray-400 hover:text-white transition-colors">Blog</Link>
+                            <Link href="/modelos" className="text-gray-400 hover:text-white transition-colors">Modelos</Link>
+                            <Link href="/showroom" className="text-gray-400 hover:text-white transition-colors">Showroom 3D</Link>
+                            <Link href="/calculadora" className="text-gray-400 hover:text-white transition-colors">Calculadora</Link>
+                            <Link href="/nosotros" className="text-gray-400 hover:text-white transition-colors">Nosotros</Link>
+                            <Link href="/blog" className="text-gray-400 hover:text-white transition-colors">Blog</Link>
+                            <Link href="/terminos" className="text-gray-400 hover:text-white transition-colors">Términos y Condiciones</Link>
+                            <Link href="/privacidad" className="text-gray-400 hover:text-white transition-colors">Política de Privacidad</Link>
                         </nav>
                     </div>
 
@@ -85,7 +126,7 @@ export function Footer() {
                         <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-[#00D4AA]">Ubicación</h4>
                         <div className="relative aspect-square w-full rounded-2xl overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-700">
                             <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3959.13867767628!2d-73.11461229999999!3d7.1099231000000005!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e683f006f63e109%3A0x7c6503f27678a31e!2sELEMOTOR!5e0!3m2!1ses-419!2sco!4v1773678039061!5m2!1ses-419!2sco"
+                                src={contact.mapSrc}
                                 width="400" height="325"
                                 style={{ border: 0 }}
                                 allowFullScreen

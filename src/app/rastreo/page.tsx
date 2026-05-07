@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import {
-    Truck, Fingerprint, ArrowRight, Loader2, AlertCircle, ArrowLeft,
+    Truck, ArrowRight, Loader2, AlertCircle, ArrowLeft,
     CheckCircle2, Anchor, Ship, FileText, ClipboardCheck, Car, Flag, Package, MapPin
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
@@ -40,25 +40,24 @@ type TrackingResult = any;
 
 export default function RastreoPage() {
     const [trackingCode, setTrackingCode] = useState('');
-    const [identity, setIdentity] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<TrackingResult | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!trackingCode.trim() || !identity.trim()) {
-            setError('Por favor ingresa el código de seguimiento y tu documento o correo.');
+        if (!trackingCode.trim()) {
+            setError('Por favor ingresa el código de seguimiento.');
             return;
         }
         setIsLoading(true);
         setError(null);
         setResult(null);
         try {
-            const data = await orderService.trackOrder(trackingCode.trim(), identity.trim());
+            const data = await orderService.trackOrder(trackingCode.trim());
             setResult(data);
         } catch (err: any) {
-            setError(err.message || 'No encontramos un pedido con esos datos. Verifica el código y tu identidad.');
+            setError(err.message || 'No encontramos un pedido con ese código. Verifica e intenta de nuevo.');
         } finally {
             setIsLoading(false);
         }
@@ -68,7 +67,6 @@ export default function RastreoPage() {
         setResult(null);
         setError(null);
         setTrackingCode('');
-        setIdentity('');
     };
 
     const currentStatusIndex = result ? (STATUS_MAP[result.status] ?? 1) : 0;
@@ -112,25 +110,6 @@ export default function RastreoPage() {
                                         value={trackingCode}
                                         onChange={(e) => setTrackingCode(e.target.value)}
                                         placeholder="ELE-2026-XXXXX"
-                                        className="w-full bg-[#060b13]/50 border border-slate-800 text-slate-200 text-sm rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:ring-1 focus:ring-[#00D4AA]/50 focus:border-[#00D4AA]/50 transition-colors placeholder:text-slate-600"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label htmlFor="identity" className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-                                    Verificación de Identidad
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Fingerprint className="h-5 w-5 text-slate-500" />
-                                    </div>
-                                    <input
-                                        id="identity"
-                                        type="text"
-                                        value={identity}
-                                        onChange={(e) => setIdentity(e.target.value)}
-                                        placeholder="Número de cédula o correo"
                                         className="w-full bg-[#060b13]/50 border border-slate-800 text-slate-200 text-sm rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:ring-1 focus:ring-[#00D4AA]/50 focus:border-[#00D4AA]/50 transition-colors placeholder:text-slate-600"
                                     />
                                 </div>

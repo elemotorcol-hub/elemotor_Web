@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Car, Users, Settings, LucideIcon, Wrench } from 'lucide-react';
+import { LayoutDashboard, Car, Users, Settings, LucideIcon, Wrench, BookOpen } from 'lucide-react';
 
 export default function AdminSidebarNav() {
   const pathname = usePathname();
@@ -39,6 +39,12 @@ export default function AdminSidebarNav() {
       href: '/admin/workshops',
       icon: Wrench,
       isActive: pathname.startsWith('/admin/workshops'),
+    },
+    {
+      name: 'Blog',
+      href: '/admin/blog',
+      icon: BookOpen,
+      isActive: pathname.startsWith('/admin/blog'),
     },
     {
       name: 'Ajustes',

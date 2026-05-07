@@ -5,26 +5,15 @@ import { Footer } from '@/components/Footer';
 import { SchemaScript } from '@/components/SchemaScript';
 import { buildMetadata } from '@/lib/metadata';
 import { siteConfig } from '@/config/seo';
-import { fetchModelBySlug, fetchActiveCatalogModels } from '@/services/catalogModels.service';
+import { fetchModelBySlug } from '@/services/catalogModels.service';
 import { VehicleDetailClient } from '@/components/Catalog/VehicleDetailClient';
 
-// Allow Next.js to handle slugs added after build time via on-demand ISR
-export const dynamicParams = true;
+// Pages are rendered server-side on every request (SSR).
+// This avoids build-time API dependency and ensures catalog data is always fresh.
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
     params: Promise<{ slug: string }>;
-}
-
-// ── generateStaticParams ──────────────────────────────────────────────────────
-// Pre-renders pages for all active models at build time (or first request with ISR)
-export async function generateStaticParams() {
-    try {
-        const models = await fetchActiveCatalogModels();
-        return models.map((m) => ({ slug: m.slug }));
-    } catch {
-        // If the API is unavailable at build time, skip pre-rendering gracefully
-        return [];
-    }
 }
 
 // ── generateMetadata ──────────────────────────────────────────────────────────

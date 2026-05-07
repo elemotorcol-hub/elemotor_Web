@@ -82,6 +82,22 @@ function ShowroomPageInner() {
     const accentColor = selectedExtColor?.hexCode ?? '#10B981';
     const bodyColor = selectedExtColor?.hexCode ?? null;
 
+    // Help & share state
+    const [showHelp, setShowHelp] = useState(false);
+    const [copyFeedback, setCopyFeedback] = useState(false);
+
+    const handleShare = useCallback(() => {
+        const url = typeof window !== 'undefined' ? window.location.href : '';
+        if (navigator.share) {
+            navigator.share({ title: 'EleMotor Showroom 3D', url });
+        } else {
+            navigator.clipboard.writeText(url).then(() => {
+                setCopyFeedback(true);
+                setTimeout(() => setCopyFeedback(false), 2000);
+            });
+        }
+    }, []);
+
     // ── Lighting toggle handlers ────────────────────────────────────────────────
     const handleToggleLightMode = useCallback(() => {
         setLightMode((prev) => (prev === 'day' ? 'night' : 'day'));
@@ -170,6 +186,52 @@ function ShowroomPageInner() {
         <>
             <Navbar />
 
+            {/* ── Help overlay ─────────────────────────────────────── */}
+            {showHelp && (
+                <div
+                    className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6"
+                    onClick={() => setShowHelp(false)}
+                >
+                    <div
+                        className="bg-[#0A110F] border border-white/10 rounded-2xl p-8 max-w-sm w-full shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h2 className="text-white font-black text-lg tracking-tight mb-6">Cómo usar el Showroom 3D</h2>
+                        <ul className="space-y-4 text-sm text-slate-400">
+                            <li className="flex items-start gap-3">
+                                <span className="text-emerald-400 font-bold mt-0.5">↔</span>
+                                <span><strong className="text-white">Rotar:</strong> Arrastra el modelo con el mouse o el dedo</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <span className="text-emerald-400 font-bold mt-0.5">⊕</span>
+                                <span><strong className="text-white">Zoom:</strong> Usa la rueda del mouse o pellizca en móvil</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <span className="text-emerald-400 font-bold mt-0.5">↺</span>
+                                <span><strong className="text-white">Resetear:</strong> Presiona el botón de reset para volver a la posición inicial</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <span className="text-emerald-400 font-bold mt-0.5">☀</span>
+                                <span><strong className="text-white">Iluminación:</strong> Alterna entre modo día y noche</span>
+                            </li>
+                        </ul>
+                        <button
+                            onClick={() => setShowHelp(false)}
+                            className="mt-8 w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm tracking-widest transition-all"
+                        >
+                            ENTENDIDO
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Copy feedback toast ───────────────────────────────── */}
+            {copyFeedback && (
+                <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] bg-emerald-500 text-black font-bold text-xs px-4 py-2 rounded-full shadow-lg">
+                    ✓ Enlace copiado
+                </div>
+            )}
+
             {/* ══════════════════════════════════════
                 MOBILE LAYOUT  (< lg)
                 Full viewer + bottom sheet
@@ -245,7 +307,11 @@ function ShowroomPageInner() {
                                 : <Sun className="w-3.5 h-3.5 text-amber-400" />
                             }
                         </button>
-                        <button aria-label="Ayuda" className="w-9 h-9 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all">
+                        <button
+                            onClick={() => setShowHelp(true)}
+                            aria-label="Ayuda"
+                            className="w-9 h-9 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all"
+                        >
                             <HelpCircle className="w-3.5 h-3.5" />
                         </button>
                     </div>
@@ -347,10 +413,20 @@ function ShowroomPageInner() {
                             <RefreshCw className="w-4 h-4" />
                         </button>
                         {LightingControls}
-                        <button aria-label="Ayuda" className="w-10 h-10 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                        <button
+                            onClick={() => setShowHelp(true)}
+                            aria-label="Ayuda"
+                            title="Cómo usar el showroom"
+                            className="w-10 h-10 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                        >
                             <HelpCircle className="w-4 h-4" />
                         </button>
-                        <button aria-label="Compartir" className="w-10 h-10 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                        <button
+                            onClick={handleShare}
+                            aria-label="Compartir"
+                            title="Compartir"
+                            className="w-10 h-10 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                        >
                             <Share2 className="w-4 h-4" />
                         </button>
                     </div>
