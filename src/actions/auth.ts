@@ -93,9 +93,9 @@ export async function verifyOtpAction(phoneOrEmail: string, code: string) {
     }
 }
 
-export async function googleAuthAction(idToken: string) {
+export async function googleAuthAction(googleAccessToken: string) {
     try {
-        const response = await authService.googleLogin({ idToken });
+        const response = await authService.googleLogin({ accessToken: googleAccessToken });
         const { accessToken, refreshToken, user } = response;
 
         if (!user || !accessToken) {

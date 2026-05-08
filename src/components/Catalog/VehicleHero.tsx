@@ -41,8 +41,10 @@ export function VehicleHero({ model, activeTrim }: VehicleHeroProps) {
             {/* 2. Car Image as Section Background (Anchored Left) */}
             <div className="absolute top-0 left-0 w-full h-[55vh] lg:h-[90%] lg:w-[65%] flex items-center justify-center z-10 mt-16 lg:mt-0">
 
-                {/* Spotlight strictly behind the car to highlight silhouette */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] h-[120vw] lg:w-[700px] lg:h-[700px] bg-[radial-gradient(ellipse_at_center,rgba(0,212,170,0.15)_0%,transparent_60%)] z-0 pointer-events-none transition-all duration-700" />
+                {/* Spotlight — fondo verde */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] h-[120vw] lg:w-[800px] lg:h-[800px] bg-[radial-gradient(ellipse_at_center,rgba(0,212,170,0.22)_0%,transparent_60%)] z-0 pointer-events-none transition-all duration-700" />
+                {/* Luz blanca cenital para iluminar la carrocería */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-[60%] bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.07)_0%,transparent_70%)] z-0 pointer-events-none" />
 
                 {/* Floor Line */}
                 <div className="absolute bottom-[20%] w-full h-px bg-linear-to-r from-transparent via-slate-500/20 to-transparent z-0" />
@@ -57,7 +59,7 @@ export function VehicleHero({ model, activeTrim }: VehicleHeroProps) {
                         src={selectedImage}
                         alt={`Vista del ${model.brand.name} ${model.name} – EleMotor`}
                         fill
-                        className="object-contain drop-shadow-2xl transition-opacity duration-500"
+                        className="object-contain drop-shadow-2xl transition-opacity duration-500 brightness-110 contrast-105"
                         priority={true}
                         sizes="(max-width: 1024px) 100vw, 65vw"
                     />

@@ -1,33 +1,38 @@
 import * as React from 'react';
 import Image from 'next/image';
-import { Linkedin, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 
 interface TeamMember {
     name: string;
     role: string;
+    email: string;
     image: string;
 }
 
 const team: TeamMember[] = [
     {
-        name: 'Alejandro Suarez',
-        role: 'CEO & FOUNDER',
-        image: '/team/alejo.jpg',
+        name: 'Javier Peña',
+        role: 'CEO',
+        email: 'gerencia@elemotor.com.co',
+        image: '/team/javier.jpg',
     },
     {
-        name: 'Elena Martinez',
-        role: 'DIR. LOGÍSTICA',
-        image: '/team/elena.jpg',
+        name: 'Fernando Buitrago',
+        role: 'Director Comercial',
+        email: 'comercial@elemotor.com.co',
+        image: '/team/fernando.jpg',
     },
     {
-        name: 'Ricardo Gómez',
-        role: 'ASESOR COMERCIAL',
-        image: '/team/ricardo.jpg',
+        name: 'Camila Jaimes',
+        role: 'Analista de Operaciones',
+        email: 'administracion2@elemotor.com.co',
+        image: '/team/camila.jpg',
     },
     {
-        name: 'Claudia Torres',
-        role: 'ATENCIÓN POST-VENTA',
-        image: '/team/claudia.jpg',
+        name: 'Catalina Blanco',
+        role: 'Comercial',
+        email: 'administracioncomercial@elemotor.com.co',
+        image: '/team/catalina.jpg',
     },
 ];
 
@@ -58,18 +63,20 @@ export function AboutTeam() {
                             <h3 className="text-lg font-bold text-white mb-1 uppercase tracking-tight">
                                 {member.name}
                             </h3>
-                            <p className="text-[#00D4AA] text-[10px] font-black tracking-widest uppercase mb-6">
+                            <p className="text-[#00D4AA] text-[10px] font-black tracking-widest uppercase mb-2">
                                 {member.role}
                             </p>
+                            <p className="text-slate-500 text-[11px] mb-6 text-center break-all">
+                                {member.email}
+                            </p>
 
-                            <div className="flex gap-4">
-                                <button className="text-slate-500 hover:text-white transition-colors">
-                                    <Mail className="w-4 h-4" />
-                                </button>
-                                <button className="text-slate-500 hover:text-white transition-colors">
-                                    <Linkedin className="w-4 h-4" />
-                                </button>
-                            </div>
+                            <a
+                                href={`mailto:${member.email}`}
+                                className="flex items-center gap-2 text-slate-500 hover:text-[#00D4AA] transition-colors text-xs"
+                            >
+                                <Mail className="w-4 h-4" />
+                                Contactar
+                            </a>
                         </div>
                     ))}
                 </div>

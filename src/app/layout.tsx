@@ -8,6 +8,7 @@ import { SchemaScript } from '@/components/SchemaScript';
 import { getOrganizationSchema, getWebSiteSchema } from '@/lib/schema';
 import { siteConfig } from '@/config/seo';
 import { buildMetadata } from '@/lib/metadata';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const WhatsAppWidget = dynamic(() => import('@/components/WhatsAppWidget').then(mod => mod.WhatsAppWidget));
 
@@ -49,7 +50,9 @@ export default function RootLayout({
         mismatch warning. This prop silences it safely at the body element level only.
       */}
       <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`} suppressHydrationWarning>
-        {children}
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+          {children}
+        </GoogleOAuthProvider>
         <WhatsAppWidget />
       </body>
     </html>
