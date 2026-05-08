@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { AboutGallery } from './AboutGallery';
 
 export function AboutHero() {
     return (
@@ -10,16 +11,33 @@ export function AboutHero() {
             </div>
 
             <div className="container mx-auto px-6 relative z-10">
-                <div className="max-w-4xl">
-                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.1] mb-8 tracking-tight">
-                        Liderando la <br />
-                        Transición <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D4AA] to-emerald-400">Eléctrica</span> <br />
-                        en Colombia
-                    </h1>
-                    <p className="text-lg md:text-xl text-slate-400 leading-relaxed max-w-2xl font-medium">
-                        Importamos el futuro de la movilidad sostenible a Bucaramanga con exclusividad,
-                        respaldo total y la tecnología más avanzada del mercado global.
-                    </p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+
+                    {/* Texto */}
+                    <div>
+                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1] mb-8 tracking-tight">
+                            Impulsando la <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D4AA] to-emerald-400">Movilidad Eléctrica</span> <br />
+                            en Colombia
+                        </h1>
+                        <div className="space-y-4">
+                            <p className="text-lg text-slate-400 leading-relaxed font-medium">
+                                La movilidad eléctrica en Colombia se consolida como un pilar estratégico para el desarrollo sostenible del país. Su impulso contribuye a la reducción de emisiones contaminantes, mejora la calidad del aire y promueve la innovación tecnológica en el sector transporte.
+                            </p>
+                            <p className="text-base text-slate-500 leading-relaxed">
+                                El fortalecimiento de la infraestructura de carga, junto con políticas públicas e incentivos adecuados, resulta fundamental para acelerar su adopción.
+                            </p>
+                            <p className="text-base text-slate-500 leading-relaxed">
+                                La articulación entre el Estado, el sector privado y la ciudadanía permitirá avanzar hacia un sistema de movilidad más eficiente, limpio y competitivo.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Carrusel de fotos */}
+                    <div className="hidden lg:flex items-center justify-center pb-10">
+                        <AboutGallery />
+                    </div>
+
                 </div>
             </div>
         </section>

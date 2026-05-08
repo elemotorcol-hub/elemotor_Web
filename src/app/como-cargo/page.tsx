@@ -1,8 +1,9 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import dynamic from 'next/dynamic';
-import { BatteryCharging, Zap, Info, ShieldCheck, Home, Settings } from 'lucide-react';
+import { BatteryCharging, Zap, Info, ShieldCheck, Home, Settings, MapPin } from 'lucide-react';
 
 const Footer = dynamic(() => import('@/components/Footer').then(mod => mod.Footer));
 
@@ -187,6 +188,157 @@ export default function ComoCargoPage() {
                   <p className="text-slate-400 text-sm leading-relaxed bg-slate-800/40 p-4 rounded-xl border border-slate-700/50">
                     El <strong className="text-white">Kilovatio hora (kWh)</strong> mide la energía almacenada. Por eso, las baterías de los vehículos se miden en kWh, como el "tamaño del tanque".
                   </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Tipos de Conectores ── */}
+          <div className="mt-20">
+            <div className="mb-10">
+              <h2 className="text-3xl font-black text-white uppercase tracking-tight">Tipos de <span className="text-[#00D4AA]">Conectores</span></h2>
+              <p className="text-slate-400 mt-2 text-sm">Cada vehículo eléctrico usa un estándar de conector. Conoce cuál usa el tuyo.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+              {/* Tipo 1 */}
+              <div className="bg-[#0b121e] border border-slate-800 rounded-3xl p-7 hover:border-[#00D4AA]/40 transition-colors group">
+                <div className="flex items-center justify-between mb-5">
+                  <span className="text-[10px] font-black tracking-[0.2em] text-[#00D4AA] uppercase">AC · Lenta</span>
+                  <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-md font-bold">SAE J1772</span>
+                </div>
+                <h4 className="text-lg font-bold text-white mb-1">Tipo 1</h4>
+                <p className="text-slate-500 text-xs mb-5 leading-relaxed">Conector monofásico, estándar en vehículos japoneses y americanos. Carga lenta en corriente alterna.</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between text-slate-400"><span>Potencia</span><span className="text-white font-semibold">Hasta 7.4 kW</span></div>
+                  <div className="flex justify-between text-slate-400"><span>Corriente</span><span className="text-white font-semibold">AC monofásica</span></div>
+                  <div className="flex justify-between text-slate-400"><span>Uso típico</span><span className="text-white font-semibold">Mitsubishi, Nissan</span></div>
+                </div>
+              </div>
+
+              {/* Tipo 2 */}
+              <div className="bg-[#0b121e] border border-[#00D4AA]/30 rounded-3xl p-7 hover:border-[#00D4AA]/60 transition-colors group relative overflow-hidden">
+                <div className="absolute top-3 right-3 text-[9px] font-black bg-[#00D4AA]/10 text-[#00D4AA] px-2 py-1 rounded-full border border-[#00D4AA]/20 tracking-widest">MÁS COMÚN</div>
+                <div className="flex items-center justify-between mb-5">
+                  <span className="text-[10px] font-black tracking-[0.2em] text-[#00D4AA] uppercase">AC · Lenta/Semi</span>
+                  <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-md font-bold">IEC 62196</span>
+                </div>
+                <h4 className="text-lg font-bold text-white mb-1">Tipo 2 (Mennekes)</h4>
+                <p className="text-slate-500 text-xs mb-5 leading-relaxed">Estándar europeo y el más utilizado en Latinoamérica. Compatible con la mayoría de cargadores públicos.</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between text-slate-400"><span>Potencia</span><span className="text-white font-semibold">Hasta 22 kW</span></div>
+                  <div className="flex justify-between text-slate-400"><span>Corriente</span><span className="text-white font-semibold">AC mono/trifásica</span></div>
+                  <div className="flex justify-between text-slate-400"><span>Uso típico</span><span className="text-white font-semibold">BYD, Deepal, Tesla</span></div>
+                </div>
+              </div>
+
+              {/* CCS */}
+              <div className="bg-[#0b121e] border border-slate-800 rounded-3xl p-7 hover:border-[#00D4AA]/40 transition-colors group">
+                <div className="flex items-center justify-between mb-5">
+                  <span className="text-[10px] font-black tracking-[0.2em] text-amber-400 uppercase">DC · Rápida</span>
+                  <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-md font-bold">CCS2</span>
+                </div>
+                <h4 className="text-lg font-bold text-white mb-1">CCS Combo 2</h4>
+                <p className="text-slate-500 text-xs mb-5 leading-relaxed">Combined Charging System. Conector Tipo 2 extendido para carga DC rápida. Estándar en Europa y cargadores públicos de alta potencia.</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between text-slate-400"><span>Potencia</span><span className="text-white font-semibold">Hasta 350 kW</span></div>
+                  <div className="flex justify-between text-slate-400"><span>Corriente</span><span className="text-white font-semibold">DC directa</span></div>
+                  <div className="flex justify-between text-slate-400"><span>Uso típico</span><span className="text-white font-semibold">BMW, Hyundai, Kia</span></div>
+                </div>
+              </div>
+
+              {/* CHAdeMO */}
+              <div className="bg-[#0b121e] border border-slate-800 rounded-3xl p-7 hover:border-[#00D4AA]/40 transition-colors group">
+                <div className="flex items-center justify-between mb-5">
+                  <span className="text-[10px] font-black tracking-[0.2em] text-amber-400 uppercase">DC · Rápida</span>
+                  <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-md font-bold">CHAdeMO</span>
+                </div>
+                <h4 className="text-lg font-bold text-white mb-1">CHAdeMO</h4>
+                <p className="text-slate-500 text-xs mb-5 leading-relaxed">Estándar japonés de carga rápida DC. Cada vez menos común en nuevos modelos, pero aún presente en infraestructura instalada.</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between text-slate-400"><span>Potencia</span><span className="text-white font-semibold">Hasta 100 kW</span></div>
+                  <div className="flex justify-between text-slate-400"><span>Corriente</span><span className="text-white font-semibold">DC directa</span></div>
+                  <div className="flex justify-between text-slate-400"><span>Uso típico</span><span className="text-white font-semibold">Nissan Leaf, Outlander</span></div>
+                </div>
+              </div>
+
+              {/* GB/T */}
+              <div className="bg-[#0b121e] border border-slate-800 rounded-3xl p-7 hover:border-[#00D4AA]/40 transition-colors group">
+                <div className="flex items-center justify-between mb-5">
+                  <span className="text-[10px] font-black tracking-[0.2em] text-blue-400 uppercase">AC/DC · Mixto</span>
+                  <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-md font-bold">GB/T</span>
+                </div>
+                <h4 className="text-lg font-bold text-white mb-1">GB/T (Estándar Chino)</h4>
+                <p className="text-slate-500 text-xs mb-5 leading-relaxed">Estándar nacional chino. Presente en vehículos de marcas como BYD, Deepal, NIO y otros fabricantes de China.</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between text-slate-400"><span>Potencia AC</span><span className="text-white font-semibold">Hasta 7 kW</span></div>
+                  <div className="flex justify-between text-slate-400"><span>Potencia DC</span><span className="text-white font-semibold">Hasta 250 kW</span></div>
+                  <div className="flex justify-between text-slate-400"><span>Uso típico</span><span className="text-white font-semibold">BYD, Deepal, NIO</span></div>
+                </div>
+              </div>
+
+              {/* NACS / Tesla */}
+              <div className="bg-[#0b121e] border border-slate-800 rounded-3xl p-7 hover:border-[#00D4AA]/40 transition-colors group">
+                <div className="flex items-center justify-between mb-5">
+                  <span className="text-[10px] font-black tracking-[0.2em] text-red-400 uppercase">AC/DC · Mixto</span>
+                  <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-md font-bold">NACS</span>
+                </div>
+                <h4 className="text-lg font-bold text-white mb-1">Tesla / NACS</h4>
+                <p className="text-slate-500 text-xs mb-5 leading-relaxed">Conector propietario de Tesla, adoptado como estándar abierto (NACS) en Norteamérica. Un solo conector para AC y DC.</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between text-slate-400"><span>Potencia</span><span className="text-white font-semibold">Hasta 250 kW</span></div>
+                  <div className="flex justify-between text-slate-400"><span>Corriente</span><span className="text-white font-semibold">AC y DC</span></div>
+                  <div className="flex justify-between text-slate-400"><span>Uso típico</span><span className="text-white font-semibold">Tesla Model 3, Y, S, X</span></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Mapa de Cargadores ── */}
+          <div className="mt-20 mb-4">
+            <div className="relative rounded-3xl overflow-hidden border border-slate-800 bg-[#05080f]">
+              {/* Map embed */}
+              <div className="w-full h-[420px] relative">
+                <iframe
+                  src="https://www.google.com/maps?q=estaciones+de+carga+electrica+para+vehiculos+electricos&output=embed"
+                  className="w-full h-full border-0"
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#05080f] via-transparent to-transparent" />
+              </div>
+
+              {/* Overlay CTA */}
+              <div className="p-8 lg:p-12 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div>
+                  <p className="text-[10px] font-black tracking-[0.2em] text-[#00D4AA] uppercase mb-2">Red de Carga Pública</p>
+                  <h2 className="text-2xl lg:text-3xl font-black text-white uppercase tracking-tight">
+                    Encuentra cargadores <br className="hidden lg:block" />
+                    <span className="text-[#00D4AA]">cerca de ti</span>
+                  </h2>
+                  <p className="text-slate-400 text-sm mt-3 max-w-lg leading-relaxed">
+                    Explora la red de estaciones de carga pública disponibles en tu ciudad. Filtra por tipo de conector, potencia y disponibilidad en tiempo real.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                  <a
+                    href="https://www.google.com/maps/search/electric+vehicle+charging/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#00D4AA] hover:bg-[#00bfa0] text-slate-900 font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_4px_20px_rgba(0,212,170,0.25)] hover:shadow-[0_4px_30px_rgba(0,212,170,0.4)] active:scale-[0.98]"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    Ver mapa completo
+                  </a>
+                  <Link
+                    href="/talleres"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    Nuestros talleres
+                  </Link>
                 </div>
               </div>
             </div>

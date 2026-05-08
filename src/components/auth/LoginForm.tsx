@@ -11,6 +11,7 @@ import { loginAction } from '@/actions/auth';
 import { useRouter } from 'next/navigation';
 import { hasAdminAccess } from '@/lib/roles';
 import { useExternalAuth } from '@/hooks/useExternalAuth';
+import { useGoogleLogin } from '@react-oauth/google';
 import ExternalAuth from './ExternalAuth';
 
 const loginSchema = z.object({
@@ -24,7 +25,12 @@ export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [authError, setAuthError] = useState<string | null>(null);
     const router = useRouter();
-    const externalAuth = useExternalAuth();
+    const { handleGoogleLogin, isGoogleLoading } = useExternalAuth();
+
+    const googleLogin = useGoogleLogin({
+        onSuccess: (tokenResponse) => handleGoogleLogin(tokenResponse.access_token),
+        onError: () => setAuthError('Error al autenticar con Google'),
+    });
 
     const {
         register,
@@ -73,8 +79,7 @@ export default function LoginForm() {
             </div>
 
             {/* Form */}
-            {externalAuth.otpStep === 'none' ? (
-                <>
+            <>
                     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
 
                         {authError && (
@@ -150,11 +155,8 @@ export default function LoginForm() {
                         <div className="h-px bg-white/5 flex-1"></div>
                     </div>
 
-                    <ExternalAuth {...externalAuth} />
+                    <ExternalAuth handleGoogleLogin={() => googleLogin()} isGoogleLoading={isGoogleLoading} />
                 </>
-            ) : (
-                <ExternalAuth {...externalAuth} />
-            )}
 
             <div className="mt-8 text-center border-t border-white/5 pt-6">
                 <p className="text-sm text-slate-400">

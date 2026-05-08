@@ -1,10 +1,17 @@
 import * as React from 'react';
+import Image from 'next/image';
 
-const partners = [
-    { name: 'PARTNER A', id: 'a' },
-    { name: 'PARTNER B', id: 'b' },
-    { name: 'PARTNER C', id: 'c' },
-    { name: 'PARTNER D', id: 'd' },
+const brands = [
+    { name: 'BYD',       src: '/marcas/byd-seeklogo.png' },
+    { name: 'Deepal',    src: '/marcas/deepal-global-changan-seeklogo.png' },
+    { name: 'Changan',   src: '/marcas/changan-icon-seeklogo.png' },
+    { name: 'Geely',     src: '/marcas/geely-2023-seeklogo.png' },
+    { name: 'GAC Motor', src: '/marcas/gac-motor-seeklogo.png' },
+    { name: 'Zeekr',     src: '/marcas/zeekr-seeklogo.png' },
+    { name: 'Lynk & Co', src: '/marcas/lynk-co-seeklogo.png' },
+    { name: 'Xpeng',     src: '/marcas/xpeng-motors-seeklogo.png' },
+    { name: 'Toyota',    src: '/marcas/toyota-svgrepo-com.svg' },
+    { name: 'Radar',     src: '/marcas/radar.jpg' },
 ];
 
 export function AboutPartners() {
@@ -21,15 +28,23 @@ export function AboutPartners() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-                    {partners.map((partner) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+                    {brands.map((brand) => (
                         <div
-                            key={partner.id}
-                            className="bg-slate-800/20 border border-white/5 rounded-2xl p-4 md:p-8 h-24 md:h-32 flex items-center justify-center group hover:border-white/10 transition-colors"
+                            key={brand.name}
+                            className="bg-white rounded-2xl p-6 h-28 flex flex-col items-center justify-center gap-3 group shadow-md hover:shadow-[0_4px_24px_rgba(0,212,170,0.18)] hover:-translate-y-1 transition-all duration-300"
                         >
-                            <div className="text-slate-500 font-black tracking-[0.2em] md:tracking-[0.3em] text-[10px] md:text-xs uppercase group-hover:text-slate-300 transition-colors text-center">
-                                {partner.name}
+                            <div className="relative w-full h-12 flex items-center justify-center">
+                                <Image
+                                    src={brand.src}
+                                    alt={`Logo ${brand.name}`}
+                                    fill
+                                    className="object-contain"
+                                />
                             </div>
+                            <span className="text-slate-400 text-[10px] font-bold tracking-widest uppercase">
+                                {brand.name}
+                            </span>
                         </div>
                     ))}
                 </div>
