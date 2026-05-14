@@ -2,30 +2,52 @@
 
 import React, { useRef } from 'react';
 import { useFormContext, useFieldArray } from 'react-hook-form';
-import { UploadCloud, X, Trash2, AlertCircle } from 'lucide-react';
+import { UploadCloud, X, Trash2, AlertCircle, Youtube } from 'lucide-react';
 import Image from 'next/image';
 import { VehicleModelFormData } from '@/schemas/inventorySchema';
 
 export default function GalleryTab({ mode }: { mode?: 'add' | 'edit' }) {
-    const { watch } = useFormContext<VehicleModelFormData>();
+    const { watch, register, formState: { errors } } = useFormContext<VehicleModelFormData>();
     const trims = watch('trims') || [];
-
-    if (trims.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center py-20 bg-slate-900/30 rounded-xl border border-dashed border-slate-700 text-center px-6">
-                <UploadCloud size={48} className="text-slate-600 mb-4" />
-                <h3 className="text-lg font-semibold text-slate-300 mb-2">Galería de Imágenes</h3>
-                <p className="text-sm text-slate-500">Debes crear al menos una versión en la pestaña "Versiones y Especificaciones" antes de poder subir imágenes o un modelo 3D.</p>
-            </div>
-        );
-    }
 
     return (
         <div className="flex flex-col gap-8">
-            <h3 className="text-sm font-bold text-slate-200 border-b border-slate-800 pb-2">Galerías y Modelos 3D por Versión</h3>
-            {trims.map((trim: any, idx: number) => (
-                <TrimGallerySection key={trim.id || idx} trimIndex={idx} trimName={trim.name} mode={mode} />
-            ))}
+
+            {/* Video URL */}
+            <div className="flex flex-col gap-2 bg-[#1e293b]/30 p-5 rounded-xl border border-slate-700/50">
+                <div className="flex items-center gap-2 mb-1">
+                    <Youtube size={16} className="text-red-400" />
+                    <h3 className="text-sm font-bold text-slate-200">Video oficial del modelo</h3>
+                </div>
+                <p className="text-xs text-slate-500 mb-2">
+                    URL directa del archivo de video subido al servidor. Ejemplo: <span className="text-slate-400 font-mono">https://elemotor.com.co/videos/modelo.mp4</span>
+                </p>
+                <input
+                    type="url"
+                    {...register('video_url')}
+                    placeholder="https://elemotor.com.co/videos/..."
+                    className={`w-full bg-[#0f172a]/60 border ${(errors as any).video_url ? 'border-red-500' : 'border-slate-700'} rounded-lg px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500 transition-all`}
+                />
+                {(errors as any).video_url && (
+                    <span className="text-red-400 text-xs">{(errors as any).video_url.message}</span>
+                )}
+            </div>
+
+            {/* Per-trim galleries */}
+            {trims.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 bg-slate-900/30 rounded-xl border border-dashed border-slate-700 text-center px-6">
+                    <UploadCloud size={48} className="text-slate-600 mb-4" />
+                    <h3 className="text-lg font-semibold text-slate-300 mb-2">Galería de Imágenes</h3>
+                    <p className="text-sm text-slate-500">Debes crear al menos una versión en la pestaña "Versiones y Especificaciones" antes de poder subir imágenes o un modelo 3D.</p>
+                </div>
+            ) : (
+                <>
+                    <h3 className="text-sm font-bold text-slate-200 border-b border-slate-800 pb-2">Galerías y Modelos 3D por Versión</h3>
+                    {trims.map((trim: any, idx: number) => (
+                        <TrimGallerySection key={trim.id || idx} trimIndex={idx} trimName={trim.name} mode={mode} />
+                    ))}
+                </>
+            )}
         </div>
     );
 }

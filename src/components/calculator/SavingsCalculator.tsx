@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Fuel, Zap, Leaf, Wrench, BadgeDollarSign, ArrowRight, MapPin, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { fetchActiveCatalogModels, CatalogModel } from '@/services/catalogModels.service';
 import { fetchElectricityRates, fetchFuelPrices, ElectricityRate, FuelPrice } from '@/services/calculator.service';
 
@@ -175,8 +176,81 @@ export function SavingsCalculator() {
 
     return (
         <section className="w-full bg-[#050B09] py-16 md:py-24 font-sans relative overflow-hidden">
-            {/* Background Glows */}
-            <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-900/10 rounded-full blur-[120px] pointer-events-none" />
+
+            {/* ── Background glows ── */}
+            <div className="absolute top-1/3 left-0 w-[500px] h-[500px] bg-red-900/8 rounded-full blur-[140px] pointer-events-none" />
+            <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-emerald-900/10 rounded-full blur-[140px] pointer-events-none" />
+
+            {/* ── LEFT decoration — Combustion engine ── */}
+            <div className="hidden xl:block absolute left-0 top-0 bottom-0 w-[20%] z-0 pointer-events-none">
+                <div className="absolute inset-y-[10%] left-0 right-0 rounded-r-3xl overflow-hidden border-y border-r border-red-900/25 bg-[#0d0405]">
+                    {/* Red glow */}
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_40%_50%,rgba(200,30,30,0.18)_0%,transparent_70%)]" />
+                    {/* Engine SVG illustration */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-35">
+                        <svg viewBox="0 0 220 260" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-48 h-48 text-red-500">
+                            {/* Engine block */}
+                            <rect x="35" y="80" width="150" height="100" rx="10" stroke="currentColor" strokeWidth="2.5" fill="rgba(200,30,30,0.05)"/>
+                            {/* Cylinder head */}
+                            <rect x="50" y="55" width="120" height="28" rx="6" stroke="currentColor" strokeWidth="2" fill="rgba(200,30,30,0.05)"/>
+                            {/* Cylinders */}
+                            <circle cx="80" cy="130" r="22" stroke="currentColor" strokeWidth="2" fill="rgba(200,30,30,0.08)"/>
+                            <circle cx="140" cy="130" r="22" stroke="currentColor" strokeWidth="2" fill="rgba(200,30,30,0.08)"/>
+                            {/* Piston rods */}
+                            <line x1="80" y1="152" x2="80" y2="180" stroke="currentColor" strokeWidth="3"/>
+                            <line x1="140" y1="152" x2="140" y2="180" stroke="currentColor" strokeWidth="3"/>
+                            {/* Crankshaft */}
+                            <path d="M55 185 Q80 200 110 185 Q140 170 165 185" stroke="currentColor" strokeWidth="2.5" fill="none"/>
+                            {/* Intake manifold */}
+                            <path d="M60 55 L60 25 Q60 18 67 18 L153 18 Q160 18 160 25 L160 55" stroke="currentColor" strokeWidth="2" fill="none"/>
+                            {/* Spark plugs */}
+                            <line x1="80" y1="55" x2="80" y2="68" stroke="currentColor" strokeWidth="2.5"/>
+                            <line x1="110" y1="55" x2="110" y2="68" stroke="currentColor" strokeWidth="2.5"/>
+                            <line x1="140" y1="55" x2="140" y2="68" stroke="currentColor" strokeWidth="2.5"/>
+                            {/* Exhaust */}
+                            <rect x="35" y="180" width="150" height="12" rx="4" stroke="currentColor" strokeWidth="2" fill="rgba(200,30,30,0.05)"/>
+                            <line x1="70" y1="192" x2="70" y2="215" stroke="currentColor" strokeWidth="3"/>
+                            <line x1="110" y1="192" x2="110" y2="215" stroke="currentColor" strokeWidth="3"/>
+                            <line x1="150" y1="192" x2="150" y2="215" stroke="currentColor" strokeWidth="3"/>
+                            <path d="M55 215 Q110 225 165 215" stroke="currentColor" strokeWidth="2.5" fill="none"/>
+                        </svg>
+                    </div>
+                    {/* Label */}
+                    <div className="absolute bottom-6 inset-x-0 text-center">
+                        <p className="text-[9px] font-black tracking-[0.3em] text-red-800/60 uppercase">Motor a Combustión</p>
+                    </div>
+                    {/* Right fade */}
+                    <div className="absolute inset-y-0 right-0 w-2/3 bg-gradient-to-r from-transparent to-[#050B09]" />
+                </div>
+            </div>
+
+            {/* ── RIGHT decoration — Electric vehicle ── */}
+            <div className="hidden xl:block absolute right-0 top-0 bottom-0 w-[20%] z-0 pointer-events-none">
+                <div className="absolute inset-y-[10%] left-0 right-0 rounded-l-3xl overflow-hidden border-y border-l border-[#00D4AA]/15 bg-[#020e09]">
+                    {/* Teal glow */}
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_50%,rgba(0,212,170,0.15)_0%,transparent_70%)]" />
+                    {/* Car image */}
+                    <div className="absolute inset-0 flex items-end justify-center pb-10">
+                        <div className="relative w-full h-[60%]">
+                            <Image
+                                src="/showroom-car.png"
+                                alt="Vehículo eléctrico"
+                                fill
+                                className="object-contain opacity-40 scale-125"
+                                sizes="20vw"
+                            />
+                        </div>
+                    </div>
+                    {/* Ground reflection */}
+                    <div className="absolute bottom-0 inset-x-0 h-1/4 bg-gradient-to-t from-[#020e09] to-transparent" />
+                    {/* Label */}
+                    <div className="absolute bottom-6 inset-x-0 text-center">
+                        <p className="text-[9px] font-black tracking-[0.3em] text-[#00D4AA]/40 uppercase">100% Eléctrico</p>
+                    </div>
+                    {/* Left fade */}
+                    <div className="absolute inset-y-0 left-0 w-2/3 bg-gradient-to-l from-transparent to-[#050B09]" />
+                </div>
+            </div>
 
             <div className="max-w-6xl mx-auto px-6 relative z-10">
 

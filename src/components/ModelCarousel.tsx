@@ -72,10 +72,39 @@ export function ModelCarousel() {
     }, []);
 
     return (
-        <section id="modelos" className="py-24 bg-slate-900 overflow-hidden">
-            <div className="container mx-auto px-6">
-                <div className="max-w-7xl mx-auto">
-                    <div className="bg-slate-800/20 border border-white/5 rounded-[40px] p-8 md:p-12 lg:p-16 shadow-2xl backdrop-blur-sm">
+        <section id="modelos" className="relative py-24 overflow-hidden">
+
+            {/* Base */}
+            <div className="absolute inset-0 bg-[#0b1929]" />
+
+            {/* Dot grid */}
+            <div className="absolute inset-0 pointer-events-none opacity-[0.18]"
+                style={{ backgroundImage: 'radial-gradient(circle, rgba(0,212,170,0.6) 1px, transparent 1px)', backgroundSize: '36px 36px' }} />
+
+            {/* Teal blob top-right */}
+            <div className="absolute -top-40 -right-40 w-[700px] h-[700px] rounded-full blur-3xl pointer-events-none opacity-20"
+                style={{ background: 'radial-gradient(ellipse at center, #00D4AA 0%, transparent 70%)' }} />
+
+            {/* Teal blob bottom-left */}
+            <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full blur-3xl pointer-events-none opacity-15"
+                style={{ background: 'radial-gradient(ellipse at center, #00D4AA 0%, transparent 70%)' }} />
+
+            {/* SVG waves bottom */}
+            <svg className="absolute bottom-0 left-0 w-full pointer-events-none" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0,80 C240,140 480,20 720,80 C960,140 1200,20 1440,80 L1440,160 L0,160 Z" fill="rgba(0,212,170,0.06)" />
+                <path d="M0,100 C360,40 720,160 1080,100 C1260,70 1380,120 1440,100 L1440,160 L0,160 Z" fill="rgba(0,212,170,0.04)" />
+            </svg>
+
+            {/* SVG waves top */}
+            <svg className="absolute top-0 left-0 w-full pointer-events-none rotate-180" viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0,50 C360,0 720,100 1080,50 C1260,25 1380,70 1440,50 L1440,100 L0,100 Z" fill="rgba(0,212,170,0.04)" />
+            </svg>
+
+            {/* Edge fades */}
+            <div className="absolute top-0 inset-x-0 h-16 bg-gradient-to-b from-slate-900 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
+
+            <div className="container mx-auto px-6 relative z-10">
 
                         {/* Header */}
                         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 gap-6">
@@ -99,8 +128,8 @@ export function ModelCarousel() {
 
                         {/* Carousel */}
                         {loading ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {[0, 1, 2].map((i) => <CardSkeleton key={i} />)}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {[0, 1, 2, 3].map((i) => <CardSkeleton key={i} />)}
                             </div>
                         ) : models.length === 0 ? (
                             <p className="text-slate-400 text-center py-12">No hay modelos destacados configurados aún.</p>
@@ -115,7 +144,7 @@ export function ModelCarousel() {
                                         return (
                                             <div
                                                 key={model.id}
-                                                className="embla__slide flex-[0_0_85%] md:flex-[0_0_48%] lg:flex-[0_0_34%] min-w-0 pl-5 py-6"
+                                                className="embla__slide flex-[0_0_85%] md:flex-[0_0_48%] lg:flex-[0_0_26%] min-w-0 pl-5 py-6"
                                             >
                                                 <div
                                                     className={`rounded-3xl overflow-hidden border flex flex-col transition-all duration-500 ${
@@ -134,7 +163,7 @@ export function ModelCarousel() {
                                                             src={getCardImage(model)}
                                                             alt={`${model.brand?.name ?? ''} ${model.name}`}
                                                             fill
-                                                            sizes="(max-width: 768px) 85vw, (max-width: 1200px) 48vw, 34vw"
+                                                            sizes="(max-width: 768px) 85vw, (max-width: 1200px) 48vw, 26vw"
                                                             className="object-cover transition-transform duration-700 group-hover:scale-105"
                                                             loading="lazy"
                                                         />
@@ -197,8 +226,6 @@ export function ModelCarousel() {
                                 </div>
                             </div>
                         )}
-                    </div>
-                </div>
             </div>
         </section>
     );

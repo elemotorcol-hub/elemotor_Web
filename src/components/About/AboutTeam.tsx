@@ -14,25 +14,25 @@ const team: TeamMember[] = [
         name: 'Javier Peña',
         role: 'CEO',
         email: 'gerencia@elemotor.com.co',
-        image: '/team/javier.jpg',
+        image: '/nosotros/equipo/Javier Peña.png',
     },
     {
         name: 'Fernando Buitrago',
         role: 'Director Comercial',
         email: 'comercial@elemotor.com.co',
-        image: '/team/fernando.jpg',
+        image: '/nosotros/equipo/Fernando Buitrago.png',
     },
     {
         name: 'Camila Jaimes',
         role: 'Analista de Operaciones',
         email: 'administracion2@elemotor.com.co',
-        image: '/team/camila.jpg',
+        image: '/nosotros/equipo/Camila Jaimes.png',
     },
     {
         name: 'Catalina Blanco',
         role: 'Comercial',
         email: 'administracioncomercial@elemotor.com.co',
-        image: '/team/catalina.jpg',
+        image: '/nosotros/equipo/Catalina Blanco.png',
     },
 ];
 

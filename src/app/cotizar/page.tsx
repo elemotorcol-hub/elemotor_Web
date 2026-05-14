@@ -16,7 +16,7 @@ export const metadata = buildMetadata({
 export default async function CotizarPage() {
     let models = [];
     try {
-        const response = await modelService.getModels({ active: true });
+        const response = await modelService.getModels({ active: true, limit: 100 });
         models = response.data || [];
     } catch (error) {
         console.error('Error fetching models for quote page:', error);

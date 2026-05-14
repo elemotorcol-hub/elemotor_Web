@@ -282,6 +282,7 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
             basePrice: Number(data.basePrice),
             featured: data.featured,
             active: data.status === 'Active',
+            videoUrl: data.video_url || undefined,
             trims: data.trims.map(trim => ({
                 ...trim,
                 price: Number(trim.price),
@@ -351,6 +352,7 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
             basePrice: Number(data.basePrice),
             featured: data.featured,
             active: data.status === 'Active',
+            videoUrl: data.video_url || undefined,
             trims: data.trims.map(trim => ({
                 dbId: trim.dbId ? Number(trim.dbId) : undefined,
                 _deleted: (trim as any)._deleted,
