@@ -16,10 +16,15 @@ interface VehicleHeroProps {
 const FALLBACK_IMAGE = '/placeholder-car.svg';
 
 export function VehicleHero({ model, activeTrim }: VehicleHeroProps) {
-    // Build gallery from active trim images
-    const galleryImages: string[] = activeTrim.images.length > 0
-        ? activeTrim.images.map((img) => img.url)
-        : [FALLBACK_IMAGE];
+    // Solo imágenes marcadas como galería o hero — excluye exterior/interior/panoramic
+    const heroImages = activeTrim.images.filter(
+        (img) => img.type === 'gallery' || img.type === 'hero',
+    );
+    const galleryImages: string[] = heroImages.length > 0
+        ? heroImages.map((img) => img.url)
+        : activeTrim.images.length > 0
+            ? activeTrim.images.map((img) => img.url) // fallback: todas si no hay gallery/hero
+            : [FALLBACK_IMAGE];
 
     const [selectedImage, setSelectedImage] = useState<string>(galleryImages[0]);
 
@@ -46,20 +51,13 @@ export function VehicleHero({ model, activeTrim }: VehicleHeroProps) {
                 {/* Luz blanca cenital para iluminar la carrocería */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-[60%] bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.07)_0%,transparent_70%)] z-0 pointer-events-none" />
 
-                {/* Floor Line */}
-                <div className="absolute bottom-[20%] w-full h-px bg-linear-to-r from-transparent via-slate-500/20 to-transparent z-0" />
-
-                {/* Contact Shadow */}
-                <div className="absolute bottom-[15%] lg:bottom-[22%] left-1/2 -translate-x-1/2 w-[70%] lg:w-[65%] h-[40px] lg:h-[50px] bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.8)_0%,transparent_70%)] z-0" />
-                <div className="absolute bottom-[18%] lg:bottom-[24%] left-1/2 -translate-x-1/2 w-[50%] lg:w-[45%] h-[20px] bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.95)_0%,transparent_70%)] z-0" />
-
                 {/* The vehicle image — changes with gallery selection */}
                 <div className="relative w-full h-full lg:h-[80%] max-w-6xl z-10">
                     <Image
                         src={selectedImage}
                         alt={`Vista del ${model.brand.name} ${model.name} – EleMotor`}
                         fill
-                        className="object-contain drop-shadow-2xl transition-opacity duration-500 brightness-110 contrast-105"
+                        className="object-contain transition-opacity duration-500 brightness-110 contrast-105"
                         priority={true}
                         sizes="(max-width: 1024px) 100vw, 65vw"
                     />
@@ -67,7 +65,7 @@ export function VehicleHero({ model, activeTrim }: VehicleHeroProps) {
             </div>
 
             {/* 3. Gradient Overlay */}
-            <div className="absolute inset-0 bg-linear-to-t lg:bg-linear-to-r from-[#060B14]/90 via-[#060B14]/40 to-[#060B14] lg:from-transparent lg:via-[#060B14]/70 lg:to-[#060B14] pointer-events-none z-20" />
+            <div className="absolute inset-0 bg-linear-to-t lg:bg-linear-to-r from-[#060B14]/80 via-transparent to-[#060B14] lg:from-transparent lg:via-transparent lg:to-[#060B14] pointer-events-none z-20" />
 
             {/* 4. Text Content */}
             <div className="container mx-auto px-6 relative z-30 w-full flex-1 flex flex-col lg:flex-row items-center justify-end pb-16 lg:pb-0">
@@ -93,12 +91,14 @@ export function VehicleHero({ model, activeTrim }: VehicleHeroProps) {
                                 Cotizar este modelo
                             </Button>
                         </Link>
-                        <Link href={`/showroom?modelo=${model.slug}`} className="w-full sm:w-auto">
-                            <Button variant="ghost" className="border border-white/20 hover:border-[#00D4AA]/50 bg-white/5 hover:bg-[#00D4AA]/10 text-white font-bold tracking-widest uppercase py-4 px-8 rounded-lg backdrop-blur-md w-full sm:w-auto h-[60px] transition-all">
-                                <View className="w-5 h-5 mr-3 inline text-slate-300" />
-                                Ver en 3D
-                            </Button>
-                        </Link>
+                        {activeTrim.models3d && (
+                            <Link href={`/showroom?modelo=${model.slug}`} className="w-full sm:w-auto">
+                                <Button variant="ghost" className="border border-white/20 hover:border-[#00D4AA]/50 bg-white/5 hover:bg-[#00D4AA]/10 text-white font-bold tracking-widest uppercase py-4 px-8 rounded-lg backdrop-blur-md w-full sm:w-auto h-[60px] transition-all">
+                                    <View className="w-5 h-5 mr-3 inline text-slate-300" />
+                                    Ver en 3D
+                                </Button>
+                            </Link>
+                        )}
                     </div>
 
                     {/* Trust badges */}

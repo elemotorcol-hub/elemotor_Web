@@ -1,5 +1,6 @@
 import { Battery, Zap, Expand, Cpu, Gauge, Clock, BoxSelect, Weight, MonitorSmartphone, Layers } from 'lucide-react';
 import type { DetailSpec } from '@/services/catalogModels.service';
+import React from 'react';
 
 interface VehicleSpecsProps {
     spec: DetailSpec | null;
@@ -78,29 +79,56 @@ export function VehicleSpecs({ spec, trimName }: VehicleSpecsProps) {
         });
     }
 
-    // ── Full spec table rows ─────────────────────────────────────────────────
-    const rows: SpecRow[] = [
-        { label: 'Batería', value: d(spec?.batteryKwh) ?? '—', unit: 'kWh' },
-        { label: 'Autonomía CLTC', value: n(spec?.rangeCltcKm) ?? '—', unit: 'km' },
-        { label: 'Autonomía WLTP', value: n(spec?.rangeWltpKm) ?? '—', unit: 'km' },
-        { label: 'Potencia', value: n(spec?.horsepower) ?? '—', unit: 'HP' },
-        { label: 'Torque', value: n(spec?.torque) ?? '—', unit: 'Nm' },
-        { label: 'Aceleración 0‑100', value: d(spec?.zeroTo100) ?? '—', unit: 's' },
-        { label: 'Velocidad máxima', value: n(spec?.topSpeed) ?? '—', unit: 'km/h' },
-        { label: 'Carga 30→80%', value: spec?.chargeTime3080 ?? '—' },
-        { label: 'Consumo', value: d(spec?.kwhPer100km) ?? '—', unit: 'kWh/100km' },
-        { label: 'Baúl', value: n(spec?.trunkLiters) ?? '—', unit: 'L' },
-        { label: 'Longitud', value: n(spec?.lengthMm) ?? '—', unit: 'mm' },
-        { label: 'Ancho', value: n(spec?.widthMm) ?? '—', unit: 'mm' },
-        { label: 'Alto', value: n(spec?.heightMm) ?? '—', unit: 'mm' },
-        { label: 'Distancia entre ejes', value: n(spec?.wheelbaseMm) ?? '—', unit: 'mm' },
-        { label: 'Peso en vacío', value: n(spec?.curbWeightKg) ?? '—', unit: 'kg' },
-        { label: 'ADAS', value: adas ? `Nivel ${adas}` : '—' },
-        { label: 'Pantalla', value: screen ? `${screen}"` : '—' },
-        { label: 'Versión de software', value: n(spec?.softwareVersion) ?? '—' },
-    ].filter((r) => r.value !== '—');
+    // ── Spec categories ───────────────────────────────────────────────────────
+    type SpecItem = { label: string; value: string; unit?: string };
+    type SpecCategory = { title: string; icon: React.ElementType; items: SpecItem[] };
 
-    if (!spec && highlights.length === 0 && rows.length === 0) {
+    const specCategories: SpecCategory[] = [
+        {
+            title: 'Energía',
+            icon: Battery,
+            items: [
+                spec?.batteryKwh ? { label: 'Batería', value: d(spec.batteryKwh) ?? '—', unit: 'kWh' } : null,
+                spec?.rangeCltcKm ? { label: 'Autonomía CLTC', value: n(spec.rangeCltcKm) ?? '—', unit: 'km' } : null,
+                spec?.rangeWltpKm ? { label: 'Autonomía WLTP', value: n(spec.rangeWltpKm) ?? '—', unit: 'km' } : null,
+                spec?.kwhPer100km ? { label: 'Consumo', value: d(spec.kwhPer100km) ?? '—', unit: 'kWh/100km' } : null,
+                spec?.chargeTime3080 ? { label: 'Carga 30→80%', value: spec.chargeTime3080, unit: 'min' } : null,
+            ].filter(Boolean) as SpecItem[],
+        },
+        {
+            title: 'Performance',
+            icon: Zap,
+            items: [
+                spec?.horsepower ? { label: 'Potencia', value: n(spec.horsepower) ?? '—', unit: 'HP' } : null,
+                spec?.torque ? { label: 'Torque', value: n(spec.torque) ?? '—', unit: 'Nm' } : null,
+                spec?.zeroTo100 ? { label: '0 – 100', value: d(spec.zeroTo100) ?? '—', unit: 's' } : null,
+                spec?.topSpeed ? { label: 'Vel. máxima', value: n(spec.topSpeed) ?? '—', unit: 'km/h' } : null,
+            ].filter(Boolean) as SpecItem[],
+        },
+        {
+            title: 'Dimensiones',
+            icon: Expand,
+            items: [
+                spec?.lengthMm ? { label: 'Longitud', value: n(spec.lengthMm) ?? '—', unit: 'mm' } : null,
+                spec?.widthMm ? { label: 'Ancho', value: n(spec.widthMm) ?? '—', unit: 'mm' } : null,
+                spec?.heightMm ? { label: 'Alto', value: n(spec.heightMm) ?? '—', unit: 'mm' } : null,
+                spec?.wheelbaseMm ? { label: 'Entre ejes', value: n(spec.wheelbaseMm) ?? '—', unit: 'mm' } : null,
+                spec?.curbWeightKg ? { label: 'Peso vacío', value: n(spec.curbWeightKg) ?? '—', unit: 'kg' } : null,
+                spec?.trunkLiters ? { label: 'Baúl', value: n(spec.trunkLiters) ?? '—', unit: 'L' } : null,
+            ].filter(Boolean) as SpecItem[],
+        },
+        {
+            title: 'Tecnología',
+            icon: Cpu,
+            items: [
+                adas ? { label: 'ADAS', value: `Nivel ${adas}` } : null,
+                screen ? { label: 'Pantalla', value: `${screen}"` } : null,
+                spec?.softwareVersion ? { label: 'Software', value: n(spec.softwareVersion) ?? '—' } : null,
+            ].filter(Boolean) as SpecItem[],
+        },
+    ].filter((cat) => cat.items.length > 0);
+
+    if (!spec && highlights.length === 0 && specCategories.length === 0) {
         return (
             <section className="w-full">
                 <h2 className="text-2xl font-bold text-white mb-4">Especificaciones Técnicas</h2>
@@ -111,47 +139,73 @@ export function VehicleSpecs({ spec, trimName }: VehicleSpecsProps) {
 
     return (
         <section className="w-full">
-            <h2 className="text-2xl font-bold text-white mb-8 text-center md:text-left">
-                Especificaciones Técnicas
-                {trimName && (
-                    <span className="ml-3 text-sm font-normal text-[#00D4AA] tracking-widest uppercase">{trimName}</span>
-                )}
-            </h2>
+            {/* Section header */}
+            <div className="flex items-end gap-4 mb-10">
+                <div>
+                    <span className="text-[#00D4AA] font-bold tracking-widest uppercase text-xs mb-1 block">Ficha técnica</span>
+                    <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+                        ESPECIFICACIONES
+                        {trimName && (
+                            <span className="ml-3 text-base font-normal text-[#00D4AA] tracking-widest uppercase align-middle">{trimName}</span>
+                        )}
+                    </h2>
+                </div>
+            </div>
 
             {/* Highlight cards */}
             {highlights.length > 0 && (
-                <div className={`grid grid-cols-2 md:grid-cols-${Math.min(highlights.length, 4)} gap-4 lg:gap-6 mb-10`}>
-                    {highlights.map((spec, index) => {
-                        const Icon = spec.icon;
+                <div className={`grid grid-cols-2 md:grid-cols-${Math.min(highlights.length, 4)} gap-3 mb-12`}>
+                    {highlights.map((h, index) => {
+                        const Icon = h.icon;
                         return (
-                            <div key={index} className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 flex flex-col items-center text-center transition-colors hover:border-[#00D4AA]/30">
-                                <Icon className="w-6 h-6 text-[#00D4AA] mb-4 stroke-[1.5]" aria-hidden="true" />
-                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">{spec.title}</span>
-                                <span className="text-lg md:text-2xl font-black text-white leading-tight mb-1">{spec.value}</span>
-                                <span className="text-[10px] text-[#00D4AA] font-bold tracking-widest">{spec.subText}</span>
+                            <div key={index} className="relative bg-gradient-to-br from-slate-900/80 to-slate-800/40 border border-white/5 rounded-2xl p-5 flex flex-col items-center text-center overflow-hidden group hover:border-[#00D4AA]/30 transition-colors">
+                                <div className="absolute inset-0 bg-[#00D4AA]/0 group-hover:bg-[#00D4AA]/[0.03] transition-colors" />
+                                <div className="w-10 h-10 rounded-xl bg-[#00D4AA]/10 flex items-center justify-center mb-3">
+                                    <Icon className="w-5 h-5 text-[#00D4AA]" aria-hidden="true" />
+                                </div>
+                                <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-2">{h.title}</span>
+                                <span className="text-xl md:text-2xl font-black text-white leading-none mb-1">{h.value}</span>
+                                <span className="text-[10px] text-[#00D4AA] font-bold tracking-wider">{h.subText}</span>
                             </div>
                         );
                     })}
                 </div>
             )}
 
-            {/* Full spec table */}
-            {rows.length > 0 && (
-                <div className="border border-white/5 rounded-2xl overflow-hidden">
-                    {rows.map((row, i) => (
-                        <div
-                            key={i}
-                            className={`flex justify-between items-center px-5 py-3.5 gap-4 ${
-                                i % 2 === 0 ? 'bg-slate-900/30' : 'bg-slate-900/10'
-                            } hover:bg-[#00D4AA]/5 transition-colors`}
-                        >
-                            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">{row.label}</span>
-                            <span className="text-sm text-white font-bold text-right">
-                                {row.value}
-                                {row.unit && <span className="text-slate-500 font-normal ml-1 text-xs">{row.unit}</span>}
-                            </span>
-                        </div>
-                    ))}
+            {/* Spec categories */}
+            {specCategories.length > 0 && (
+                <div className="space-y-8">
+                    {specCategories.map((cat, ci) => {
+                        const CatIcon = cat.icon;
+                        return (
+                            <div key={ci}>
+                                {/* Category header */}
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-7 h-7 rounded-lg bg-[#00D4AA]/10 flex items-center justify-center flex-shrink-0">
+                                        <CatIcon className="w-3.5 h-3.5 text-[#00D4AA]" />
+                                    </div>
+                                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{cat.title}</span>
+                                    <div className="flex-1 h-px bg-white/5" />
+                                </div>
+
+                                {/* Spec grid */}
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                    {cat.items.map((item, ii) => (
+                                        <div
+                                            key={ii}
+                                            className="bg-slate-900/40 border border-white/5 rounded-xl px-4 py-3 flex flex-col gap-1 hover:border-[#00D4AA]/20 transition-colors"
+                                        >
+                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{item.label}</span>
+                                            <div className="flex items-baseline gap-1 flex-wrap">
+                                                <span className="text-lg font-black text-white leading-none">{item.value}</span>
+                                                {item.unit && <span className="text-[10px] text-[#00D4AA] font-bold">{item.unit}</span>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </section>

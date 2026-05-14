@@ -132,7 +132,7 @@ export function Navbar() {
                             width={180}
                             height={40}
                             priority
-                            className="h-8 md:h-10 w-auto object-contain brightness-110"
+                            className="h-8 md:h-10 w-auto object-contain brightness-110 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
                         />
                     </Link>
 

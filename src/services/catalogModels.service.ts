@@ -149,6 +149,7 @@ export interface DetailTrim {
     spec: DetailSpec | null;
     colors: DetailColor[];
     images: DetailImage[];
+    models3d: { id: number } | null;
 }
 
 export interface DetailBrand {
@@ -169,6 +170,7 @@ export interface DetailModel {
     basePrice: string | null;     // Decimal serialised as string by Prisma
     featured: boolean;
     active: boolean;
+    videoUrl: string | null;
     brand: DetailBrand;
     trims: DetailTrim[];
 }

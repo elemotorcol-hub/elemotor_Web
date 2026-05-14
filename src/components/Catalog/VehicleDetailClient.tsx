@@ -5,6 +5,7 @@ import { TrimSelector } from '@/components/Catalog/TrimSelector';
 import { VehicleHero } from '@/components/Catalog/VehicleHero';
 import { VehicleSpecs } from '@/components/Catalog/VehicleSpecs';
 import { VehicleFeatures } from '@/components/Catalog/VehicleFeatures';
+import { VehiclePhotoGallery } from '@/components/Catalog/VehiclePhotoGallery';
 import type { DetailModel, DetailTrim } from '@/services/catalogModels.service';
 
 interface VehicleDetailClientProps {
@@ -67,9 +68,9 @@ export function VehicleDetailClient({ model }: VehicleDetailClientProps) {
                 activeTrim={activeTrim}
             />
 
+            {/* Specs + Features — contained */}
             <div className="container mx-auto px-6 max-w-5xl flex flex-col gap-16 md:gap-24 pt-12 md:pt-16 mb-16">
 
-                {/* Trim selector — only if multiple trims */}
                 {model.trims.length > 1 && (
                     <TrimSelector
                         trims={model.trims}
@@ -87,6 +88,13 @@ export function VehicleDetailClient({ model }: VehicleDetailClientProps) {
 
                 <VehicleFeatures features={features} />
             </div>
+
+            {/* Gallery & Video — full width sections */}
+            <VehiclePhotoGallery
+                images={activeTrim.images}
+                modelName={`${model.brand.name} ${model.name}`}
+                videoUrl={model.videoUrl ?? undefined}
+            />
         </>
     );
 }
