@@ -52,12 +52,30 @@ export default function OrderSlideOver({ onClose, mode, initialData, onSave }: O
         })();
     }, [mode]);
 
+    // ─── Pre-fill trim from client's won quote ───────────────────────────────
+    useEffect(() => {
+        if (!userId || mode !== 'add') return;
+        const selectedUser = users.find((u: any) => u.id === Number(userId));
+        if (!selectedUser?.email) return;
+        orderService.fetchWonQuoteByEmail(selectedUser.email).then(quote => {
+            if (quote?.trim?.id) {
+                setTrimId(quote.trim.id);
+            }
+        }).catch(() => {/* silencioso — no bloquear */});
+    }, [userId, users, mode]);
+
     // ─── Load colors when trim changes ──────────────────────────────────────
     useEffect(() => {
         if (!trimId) { setColors([]); setColorId(''); return; }
-        orderService.fetchColorsByTrim(Number(trimId))
-            .then(data => setColors(Array.isArray(data) ? data : []))
-            .catch(() => setColors([]));
+        orderService.fetchColorsByTrim(Number(trimId)).then(async data => {
+            if (Array.isArray(data) && data.length > 0) {
+                setColors(data);
+            } else {
+                // Fallback: cargar todos los colores si el trim no tiene colores específicos
+                const all = await orderService.fetchAllColors();
+                setColors(all);
+            }
+        }).catch(() => setColors([]));
         setColorId('');
     }, [trimId]);
 
@@ -212,7 +230,7 @@ export default function OrderSlideOver({ onClose, mode, initialData, onSave }: O
                                             value={colorId}
                                             onChange={e => setColorId(Number(e.target.value))}
                                             required
-                                            disabled={!trimId || colors.length === 0}
+                                            disabled={!trimId}
                                             className={`${inputCls} disabled:opacity-40`}
                                         >
                                             <option value="">{trimId ? 'Selecciona un color' : 'Primero elige una versión'}</option>
