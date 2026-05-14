@@ -85,6 +85,22 @@ export const orderService = {
     },
 
     /**
+     * [Público] Todos los colores — GET /api/colors (fallback si el trim no tiene colores)
+     */
+    async fetchAllColors(): Promise<any[]> {
+        const res = await fetchApi<{ data: any[] }>('/api/colors?limit=200');
+        return res.data || [];
+    },
+
+    /**
+     * [Admin] Cotización closed_won de un cliente por email — GET /api/quotes?email=X&status=closed_won
+     */
+    async fetchWonQuoteByEmail(email: string): Promise<any | null> {
+        const res = await fetchApi<{ data: any[] }>(`/api/quotes?email=${encodeURIComponent(email)}&status=closed_won&limit=1&sortBy=createdAt&order=desc`);
+        return res.data?.[0] ?? null;
+    },
+
+    /**
      * [Cliente] Listar mis pedidos
      */
     async fetchMyOrders(params?: Record<string, any>): Promise<{ data: any[]; total: number }> {
