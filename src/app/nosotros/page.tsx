@@ -1,6 +1,7 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { AboutHero } from '@/components/About/AboutHero';
+import { AboutBranches } from '@/components/About/AboutBranches';
 import { AboutStats } from '@/components/About/AboutStats';
 import { AboutProcess } from '@/components/About/AboutProcess';
 import { AboutPartners } from '@/components/About/AboutPartners';
@@ -25,6 +26,7 @@ export default function NosotrosPage() {
 
             <main>
                 <AboutHero />
+                <AboutBranches />
                 <AboutStats />
                 <AboutProcess />
                 <AboutPartners />

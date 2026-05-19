@@ -54,10 +54,6 @@ export function VehicleSummary({ vehicle }: Props) {
             <div className="p-8 flex-1 flex flex-col">
                 <div className="mb-6">
                     <h3 className="text-3xl font-bold text-white mb-2 tracking-tight uppercase">{vehicle.name}</h3>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Desde</span>
-                        <span className="text-2xl font-black text-[#00D4AA]">{formatPrice(vehicle.basePrice)}</span>
-                    </div>
                 </div>
 
                 {/* Specs Grid */}

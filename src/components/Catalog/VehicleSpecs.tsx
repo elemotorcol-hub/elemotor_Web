@@ -1,3 +1,6 @@
+'use client';
+
+import { motion } from 'framer-motion';
 import { Battery, Zap, Expand, Cpu, Gauge, Clock, BoxSelect, Weight, MonitorSmartphone, Layers } from 'lucide-react';
 import type { DetailSpec } from '@/services/catalogModels.service';
 import React from 'react';
@@ -128,86 +131,111 @@ export function VehicleSpecs({ spec, trimName }: VehicleSpecsProps) {
         },
     ].filter((cat) => cat.items.length > 0);
 
-    if (!spec && highlights.length === 0 && specCategories.length === 0) {
-        return (
-            <section className="w-full">
-                <h2 className="text-2xl font-bold text-white mb-4">Especificaciones Técnicas</h2>
-                <p className="text-slate-500 text-sm">Especificaciones no disponibles para esta versión.</p>
-            </section>
-        );
-    }
+    if (!spec && highlights.length === 0 && specCategories.length === 0) return null;
 
     return (
-        <section className="w-full">
-            {/* Section header */}
-            <div className="flex items-end gap-4 mb-10">
-                <div>
-                    <span className="text-[#00D4AA] font-bold tracking-widest uppercase text-xs mb-1 block">Ficha técnica</span>
-                    <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
-                        ESPECIFICACIONES
-                        {trimName && (
-                            <span className="ml-3 text-base font-normal text-[#00D4AA] tracking-widest uppercase align-middle">{trimName}</span>
-                        )}
-                    </h2>
-                </div>
+        <section className="relative w-full py-24 overflow-hidden bg-[#060B14]">
+
+            {/* Background decoration */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute inset-0 opacity-[0.15]"
+                    style={{ backgroundImage: 'radial-gradient(circle, rgba(0,212,170,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+                <div className="absolute -top-60 -right-60 w-[700px] h-[700px] rounded-full opacity-10 blur-3xl"
+                    style={{ background: 'radial-gradient(ellipse at center, #00D4AA 0%, transparent 70%)' }} />
+                <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full opacity-10 blur-3xl"
+                    style={{ background: 'radial-gradient(ellipse at center, #00D4AA 0%, transparent 70%)' }} />
             </div>
 
-            {/* Highlight cards */}
-            {highlights.length > 0 && (
-                <div className={`grid grid-cols-2 md:grid-cols-${Math.min(highlights.length, 4)} gap-3 mb-12`}>
-                    {highlights.map((h, index) => {
-                        const Icon = h.icon;
-                        return (
-                            <div key={index} className="relative bg-gradient-to-br from-slate-900/80 to-slate-800/40 border border-white/5 rounded-2xl p-5 flex flex-col items-center text-center overflow-hidden group hover:border-[#00D4AA]/30 transition-colors">
-                                <div className="absolute inset-0 bg-[#00D4AA]/0 group-hover:bg-[#00D4AA]/[0.03] transition-colors" />
-                                <div className="w-10 h-10 rounded-xl bg-[#00D4AA]/10 flex items-center justify-center mb-3">
-                                    <Icon className="w-5 h-5 text-[#00D4AA]" aria-hidden="true" />
-                                </div>
-                                <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-2">{h.title}</span>
-                                <span className="text-xl md:text-2xl font-black text-white leading-none mb-1">{h.value}</span>
-                                <span className="text-[10px] text-[#00D4AA] font-bold tracking-wider">{h.subText}</span>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
+            <div className="relative z-10 container mx-auto px-6 max-w-7xl">
 
-            {/* Spec categories */}
-            {specCategories.length > 0 && (
-                <div className="space-y-8">
-                    {specCategories.map((cat, ci) => {
-                        const CatIcon = cat.icon;
-                        return (
-                            <div key={ci}>
-                                {/* Category header */}
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-7 h-7 rounded-lg bg-[#00D4AA]/10 flex items-center justify-center flex-shrink-0">
-                                        <CatIcon className="w-3.5 h-3.5 text-[#00D4AA]" />
-                                    </div>
-                                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{cat.title}</span>
-                                    <div className="flex-1 h-px bg-white/5" />
-                                </div>
+                {/* Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="mb-14"
+                >
+                    <span className="text-[#00D4AA] font-bold tracking-widest uppercase text-sm mb-2 block">Ficha técnica</span>
+                    <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+                        ESPECIFICACIONES
+                        {trimName && <span className="ml-3 text-lg font-normal text-[#00D4AA] tracking-widest uppercase align-middle">{trimName}</span>}
+                    </h2>
+                </motion.div>
 
-                                {/* Spec grid */}
-                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                                    {cat.items.map((item, ii) => (
-                                        <div
-                                            key={ii}
-                                            className="bg-slate-900/40 border border-white/5 rounded-xl px-4 py-3 flex flex-col gap-1 hover:border-[#00D4AA]/20 transition-colors"
-                                        >
-                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{item.label}</span>
-                                            <div className="flex items-baseline gap-1 flex-wrap">
-                                                <span className="text-lg font-black text-white leading-none">{item.value}</span>
-                                                {item.unit && <span className="text-[10px] text-[#00D4AA] font-bold">{item.unit}</span>}
-                                            </div>
+                {/* Highlight stats — horizontal bar */}
+                {highlights.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/5 rounded-3xl overflow-hidden mb-16 border border-white/5"
+                    >
+                        {highlights.map((h, i) => {
+                            const Icon = h.icon;
+                            return (
+                                <div key={i} className="relative bg-[#080E1C] px-8 py-8 flex flex-col gap-3 group hover:bg-[#0d1829] transition-colors duration-300 overflow-hidden">
+                                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00D4AA]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <div className="w-9 h-9 rounded-xl bg-[#00D4AA]/10 flex items-center justify-center flex-shrink-0">
+                                            <Icon className="w-4 h-4 text-[#00D4AA]" />
                                         </div>
-                                    ))}
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{h.title}</span>
+                                    </div>
+                                    <span className="text-3xl md:text-4xl font-black text-white leading-none">{h.value}</span>
+                                    <span className="text-xs text-[#00D4AA] font-bold tracking-wider">{h.subText}</span>
                                 </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
+                            );
+                        })}
+                    </motion.div>
+                )}
+
+                {/* Spec categories */}
+                {specCategories.length > 0 && (
+                    <div className="space-y-12">
+                        {specCategories.map((cat, ci) => {
+                            const CatIcon = cat.icon;
+                            return (
+                                <motion.div
+                                    key={ci}
+                                    initial={{ opacity: 0, y: 24 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, margin: '-60px' }}
+                                    transition={{ duration: 0.5, delay: ci * 0.07 }}
+                                >
+                                    {/* Category header */}
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="w-10 h-10 rounded-2xl bg-[#00D4AA]/10 border border-[#00D4AA]/20 flex items-center justify-center flex-shrink-0">
+                                            <CatIcon className="w-5 h-5 text-[#00D4AA]" />
+                                        </div>
+                                        <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">{cat.title}</h3>
+                                        <div className="flex-1 h-px bg-gradient-to-r from-[#00D4AA]/20 to-transparent" />
+                                    </div>
+
+                                    {/* Spec cards */}
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                                        {cat.items.map((item, ii) => (
+                                            <motion.div
+                                                key={ii}
+                                                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                                                className="relative bg-[#080E1C] border border-white/5 rounded-2xl px-5 py-5 flex flex-col gap-2 group overflow-hidden cursor-default hover:border-[#00D4AA]/25 transition-colors duration-300"
+                                            >
+                                                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(0,212,170,0.06)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
+                                                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{item.label}</span>
+                                                <div className="flex items-baseline gap-1.5 flex-wrap">
+                                                    <span className="text-2xl font-black text-white leading-none">{item.value}</span>
+                                                    {item.unit && <span className="text-[11px] text-[#00D4AA] font-black tracking-wider">{item.unit}</span>}
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
         </section>
     );
 }
