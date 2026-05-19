@@ -14,7 +14,9 @@ const quoteSchema = z.object({
     country: z.string().min(1, 'Selecciona un país'),
     trackingCode: z.string().optional(),
     model_id: z.string().min(1, 'Selecciona un modelo'),
+    color: z.string().optional(),
     budget_range: z.string().min(1, 'Selecciona un presupuesto'),
+    payment_method: z.string().min(1, 'Selecciona una forma de pago'),
     preferred_channel: z.enum(['whatsapp', 'call', 'email']),
     message: z.string().optional(),
 });
@@ -40,7 +42,9 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
             country: 'Colombia',
             trackingCode: '',
             model_id: vehicles[0]?.id || '',
+            color: '',
             budget_range: '',
+            payment_method: '',
             preferred_channel: 'whatsapp',
             message: '',
         }
@@ -48,6 +52,22 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
 
     const selectedModelId = watch('model_id');
     const preferredChannel = watch('preferred_channel');
+    const paymentMethod = watch('payment_method');
+    const selectedColor = watch('color');
+
+    // Colores únicos del modelo seleccionado (deduplicados por nombre)
+    const availableColors = React.useMemo(() => {
+        const vehicle = vehicles.find(v => String(v.id) === String(selectedModelId));
+        if (!vehicle?.trims) return [];
+        const seen = new Set<string>();
+        return vehicle.trims
+            .flatMap(t => t.colors ?? [])
+            .filter(c => {
+                if (seen.has(c.name)) return false;
+                seen.add(c.name);
+                return true;
+            });
+    }, [selectedModelId, vehicles]);
 
     useEffect(() => {
         onModelChange(selectedModelId);
@@ -66,6 +86,8 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
                 city: data.city || undefined,
                 country: data.country,
                 trackingCode: data.trackingCode || undefined,
+                color: data.color || undefined,
+                paymentMethod: data.payment_method || undefined,
                 preferredChannel: data.preferred_channel,
                 message: data.message || undefined,
                 source: 'web'
@@ -122,14 +144,17 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
                         {errors.phone && <p className="text-xs text-red-500 mt-1 font-medium">{errors.phone.message}</p>}
                     </div>
                     <div>
-                        <label className={labelClasses}>Ciudad</label>
+                        <label className={labelClasses}>Ciudad de entrega del vehículo</label>
                         <div className="relative">
                             <select {...register('city')} className={`${inputClasses} appearance-none cursor-pointer`}>
                                 <option value="" disabled>Selecciona una ciudad</option>
                                 <option value="Bogota">Bogotá</option>
-                                <option value="Medellin">Medellin</option>
+                                <option value="Medellin">Medellín</option>
                                 <option value="Cali">Cali</option>
                                 <option value="Barranquilla">Barranquilla</option>
+                                <option value="Bucaramanga">Bucaramanga</option>
+                                <option value="Cartagena">Cartagena</option>
+                                <option value="Otra">Otra ciudad</option>
                             </select>
                             <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
@@ -166,7 +191,7 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
                     </div>
                 </div>
 
-                {/* File 3: Modelo y Presupuesto */}
+                {/* Modelo y Color */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <label className={labelClasses}>Modelo de interés</label>
@@ -182,19 +207,77 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
                         {errors.model_id && <p className="text-xs text-red-500 mt-1 font-medium">{errors.model_id.message}</p>}
                     </div>
                     <div>
-                        <label className={labelClasses}>Presupuesto aproximado</label>
-                        <div className="relative">
-                            <select {...register('budget_range')} className={`${inputClasses} appearance-none cursor-pointer`}>
-                                <option value="" disabled>Selecciona tu presupuesto</option>
-                                <option value="125000000">100M - 150M COP</option>
-                                <option value="175000000">150M - 200M COP</option>
-                                <option value="225000000">200M - 250M COP</option>
-                                <option value="300000000">Más de 250M COP</option>
-                            </select>
-                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
-                        {errors.budget_range && <p className="text-xs text-red-500 mt-1 font-medium">{errors.budget_range.message}</p>}
+                        <label className={labelClasses}>Color de interés (Opcional)</label>
+                        {availableColors.length > 0 ? (
+                            <div className="flex flex-wrap gap-2 pt-1">
+                                {availableColors.map(c => (
+                                    <button
+                                        key={c.name}
+                                        type="button"
+                                        title={c.name}
+                                        onClick={() => setValue('color', selectedColor === c.name ? '' : c.name)}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[12px] font-semibold transition-all ${
+                                            selectedColor === c.name
+                                                ? 'border-[#00D4AA] bg-[#00D4AA]/10 text-white'
+                                                : 'border-white/10 bg-[#121c19] text-slate-400 hover:border-white/20'
+                                        }`}
+                                    >
+                                        <span
+                                            className="w-4 h-4 rounded-full border border-white/20 shrink-0"
+                                            style={{ backgroundColor: `#${(c as any).hexCode ?? c.hex_code}` }}
+                                        />
+                                        {c.name}
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <input
+                                {...register('color')}
+                                type="text"
+                                placeholder="Ej: Blanco, Negro, Gris..."
+                                className={inputClasses}
+                            />
+                        )}
                     </div>
+                </div>
+
+                {/* Presupuesto */}
+                <div>
+                    <label className={labelClasses}>Presupuesto aproximado</label>
+                    <div className="relative">
+                        <select {...register('budget_range')} className={`${inputClasses} appearance-none cursor-pointer`}>
+                            <option value="" disabled>Selecciona tu presupuesto</option>
+                            <option value="65000000">60M - 80M COP</option>
+                            <option value="90000000">80M - 100M COP</option>
+                            <option value="125000000">100M - 150M COP</option>
+                            <option value="175000000">150M - 200M COP</option>
+                            <option value="250000000">Más de 200M COP</option>
+                        </select>
+                        <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    {errors.budget_range && <p className="text-xs text-red-500 mt-1 font-medium">{errors.budget_range.message}</p>}
+                </div>
+
+                {/* Forma de pago */}
+                <div>
+                    <label className={labelClasses}>Forma de pago</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {[
+                            { value: 'credito_banco', label: 'Crédito banco' },
+                            { value: 'recursos_propios', label: 'Recursos propios' },
+                            { value: 'no_definido', label: 'No tengo claro todavía' },
+                        ].map(opt => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => setValue('payment_method', opt.value)}
+                                className={`py-3 px-4 rounded-xl border text-[13px] font-bold transition-all text-center ${paymentMethod === opt.value ? 'bg-[#00D4AA] border-[#00D4AA] text-[#0A0F1C]' : 'bg-[#121c19] border-white/10 text-slate-300 hover:border-white/20'}`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                    {errors.payment_method && <p className="text-xs text-red-500 mt-1 font-medium">{errors.payment_method.message}</p>}
                 </div>
 
                 {/* Preferencia de contacto */}

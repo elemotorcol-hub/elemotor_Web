@@ -5,13 +5,10 @@ const brands = [
     { name: 'BYD',       src: '/marcas/byd-seeklogo.png' },
     { name: 'Deepal',    src: '/marcas/deepal-global-changan-seeklogo.png' },
     { name: 'Changan',   src: '/marcas/changan-icon-seeklogo.png' },
-    { name: 'Geely',     src: '/marcas/geely-2023-seeklogo.png' },
     { name: 'GAC Motor', src: '/marcas/gac-motor-seeklogo.png' },
-    { name: 'Zeekr',     src: '/marcas/zeekr-seeklogo.png' },
     { name: 'Lynk & Co', src: '/marcas/lynk-co-seeklogo.png' },
     { name: 'Xpeng',     src: '/marcas/xpeng-motors-seeklogo.png' },
     { name: 'Toyota',    src: '/marcas/toyota-svgrepo-com.svg' },
-    { name: 'Radar',     src: '/marcas/radar.jpg' },
 ];
 
 export function AboutPartners() {
@@ -47,6 +44,15 @@ export function AboutPartners() {
                             </span>
                         </div>
                     ))}
+                    {/* RADAR — tarjeta de solo texto */}
+                    <div className="bg-white rounded-2xl p-6 h-28 flex flex-col items-center justify-center gap-3 group shadow-md hover:shadow-[0_4px_24px_rgba(0,212,170,0.18)] hover:-translate-y-1 transition-all duration-300">
+                        <span className="text-slate-800 text-2xl font-black tracking-widest uppercase">
+                            RADAR
+                        </span>
+                        <span className="text-slate-400 text-[10px] font-bold tracking-widest uppercase">
+                            Radar
+                        </span>
+                    </div>
                 </div>
             </div>
         </section>

@@ -68,24 +68,25 @@ export function VehicleDetailClient({ model }: VehicleDetailClientProps) {
                 activeTrim={activeTrim}
             />
 
-            {/* Specs + Features — contained */}
-            <div className="container mx-auto px-6 max-w-5xl flex flex-col gap-16 md:gap-24 pt-12 md:pt-16 mb-16">
-
-                {model.trims.length > 1 && (
+            {/* Trim selector — contained */}
+            {model.trims.length > 1 && (
+                <div className="container mx-auto px-6 max-w-5xl pt-12">
                     <TrimSelector
                         trims={model.trims}
                         selectedTrimId={activeTrim.id}
                         onTrimChange={setActiveTrim}
                     />
-                )}
+                </div>
+            )}
 
-                <VehicleSpecs
-                    spec={activeTrim.spec}
-                    trimName={model.trims.length > 1 ? activeTrim.name : undefined}
-                />
+            {/* Specs — full width section */}
+            <VehicleSpecs
+                spec={activeTrim.spec}
+                trimName={model.trims.length > 1 ? activeTrim.name : undefined}
+            />
 
-                <hr className="border-white/5 w-full max-w-lg mx-auto" />
-
+            {/* Features */}
+            <div className="container mx-auto px-6 max-w-7xl">
                 <VehicleFeatures features={features} />
             </div>
 
