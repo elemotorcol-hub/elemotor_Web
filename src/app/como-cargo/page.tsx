@@ -160,6 +160,122 @@ export default function ComoCargoPage() {
             </div>
           </div>
 
+          {/* ── Cargadores DC ── */}
+          <div className="mb-20">
+            <div className="mb-10">
+              <h2 className="text-3xl font-black text-white uppercase tracking-tight">Cargadores <span className="text-[#00D4AA]">DC Rápidos</span></h2>
+              <p className="text-slate-400 mt-2 text-sm">Soluciones de carga rápida para estaciones comerciales y flotas empresariales.</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+              {/* Cargador 1 — Mini DC 20-80 kW */}
+              <div className="bg-gradient-to-br from-[#0d131f] to-[#0a0f1c] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col group hover:border-[#00D4AA]/30 transition-colors">
+                <div className="relative w-full h-80 bg-[#0d131f]">
+                  <Image
+                    src="/comocargo1.jpg"
+                    alt="Cargador DC Mini 20-80 kW"
+                    fill
+                    className="object-contain object-center group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#0d131f] to-transparent" />
+                  <div className="absolute top-4 left-4 text-[10px] font-black tracking-[0.2em] text-amber-400 uppercase bg-slate-900/80 px-3 py-1.5 rounded-full border border-amber-400/30">
+                    DC · Rápida
+                  </div>
+                </div>
+                <div className="p-8 flex flex-col flex-1">
+                  <h3 className="text-xl font-bold text-white mb-1">Cargador Mini DC</h3>
+                  <p className="text-[#00D4AA] text-xs font-black tracking-widest uppercase mb-4">20 kW · 30 kW · 40 kW · 60 kW · 80 kW</p>
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700/50 text-sm">
+                      <span className="text-slate-400">Potencia</span>
+                      <span className="text-[#00D4AA] font-bold">20 – 80 kW</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700/50 text-sm">
+                      <span className="text-slate-400">Corriente</span>
+                      <span className="text-white font-bold">DC Directa</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700/50 text-sm">
+                      <span className="text-slate-400">Certificación</span>
+                      <span className="text-white font-bold">TUV</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+                    <a
+                      href="/manuales/manual-dc-mini-20-80kw.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all"
+                    >
+                      Manual PDF
+                    </a>
+                    <a
+                      href="https://wa.me/573117762260?text=Hola%2C%20quiero%20cotizar%20el%20cargador%20DC%20Mini%2020-80%20kW"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#00D4AA] hover:bg-[#00bfa0] text-slate-900 font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_4px_20px_rgba(0,212,170,0.25)]"
+                    >
+                      Cotizar
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cargador 2 — DC 60-320 kW */}
+              <div className="bg-gradient-to-br from-[#0d131f] to-[#0a0f1c] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col group hover:border-[#00D4AA]/30 transition-colors">
+                <div className="relative w-full h-80 bg-[#0d131f]">
+                  <Image
+                    src="/comocargo2.jpg"
+                    alt="Estación de Carga DC 60-320 kW"
+                    fill
+                    className="object-contain object-center group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#0d131f] to-transparent" />
+                  <div className="absolute top-4 left-4 text-[10px] font-black tracking-[0.2em] text-amber-400 uppercase bg-slate-900/80 px-3 py-1.5 rounded-full border border-amber-400/30">
+                    DC · Ultra Rápida
+                  </div>
+                </div>
+                <div className="p-8 flex flex-col flex-1">
+                  <h3 className="text-xl font-bold text-white mb-1">Estación DC de Alta Potencia</h3>
+                  <p className="text-[#00D4AA] text-xs font-black tracking-widest uppercase mb-4">60 kW · 120 kW · 180 kW · 240 kW · 320 kW</p>
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700/50 text-sm">
+                      <span className="text-slate-400">Potencia</span>
+                      <span className="text-[#00D4AA] font-bold">60 – 320 kW</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700/50 text-sm">
+                      <span className="text-slate-400">Corriente</span>
+                      <span className="text-white font-bold">DC Directa</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700/50 text-sm">
+                      <span className="text-slate-400">Uso ideal</span>
+                      <span className="text-white font-bold">Flotas y estaciones</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+                    <a
+                      href="/manuales/manual-dc-60-320kw.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all"
+                    >
+                      Manual PDF
+                    </a>
+                    <a
+                      href="https://wa.me/573117762260?text=Hola%2C%20quiero%20cotizar%20la%20estaci%C3%B3n%20de%20carga%20DC%2060-320%20kW"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#00D4AA] hover:bg-[#00bfa0] text-slate-900 font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_4px_20px_rgba(0,212,170,0.25)]"
+                    >
+                      Cotizar
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
           {/* Educational Definitions Section */}
           <div className="bg-[#05080f] rounded-3xl p-8 lg:p-12 border border-slate-800/60 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -298,21 +414,10 @@ export default function ComoCargoPage() {
 
           {/* ── Mapa de Cargadores ── */}
           <div className="mt-20 mb-4">
-            <div className="relative rounded-3xl overflow-hidden border border-slate-800 bg-[#05080f]">
-              {/* Map embed */}
-              <div className="w-full h-[420px] relative">
-                <iframe
-                  src="https://www.google.com/maps?q=estaciones+de+carga+electrica+para+vehiculos+electricos&output=embed"
-                  className="w-full h-full border-0"
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#05080f] via-transparent to-transparent" />
-              </div>
+            <div className="rounded-3xl overflow-hidden border border-slate-800 bg-[#05080f]">
 
-              {/* Overlay CTA */}
-              <div className="p-8 lg:p-12 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+              {/* Header */}
+              <div className="p-8 lg:p-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 border-b border-slate-800">
                 <div>
                   <p className="text-[10px] font-black tracking-[0.2em] text-[#00D4AA] uppercase mb-2">Red de Carga Pública</p>
                   <h2 className="text-2xl lg:text-3xl font-black text-white uppercase tracking-tight">
@@ -320,18 +425,18 @@ export default function ComoCargoPage() {
                     <span className="text-[#00D4AA]">cerca de ti</span>
                   </h2>
                   <p className="text-slate-400 text-sm mt-3 max-w-lg leading-relaxed">
-                    Explora la red de estaciones de carga pública disponibles en tu ciudad. Filtra por tipo de conector, potencia y disponibilidad en tiempo real.
+                    Mapa en tiempo real con estaciones de carga pública. Filtra por tipo de conector y disponibilidad con datos de PlugShare.
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 shrink-0">
                   <a
-                    href="https://www.google.com/maps/search/electric+vehicle+charging/"
+                    href="https://www.plugshare.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#00D4AA] hover:bg-[#00bfa0] text-slate-900 font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_4px_20px_rgba(0,212,170,0.25)] hover:shadow-[0_4px_30px_rgba(0,212,170,0.4)] active:scale-[0.98]"
                   >
                     <MapPin className="w-4 h-4" />
-                    Ver mapa completo
+                    Ver en PlugShare
                   </a>
                   <Link
                     href="/talleres"
@@ -341,6 +446,18 @@ export default function ComoCargoPage() {
                   </Link>
                 </div>
               </div>
+
+              {/* PlugShare embed */}
+              <div className="w-full h-[520px] lg:h-[620px]">
+                <iframe
+                  src="https://www.plugshare.com/widget2.html?plugs=1,2,3,4,5,6,42,13,7,8,9,10,11,12,14,15,16,17,20&latitude=4.5709&longitude=-74.2973&zoom=6"
+                  className="w-full h-full border-0"
+                  allow="geolocation"
+                  loading="lazy"
+                  title="Mapa de cargadores eléctricos — PlugShare"
+                />
+              </div>
+
             </div>
           </div>
 

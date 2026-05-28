@@ -61,6 +61,7 @@ export interface ShowroomTrim {
     spec: ShowroomSpec | null;
     colors: ShowroomColor[];
     images: ShowroomTrimImage[];
+    models3d?: { id: number } | null;
 }
 
 export interface ShowroomTrimImage {

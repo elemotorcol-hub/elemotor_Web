@@ -49,6 +49,10 @@ function mapApiToFormData(apiModel: any): VehicleModelFormData {
         active: apiModel.active ?? true,
         status: apiModel.active ? 'Active' : 'Draft',
         thumbnail: '',
+        datasheet: apiModel.datasheetUrl ? {
+            file_url: apiModel.datasheetUrl,
+            public_id: apiModel.datasheetPublicId || 'legacy',
+        } : undefined,
         trims: (apiModel.trims || []).map((trim: any) => ({
             id: String(trim.id),
             dbId: trim.id,
@@ -124,6 +128,7 @@ const EMPTY_FORM: VehicleModelFormData = {
     active: true,
     description: '',
     thumbnail: '',
+    datasheet: undefined,
     trims: []
 };
 
@@ -224,7 +229,7 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
     };
 
     // ─── HELPER: concurrent media uploads ───────────────────────────────────────
-    const processUploads = async (trims: any[]) => {
+    const processUploads = async (trims: any[], datasheet?: any) => {
         const uploadPromises: Promise<void>[] = [];
 
         trims.forEach(trim => {
@@ -264,13 +269,24 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
             }
         });
 
+        if (datasheet?.rawFile) {
+            const p = uploadService.uploadFile(datasheet.rawFile, 'document')
+                .then(res => {
+                    datasheet.file_url = res.publicUrl;
+                    datasheet.public_id = res.publicId;
+                    datasheet.file_size_mb = res.size ? res.size / (1024 * 1024) : 0;
+                    delete datasheet.rawFile;
+                });
+            uploadPromises.push(p);
+        }
+
         await Promise.all(uploadPromises);
     };
 
     // ─── CREATE flow ────────────────────────────────────────────────
     const handleCreate = async (data: VehicleModelFormData) => {
         // First, upload all media files concurrently
-        await processUploads(data.trims);
+        await processUploads(data.trims, data.datasheet);
 
         const modelPayload = {
             brandId: Number(data.brand_id),
@@ -283,6 +299,8 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
             featured: data.featured,
             active: data.status === 'Active',
             videoUrl: data.video_url || undefined,
+            datasheetUrl: data.datasheet?.file_url || undefined,
+            datasheetPublicId: data.datasheet?.public_id || undefined,
             trims: data.trims.map(trim => ({
                 ...trim,
                 price: Number(trim.price),
@@ -340,7 +358,16 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
         const modelId = Number(initialData!.id);
 
         // Upload media files concurrently
-        await processUploads(data.trims);
+        await processUploads(data.trims, data.datasheet);
+
+        // Delete PDF from Cloudinary if marked for deletion
+        if (data.datasheet?._deleted && data.datasheet.public_id && data.datasheet.public_id !== 'legacy') {
+            try {
+                await uploadService.deleteImage(data.datasheet.public_id, 'raw');
+            } catch {
+                // Non-blocking: continue even if Cloudinary delete fails
+            }
+        }
 
         const modelPayload = {
             brandId: Number(data.brand_id),
@@ -353,6 +380,8 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
             featured: data.featured,
             active: data.status === 'Active',
             videoUrl: data.video_url || undefined,
+            datasheetUrl: data.datasheet?._deleted ? null : (data.datasheet?.file_url || undefined),
+            datasheetPublicId: data.datasheet?._deleted ? null : (data.datasheet?.public_id || undefined),
             trims: data.trims.map(trim => ({
                 dbId: trim.dbId ? Number(trim.dbId) : undefined,
                 _deleted: (trim as any)._deleted,

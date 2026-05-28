@@ -36,7 +36,7 @@ export const uploadService = {
         return response.json();
     },
 
-    deleteImage: async (publicId: string): Promise<any> => {
+    deleteImage: async (publicId: string, resourceType: 'image' | 'raw' = 'image'): Promise<any> => {
         const session = await getSession();
         const response = await fetch(`${API_BASE_URL}/api/upload/delete`, {
             method: 'POST',
@@ -44,7 +44,7 @@ export const uploadService = {
                 'Content-Type': 'application/json',
                 ...(session?.accessToken && { 'Authorization': `Bearer ${session.accessToken}` })
             },
-            body: JSON.stringify({ publicId, resourceType: 'image' }),
+            body: JSON.stringify({ publicId, resourceType }),
         });
 
         if (!response.ok) {

@@ -262,7 +262,17 @@ export function VehiclePhotoGallery({ images, modelName, videoUrl }: VehiclePhot
                             <div className="w-full aspect-video overflow-hidden">
                                 {/youtu\.be|youtube\.com|vimeo\.com/.test(videoUrl) ? (
                                     <iframe
-                                        src={`${videoUrl.replace('youtu.be/', 'www.youtube.com/embed/').split('?')[0]}?autoplay=1&mute=1&loop=1&playlist=${videoUrl.split('/').pop()?.split('?')[0]}`}
+                                        src={(() => {
+                                            // youtu.be/VIDEO_ID
+                                            const shortMatch = videoUrl.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+                                            // youtube.com/watch?v=VIDEO_ID
+                                            const watchMatch = videoUrl.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+                                            // youtube.com/shorts/VIDEO_ID
+                                            const shortsMatch = videoUrl.match(/shorts\/([a-zA-Z0-9_-]{11})/);
+                                            const videoId = (shortMatch || watchMatch || shortsMatch)?.[1];
+                                            if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`;
+                                            return videoUrl;
+                                        })()}
                                         className="w-full h-full"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                         allowFullScreen

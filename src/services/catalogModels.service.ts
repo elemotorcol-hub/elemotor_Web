@@ -171,6 +171,7 @@ export interface DetailModel {
     featured: boolean;
     active: boolean;
     videoUrl: string | null;
+    datasheetUrl: string | null;
     brand: DetailBrand;
     trims: DetailTrim[];
 }

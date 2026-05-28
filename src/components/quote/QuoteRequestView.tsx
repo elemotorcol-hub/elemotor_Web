@@ -6,13 +6,20 @@ import { QuoteForm } from './QuoteForm';
 import { VehicleSummary } from './VehicleSummary';
 import { VehicleModel } from '@/types/inventory';
 
-interface Props {
-    models: VehicleModel[];
+interface Advisor {
+    id: number;
+    name: string;
 }
 
-export default function QuoteRequestView({ models }: Props) {
+interface Props {
+    models: VehicleModel[];
+    advisors: Advisor[];
+}
+
+export default function QuoteRequestView({ models, advisors }: Props) {
     const searchParams = useSearchParams();
     const modeloParam = searchParams.get('modelo');
+    const initialColor = searchParams.get('color') ?? undefined;
 
     const initialVehicle = modeloParam
         ? models.find(v => String(v.id) === String(modeloParam)) ?? models[0]
@@ -40,7 +47,13 @@ export default function QuoteRequestView({ models }: Props) {
 
             <div className="container mx-auto px-6 lg:px-12 max-w-7xl relative z-10 w-full">
                 <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 py-4 xl:gap-12 items-stretch">
-                    <QuoteForm vehicles={models} onModelChange={handleModelChange} />
+                    <QuoteForm
+                        vehicles={models}
+                        advisors={advisors}
+                        initialModelId={initialVehicle ? String(initialVehicle.id) : ''}
+                        initialColor={initialColor}
+                        onModelChange={handleModelChange}
+                    />
 
                     {/* Contenedor derecho para la previsualización */}
                     <div className="hidden lg:block h-full">

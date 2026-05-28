@@ -1,12 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { VehicleModelFormData } from '@/schemas/inventorySchema';
 import { brandService } from '@/services/brand.service';
+import { uploadService } from '@/services/upload.service';
 import { Brand } from '@/types/inventory';
+import { FileText, Upload, X, Loader2 } from 'lucide-react';
 
 export default function GeneralTab({ mode }: { mode?: 'add' | 'edit' }) {
     const { register, watch, setValue, formState: { errors, touchedFields } } = useFormContext<VehicleModelFormData>();
     const [brands, setBrands] = useState<Brand[]>([]);
+    const [datasheetUploading, setDatasheetUploading] = useState(false);
+    const [datasheetError, setDatasheetError] = useState<string | null>(null);
+    const datasheetInputRef = useRef<HTMLInputElement>(null);
+    const datasheet = watch('datasheet');
 
     useEffect(() => {
         const fetchBrands = async () => {
@@ -164,6 +170,79 @@ export default function GeneralTab({ mode }: { mode?: 'add' | 'edit' }) {
                     className={`w-full bg-[#0f172a]/40 border ${errors.description ? 'border-red-500' : 'border-[#1e293b]'} rounded-lg px-4 py-3 text-[14px] font-medium text-white placeholder-slate-600 focus:outline-none focus:border-[#10B981] transition-all min-h-[140px] resize-y`}
                 />
                 {errors.description && <span className="text-red-500 text-xs mt-1">{errors.description.message}</span>}
+            </div>
+
+            {/* Ficha técnica (PDF) */}
+            <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-slate-300">Ficha Técnica (PDF)</label>
+                {datasheet?.file_url && !datasheet._deleted ? (
+                    <div className="flex items-center gap-3 bg-[#0f172a]/40 border border-[#10B981]/40 rounded-lg px-4 py-3">
+                        <FileText className="w-5 h-5 text-[#10B981] shrink-0" />
+                        <a
+                            href={datasheet.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[13px] text-[#10B981] hover:underline truncate flex-1"
+                        >
+                            Ver ficha técnica
+                        </a>
+                        {datasheet.file_size_mb && (
+                            <span className="text-[11px] text-slate-500 shrink-0">
+                                {(datasheet.file_size_mb).toFixed(1)} MB
+                            </span>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => setValue('datasheet', { ...datasheet, file_url: datasheet!.file_url, _deleted: true })}
+                            className="text-slate-500 hover:text-red-400 transition-colors shrink-0"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                ) : datasheetUploading ? (
+                    <div className="flex items-center gap-3 bg-[#0f172a]/40 border border-dashed border-[#10B981]/40 rounded-lg px-4 py-4">
+                        <Loader2 className="w-5 h-5 text-[#10B981] animate-spin shrink-0" />
+                        <span className="text-[13px] text-slate-400">Subiendo PDF...</span>
+                    </div>
+                ) : (
+                    <div
+                        onClick={() => datasheetInputRef.current?.click()}
+                        className="flex items-center gap-3 bg-[#0f172a]/40 border border-dashed border-[#1e293b] hover:border-[#10B981]/50 rounded-lg px-4 py-4 cursor-pointer transition-all group"
+                    >
+                        <Upload className="w-5 h-5 text-slate-600 group-hover:text-[#10B981] transition-colors shrink-0" />
+                        <span className="text-[13px] text-slate-600 group-hover:text-slate-400 transition-colors">
+                            Haz clic para subir la ficha técnica en PDF (máx. 10 MB)
+                        </span>
+                    </div>
+                )}
+                {datasheetError && (
+                    <p className="text-red-400 text-[12px]">{datasheetError}</p>
+                )}
+                <input
+                    ref={datasheetInputRef}
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="hidden"
+                    onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        e.target.value = '';
+                        setDatasheetError(null);
+                        setDatasheetUploading(true);
+                        try {
+                            const result = await uploadService.uploadFile(file, 'document');
+                            setValue('datasheet', {
+                                file_url: result.publicUrl,
+                                public_id: result.publicId,
+                                file_size_mb: file.size / (1024 * 1024),
+                            });
+                        } catch (err: any) {
+                            setDatasheetError('Error al subir el PDF. Intenta de nuevo.');
+                        } finally {
+                            setDatasheetUploading(false);
+                        }
+                    }}
+                />
             </div>
         </div>
     );

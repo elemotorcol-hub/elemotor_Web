@@ -1,8 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Share2, Bookmark, X, Info, Zap, Wrench, Navigation, Clock, Phone, MessageCircle, CalendarDays, BatteryCharging, CircleDot, Wifi, Coffee, Armchair, MapPin, Activity, Palette } from 'lucide-react';
+import { Share2, X, Info, Zap, Wrench, Navigation, Clock, Phone, CalendarCheck, CalendarDays, BatteryCharging, CircleDot, Wifi, Coffee, Armchair, MapPin, Activity, Palette } from 'lucide-react';
 import Image from 'next/image';
 import { WorkshopResponse } from '@/services/workshop.service';
+import { AppointmentForm } from './AppointmentForm';
+import { ShareModal } from '@/components/ShareModal';
 
 interface WorkshopDetailsModalProps {
     workshop: any; // Using any temporarily if types have minor mismatches, but aligning fields below
@@ -41,6 +43,18 @@ export function WorkshopDetailsModal({ workshop, onClose }: WorkshopDetailsModal
     const handleContentClick = (e: React.MouseEvent) => e.stopPropagation();
     const mapContainerRef = React.useRef<HTMLDivElement>(null);
     const mapInstanceRef = React.useRef<any>(null);
+    const [appointmentOpen, setAppointmentOpen] = React.useState(false);
+    const [shareModal, setShareModal] = React.useState<{ url: string; title: string } | null>(null);
+
+    const handleShare = () => {
+        const url = typeof window !== 'undefined' ? window.location.href : '';
+        const title = `EleMotor — ${workshop.name}`;
+        if (navigator.share) {
+            navigator.share({ title, url }).catch(() => setShareModal({ url, title }));
+        } else {
+            setShareModal({ url, title });
+        }
+    };
 
     React.useEffect(() => {
         if (typeof window === 'undefined' || !workshop.latitude || !workshop.longitude || !mapContainerRef.current) return;
@@ -169,11 +183,12 @@ export function WorkshopDetailsModal({ workshop, onClose }: WorkshopDetailsModal
 
                         {/* Header Action Buttons */}
                         <div className="flex gap-3">
-                            <button className="flex items-center gap-2 bg-[#1A2327]/80 hover:bg-[#1A2327] border border-white/5 backdrop-blur-md px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors">
-                                <Share2 className="w-4 h-4" /> Compartir
-                            </button>
-                            <button className="flex items-center gap-2 bg-[#1A2327]/80 hover:bg-[#1A2327] border border-white/5 backdrop-blur-md px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors">
-                                <Bookmark className="w-4 h-4" /> Guardar
+                            <button
+                                onClick={handleShare}
+                                className="flex items-center gap-2 bg-[#1A2327]/80 hover:bg-[#1A2327] border border-white/5 backdrop-blur-md px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors"
+                            >
+                                <Share2 className="w-4 h-4" />
+                                Compartir
                             </button>
                         </div>
                     </div>
@@ -294,17 +309,58 @@ export function WorkshopDetailsModal({ workshop, onClose }: WorkshopDetailsModal
                 {/* --- FOOTER ACTIONS --- */}
                 <div className="border-t border-[#1e293b] p-6 bg-[#0A1114] shrink-0 flex justify-center">
                     <button
-                        onClick={() => {
-                            const num = (workshop.phone || '').replace(/\D/g, '');
-                            if (num) window.open(`https://wa.me/${num}`, '_blank');
-                        }}
-                        className="w-full md:w-1/2 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] border border-[#1da851] text-[#0A1114] font-bold py-3.5 rounded-xl transition-colors shadow-[0_0_20px_rgba(37,211,102,0.3)]"
+                        onClick={() => setAppointmentOpen(true)}
+                        className="w-full md:w-1/2 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3.5 rounded-xl transition-colors shadow-[0_0_20px_rgba(16,185,129,0.3)]"
                     >
-                        <MessageCircle className="w-5 h-5 text-[#0A1114]" /> Escribir por WhatsApp
+                        <CalendarCheck className="w-5 h-5" /> Agendar Cita
                     </button>
                 </div>
 
             </motion.div>
+
+            {/* --- SHARE MODAL --- */}
+            {shareModal && (
+                <ShareModal
+                    url={shareModal.url}
+                    title={shareModal.title}
+                    onClose={() => setShareModal(null)}
+                />
+            )}
+
+            {/* --- APPOINTMENT MODAL --- */}
+            {appointmentOpen && (
+                <div
+                    className="fixed inset-0 z-[110] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+                    onClick={(e) => { e.stopPropagation(); if (e.target === e.currentTarget) setAppointmentOpen(false); }}
+                >
+                    <div className="relative w-full max-w-lg max-h-[90vh] bg-[#0f1e18] border border-white/5 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden">
+                        <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-white/5 shrink-0">
+                            <div>
+                                <p className="text-[10px] font-bold tracking-[0.25em] text-emerald-500/80 uppercase mb-1">
+                                    {workshop.name}
+                                </p>
+                                <h2 className="text-xl font-light text-white">
+                                    Agenda tu{' '}
+                                    <span className="font-black">mantenimiento</span>
+                                </h2>
+                            </div>
+                            <button
+                                onClick={() => setAppointmentOpen(false)}
+                                className="p-2 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="overflow-y-auto p-6">
+                            <AppointmentForm
+                                initialWorkshopId={workshop.id}
+                                onSuccess={() => setTimeout(() => setAppointmentOpen(false), 3000)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </motion.div>
     );
 }

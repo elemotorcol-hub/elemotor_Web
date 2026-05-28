@@ -112,6 +112,13 @@ export const vehicleModelSchema = z.object({
     status: z.enum(['Active', 'Draft']),
     thumbnail: z.string().optional().or(z.literal('')),
     video_url: z.string().url('URL inválida').optional().or(z.literal('')),
+    datasheet: z.object({
+        file_url: z.string().min(1, 'Requerida'),
+        public_id: z.string().optional().or(z.literal('')),
+        file_size_mb: z.number().optional(),
+        rawFile: z.any().optional(),
+        _deleted: z.boolean().optional(),
+    }).optional(),
     trims: z.array(trimSchema).default([]),
 
     // Level 3 Detection

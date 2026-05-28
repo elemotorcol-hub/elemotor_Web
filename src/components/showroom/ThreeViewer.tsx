@@ -27,6 +27,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 export interface ThreeViewerHandle {
     resetCamera: () => void;
+    /** Zoom toward windshield; calls onComplete when animation finishes */
+    zoomToWindshield: (onComplete: () => void) => void;
+    /** Animate camera back to initial exterior position */
+    zoomBack: () => void;
 }
 
 export type LightMode = 'day' | 'night';
@@ -252,6 +256,15 @@ const ThreeViewer = forwardRef<ThreeViewerHandle, ThreeViewerProps>(
         const initialCameraPosRef = useRef<THREE.Vector3 | null>(null);
         const initialTargetPosRef = useRef<THREE.Vector3 | null>(null);
 
+        // Camera animation state
+        const animRef = useRef<{
+            active: boolean;
+            targetPos: THREE.Vector3;
+            targetLookAt: THREE.Vector3;
+            onComplete?: () => void;
+            speed: number;
+        } | null>(null);
+
         // Light refs for dynamic updates
         const ambientRef = useRef<THREE.AmbientLight | null>(null);
         const keyLightRef = useRef<THREE.DirectionalLight | null>(null);
@@ -263,12 +276,49 @@ const ThreeViewer = forwardRef<ThreeViewerHandle, ThreeViewerProps>(
         // ── Expose reset camera to parent ──────────────────────────────────────
         const resetCamera = useCallback(() => {
             if (!cameraRef.current || !controlsRef.current) return;
+            animRef.current = null;
+            controlsRef.current.enabled = true;
             cameraRef.current.position.copy(initialCameraPosRef.current || DEFAULT_CAMERA_POSITION);
             controlsRef.current.target.copy(initialTargetPosRef.current || DEFAULT_TARGET);
             controlsRef.current.update();
         }, []);
 
-        useImperativeHandle(ref, () => ({ resetCamera }), [resetCamera]);
+        const zoomToWindshield = useCallback((onComplete: () => void) => {
+            if (!cameraRef.current || !controlsRef.current) { onComplete(); return; }
+            const initPos = initialCameraPosRef.current || DEFAULT_CAMERA_POSITION;
+            const initTarget = initialTargetPosRef.current || DEFAULT_TARGET;
+            // Disable controls and remove minDistance so camera can enter the model
+            controlsRef.current.enabled = false;
+            controlsRef.current.minDistance = 0;
+            // Zoom into interior: close to the windshield, camera low (seat level),
+            // looking toward dashboard (negative z relative to car center)
+            animRef.current = {
+                active: true,
+                targetPos: new THREE.Vector3(0, initPos.y * 0.45, initPos.z * 0.18),
+                targetLookAt: new THREE.Vector3(0, initTarget.y * 0.9, -initPos.z * 0.3),
+                onComplete,
+                speed: 0.055,
+            };
+        }, []);
+
+        const zoomBack = useCallback(() => {
+            if (!cameraRef.current || !controlsRef.current) return;
+            // Disable controls during animation
+            controlsRef.current.enabled = false;
+            // Restore minDistance before animating back
+            if (initialCameraPosRef.current) {
+                const initSize = initialCameraPosRef.current.length();
+                controlsRef.current.minDistance = initSize * 0.1;
+            }
+            animRef.current = {
+                active: true,
+                targetPos: (initialCameraPosRef.current || DEFAULT_CAMERA_POSITION).clone(),
+                targetLookAt: (initialTargetPosRef.current || DEFAULT_TARGET).clone(),
+                speed: 0.07,
+            };
+        }, []);
+
+        useImperativeHandle(ref, () => ({ resetCamera, zoomToWindshield, zoomBack }), [resetCamera, zoomToWindshield, zoomBack]);
 
         // ── Setup Three.js scene (runs once on mount) ──────────────────────────
         useEffect(() => {
@@ -394,7 +444,31 @@ const ThreeViewer = forwardRef<ThreeViewerHandle, ThreeViewerProps>(
             // ─ Animate loop ─────────────────────────────────────────────────────
             function animate() {
                 animFrameRef.current = requestAnimationFrame(animate);
-                controls.update();
+
+                const anim = animRef.current;
+                if (anim?.active) {
+                    // Lerp camera directly — do NOT call controls.update() here to avoid
+                    // damping fighting the animation and blocking completion
+                    camera.position.lerp(anim.targetPos, anim.speed);
+                    controls.target.lerp(anim.targetLookAt, anim.speed);
+                    camera.lookAt(controls.target);
+                    // Snap when close enough and fire callback
+                    if (
+                        camera.position.distanceTo(anim.targetPos) < 0.04 &&
+                        controls.target.distanceTo(anim.targetLookAt) < 0.04
+                    ) {
+                        camera.position.copy(anim.targetPos);
+                        controls.target.copy(anim.targetLookAt);
+                        anim.active = false;
+                        // Re-enable controls so user can interact again
+                        controls.enabled = true;
+                        controls.update();
+                        anim.onComplete?.();
+                    }
+                } else {
+                    controls.update();
+                }
+
                 renderer.render(scene, camera);
             }
             animate();

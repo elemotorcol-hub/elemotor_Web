@@ -2,6 +2,7 @@ import { Navbar } from '@/components/Navbar';
 import QuoteRequestView from '@/components/quote/QuoteRequestView';
 import { Footer } from '@/components/Footer';
 import { modelService } from '@/services/model.service';
+import { fetchApi } from '@/lib/api';
 import { buildMetadata } from '@/lib/metadata';
 
 export const dynamic = 'force-dynamic';
@@ -15,11 +16,17 @@ export const metadata = buildMetadata({
 
 export default async function CotizarPage() {
     let models = [];
+    let advisors: { id: number; name: string }[] = [];
+
     try {
-        const response = await modelService.getModels({ active: true, limit: 100 });
-        models = response.data || [];
+        const [modelsRes, advisorsRes] = await Promise.all([
+            modelService.getModels({ active: true, limit: 100 }),
+            fetchApi('/api/users/advisors', { method: 'GET' }),
+        ]);
+        models = modelsRes.data || [];
+        advisors = Array.isArray(advisorsRes) ? advisorsRes : [];
     } catch (error) {
-        console.error('Error fetching models for quote page:', error);
+        console.error('Error fetching quote page data:', error);
     }
 
     return (
@@ -29,7 +36,7 @@ export default async function CotizarPage() {
             </header>
 
             <main className="flex-1 pt-[80px]">
-                <QuoteRequestView models={models} />
+                <QuoteRequestView models={models} advisors={advisors} />
             </main>
 
             <Footer />

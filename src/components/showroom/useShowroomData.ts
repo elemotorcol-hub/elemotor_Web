@@ -33,6 +33,7 @@ interface UseShowroomDataReturn {
     selectedIntColor: ShowroomColor | null;
     viewMode: ViewMode;
     model3dUrl: string | null;
+    interiorImageUrl: string | null;
 
     // Loading/Error
     isLoadingModels: boolean;
@@ -79,6 +80,12 @@ export function useShowroomData(initialSlug?: string | null): UseShowroomDataRet
         selectedTrim?.colors.filter((c) => c.type === 'exterior') ?? [];
     const interiorColors =
         selectedTrim?.colors.filter((c) => c.type === 'interior') ?? [];
+
+    // ── Derived: interior image URL (for interior view mode) ──────────────────
+    const interiorImageUrl =
+        selectedIntColor?.imageUrl ??
+        (selectedTrim?.images ?? []).find((img) => img.type === 'interior')?.url ??
+        null;
 
     // ── Load 3D model URL when trim changes ────────────────────────────────────
     const load3dUrl = useCallback(async (trimId: number) => {
@@ -223,9 +230,12 @@ export function useShowroomData(initialSlug?: string | null): UseShowroomDataRet
 
     const getQuoteParams = useCallback(() => {
         const params = new URLSearchParams();
-        if (selectedModel) params.set('model', selectedModel.slug);
+        if (selectedModel) params.set('modelo', String(selectedModel.id));
         if (selectedTrim) params.set('trim', String(selectedTrim.id));
-        if (selectedExtColor) params.set('colorExt', String(selectedExtColor.id));
+        if (selectedExtColor) {
+            params.set('colorExt', String(selectedExtColor.id));
+            params.set('color', selectedExtColor.name);
+        }
         if (selectedIntColor) params.set('colorInt', String(selectedIntColor.id));
         return params;
     }, [selectedModel, selectedTrim, selectedExtColor, selectedIntColor]);
@@ -240,6 +250,7 @@ export function useShowroomData(initialSlug?: string | null): UseShowroomDataRet
         selectedIntColor,
         viewMode,
         model3dUrl,
+        interiorImageUrl,
         isLoadingModels,
         isLoading3d,
         error,

@@ -34,7 +34,7 @@ export function AboutHero() {
                     </div>
 
                     {/* Carrusel de fotos */}
-                    <div className="hidden lg:flex items-center justify-center pb-10">
+                    <div className="flex items-center justify-center pb-10">
                         <AboutGallery />
                     </div>
 
