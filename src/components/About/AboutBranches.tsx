@@ -35,9 +35,9 @@ const branches = [
         country: 'Colombia',
         description: 'Sede principal en Santander. Showroom, posventa y asesoría especializada en movilidad eléctrica.',
         image: '/nosotros/galeria-2.webp',
-        href: null,
-        external: false,
-        label: null,
+        href: 'https://maps.google.com/?q=ELEMOTOR,Ak+27+%2355-16,Bucaramanga,Santander,Colombia',
+        external: true,
+        label: 'Ver en Maps',
         hours: [
             { days: 'Lunes a Viernes', time: '8:00 AM – 5:00 PM' },
             { days: 'Sábados', time: '9:00 AM – 1:00 PM' },
