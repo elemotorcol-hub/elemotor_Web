@@ -127,8 +127,8 @@ export default function TerminosPage() {
 
                     <section>
                         <h2 className="text-xl font-bold text-white mb-3">13. Contacto</h2>
-                        <p>Correo: <a href="mailto:info@elemotor.com.co" className="text-[#00D4AA] hover:underline">info@elemotor.com.co</a></p>
-                        <p>Teléfono: +57 XXX XXX XXXX</p>
+                        <p>Correo: <a href="mailto:comercial@elemotor.com.co" className="text-[#00D4AA] hover:underline">comercial@elemotor.com.co</a></p>
+                        <p>Teléfono: <a href="tel:+573144663469" className="text-[#00D4AA] hover:underline">314 466 3469</a></p>
                     </section>
 
                 </div>
