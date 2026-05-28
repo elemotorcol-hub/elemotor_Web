@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Share2, X, Info, Zap, Wrench, Navigation, Clock, Phone, CalendarCheck, CalendarDays, BatteryCharging, CircleDot, Wifi, Coffee, Armchair, MapPin, Activity, Palette } from 'lucide-react';
+import { Share2, X, Info, Zap, Wrench, Navigation, Clock, CalendarCheck, CalendarDays, BatteryCharging, CircleDot, Wifi, Coffee, Armchair, MapPin, Activity, Palette } from 'lucide-react';
 import Image from 'next/image';
 import { WorkshopResponse } from '@/services/workshop.service';
 import { AppointmentForm } from './AppointmentForm';
@@ -292,16 +292,6 @@ export function WorkshopDetailsModal({ workshop, onClose }: WorkshopDetailsModal
                             </div>
                         </div>
 
-                        {/* Teléfono Contacto */}
-                        <div className="bg-[#0A1114] border border-[#1e293b] rounded-xl p-4 flex items-center gap-4 shadow-lg">
-                            <div className="bg-[#1A2327] w-10 h-10 rounded-full flex items-center justify-center shrink-0">
-                                <Phone className="w-4 h-4 text-slate-400" />
-                            </div>
-                            <div>
-                                <p className="text-slate-500 text-[11px] mb-0.5">Teléfono</p>
-                                <p className="text-white font-bold text-sm">{workshop.phone}</p>
-                            </div>
-                        </div>
 
                     </div>
                 </div>
