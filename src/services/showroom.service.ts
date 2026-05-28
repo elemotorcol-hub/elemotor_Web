@@ -43,7 +43,10 @@ export async function fetchShowroomModels(options?: { signal?: AbortSignal }): P
     }
 
     const json: ModelsApiResponse = await res.json();
-    return json.data;
+    // Solo incluir modelos que tengan al menos un trim con modelo 3D disponible
+    return json.data.filter(model =>
+        model.trims.some(trim => trim.models3d != null)
+    );
 }
 
 // ─── Fetch full model detail by slug ─────────────────────────────────────────

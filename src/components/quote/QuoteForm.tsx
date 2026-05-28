@@ -15,6 +15,7 @@ const quoteSchema = z.object({
     trackingCode: z.string().optional(),
     model_id: z.string().min(1, 'Selecciona un modelo'),
     color: z.string().optional(),
+    assigned_to: z.string().optional(),
     budget_range: z.string().min(1, 'Selecciona un presupuesto'),
     payment_method: z.string().min(1, 'Selecciona una forma de pago'),
     preferred_channel: z.enum(['whatsapp', 'call', 'email']),
@@ -26,12 +27,20 @@ type QuoteFormValues = z.infer<typeof quoteSchema>;
 const inputClasses = "w-full bg-[#121c19] border border-white/5 rounded-xl px-4 py-3.5 text-[14px] text-white placeholder-slate-500 focus:outline-none focus:border-[#00D4AA] focus:ring-1 focus:ring-[#00D4AA] transition-all";
 const labelClasses = "text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block";
 
+interface Advisor {
+    id: number;
+    name: string;
+}
+
 interface Props {
     vehicles: VehicleModel[];
+    advisors: Advisor[];
+    initialModelId?: string;
+    initialColor?: string;
     onModelChange: (modelId: string) => void;
 }
 
-export function QuoteForm({ vehicles, onModelChange }: Props) {
+export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, onModelChange }: Props) {
     const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<QuoteFormValues>({
         resolver: zodResolver(quoteSchema),
         defaultValues: {
@@ -41,8 +50,9 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
             city: '',
             country: 'Colombia',
             trackingCode: '',
-            model_id: vehicles[0]?.id || '',
-            color: '',
+            model_id: initialModelId || vehicles[0]?.id || '',
+            color: initialColor || '',
+            assigned_to: '',
             budget_range: '',
             payment_method: '',
             preferred_channel: 'whatsapp',
@@ -88,6 +98,7 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
                 trackingCode: data.trackingCode || undefined,
                 color: data.color || undefined,
                 paymentMethod: data.payment_method || undefined,
+                assignedToId: data.assigned_to ? parseInt(data.assigned_to) : undefined,
                 preferredChannel: data.preferred_channel,
                 message: data.message || undefined,
                 source: 'web'
@@ -240,6 +251,22 @@ export function QuoteForm({ vehicles, onModelChange }: Props) {
                         )}
                     </div>
                 </div>
+
+                {/* Asesor */}
+                {advisors.length > 0 && (
+                    <div>
+                        <label className={labelClasses}>Asesor de preferencia (Opcional)</label>
+                        <div className="relative">
+                            <select {...register('assigned_to')} className={`${inputClasses} appearance-none cursor-pointer`}>
+                                <option value="">Sin preferencia — se asignará automáticamente</option>
+                                {advisors.map(a => (
+                                    <option key={a.id} value={a.id}>{a.name}</option>
+                                ))}
+                            </select>
+                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                )}
 
                 {/* Presupuesto */}
                 <div>

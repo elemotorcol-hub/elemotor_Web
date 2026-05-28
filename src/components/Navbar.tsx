@@ -44,6 +44,7 @@ const NAVIGATION_ITEMS: NavItem[] = [
         ],
     },
     { name: 'Nosotros', href: '/nosotros' },
+    { name: 'Blog', href: '/blog' },
 ];
 
 /* ─────────────────────────────────────────────────────

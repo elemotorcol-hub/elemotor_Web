@@ -24,6 +24,7 @@ import { ViewToggle } from '@/components/showroom/ViewToggle';
 import { ViewerLoader } from '@/components/showroom/ViewerLoader';
 import { BottomSheet } from '@/components/showroom/BottomSheet';
 import { useShowroomData } from '@/components/showroom/useShowroomData';
+import { ShareModal } from '@/components/ShareModal';
 import type { ThreeViewerHandle } from '@/components/showroom/ThreeViewer';
 import type { LightMode } from '@/components/showroom/ThreeViewer';
 
@@ -51,6 +52,7 @@ function ShowroomPageInner() {
     // 3D model loading state
     const [loadProgress, setLoadProgress] = useState(0);
     const [modelLoaded, setModelLoaded] = useState(false);
+
     const [viewerReady, setViewerReady] = useState(false);
 
     // Lighting controls
@@ -67,6 +69,7 @@ function ShowroomPageInner() {
         selectedIntColor,
         viewMode,
         model3dUrl,
+        interiorImageUrl,
         isLoadingModels,
         isLoading3d,
         error,
@@ -85,18 +88,23 @@ function ShowroomPageInner() {
     // Help & share state
     const [showHelp, setShowHelp] = useState(false);
     const [copyFeedback, setCopyFeedback] = useState(false);
+    const [shareModal, setShareModal] = useState<{ url: string; title: string } | null>(null);
 
     const handleShare = useCallback(() => {
-        const url = typeof window !== 'undefined' ? window.location.href : '';
+        const base = typeof window !== 'undefined' ? `${window.location.origin}/showroom` : '/showroom';
+        const params = new URLSearchParams();
+        if (selectedModel) params.set('modelo', selectedModel.slug);
+        const url = selectedModel ? `${base}?${params.toString()}` : base;
+        const title = selectedModel
+            ? `EleMotor – ${selectedModel.brand.name} ${selectedModel.name} ${selectedModel.year}`
+            : 'EleMotor Showroom 3D';
+
         if (navigator.share) {
-            navigator.share({ title: 'EleMotor Showroom 3D', url });
+            navigator.share({ title, url }).catch(() => setShareModal({ url, title }));
         } else {
-            navigator.clipboard.writeText(url).then(() => {
-                setCopyFeedback(true);
-                setTimeout(() => setCopyFeedback(false), 2000);
-            });
+            setShareModal({ url, title });
         }
-    }, []);
+    }, [selectedModel]);
 
     // ── Lighting toggle handlers ────────────────────────────────────────────────
     const handleToggleLightMode = useCallback(() => {
@@ -130,10 +138,25 @@ function ShowroomPageInner() {
         viewerRef.current?.resetCamera();
     }, []);
 
+    // ── View toggle with zoom animation ───────────────────────────────────────
+    const handleToggleViewMode = useCallback(() => {
+        if (viewMode === 'exterior') {
+            // Zoom into the interior of the 3D model
+            viewerRef.current?.zoomToWindshield(() => {
+                toggleViewMode();
+            });
+        } else {
+            // Animate camera back to exterior position
+            toggleViewMode();
+            viewerRef.current?.zoomBack();
+        }
+    }, [viewMode, toggleViewMode]);
+
     // ── Is loader showing? ─────────────────────────────────────────────────────
     // Show loader when: loading models initially, or a 3D model is being fetched/rendered
     const showLoader = isLoadingModels || isLoading3d || (!!model3dUrl && !modelLoaded);
     const loaderProgress = isLoadingModels ? 15 : isLoading3d ? 40 : loadProgress;
+
 
     // ── Lighting control buttons (shared between mobile and desktop) ───────────
     const LightingControls = (
@@ -185,6 +208,15 @@ function ShowroomPageInner() {
     return (
         <>
             <Navbar />
+
+            {/* ── Share modal ──────────────────────────────────────── */}
+            {shareModal && (
+                <ShareModal
+                    url={shareModal.url}
+                    title={shareModal.title}
+                    onClose={() => setShareModal(null)}
+                />
+            )}
 
             {/* ── Help overlay ─────────────────────────────────────── */}
             {showHelp && (
@@ -249,7 +281,7 @@ function ShowroomPageInner() {
 
                     {/* View toggle — top right */}
                     <div className="absolute top-4 right-4 z-20">
-                        <ViewToggle viewMode={viewMode} onToggle={toggleViewMode} />
+                        <ViewToggle viewMode={viewMode} onToggle={handleToggleViewMode} />
                     </div>
 
                     {/* Error state */}
@@ -284,6 +316,7 @@ function ShowroomPageInner() {
                         lightMode={lightMode}
                         bodyColor={bodyColor}
                     />
+
 
                     {/* Loading overlay */}
                     <ViewerLoader progress={loaderProgress} visible={showLoader} />
@@ -350,7 +383,7 @@ function ShowroomPageInner() {
 
                     {/* View toggle */}
                     <div className="absolute top-5 left-1/2 -translate-x-1/2 z-20">
-                        <ViewToggle viewMode={viewMode} onToggle={toggleViewMode} />
+                        <ViewToggle viewMode={viewMode} onToggle={handleToggleViewMode} />
                     </div>
 
                     {/* No 3D model placeholder */}

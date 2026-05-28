@@ -1,5 +1,6 @@
 import { Navbar } from '@/components/Navbar';
 import { WorkshopsMap } from '@/components/talleres/WorkshopsMap';
+import { AppointmentModal } from '@/components/talleres/AppointmentModal';
 import { buildMetadata } from '@/lib/metadata';
 
 export const metadata = buildMetadata({
@@ -11,9 +12,16 @@ export const metadata = buildMetadata({
 
 export default function TalleresPage() {
     return (
-        <main className="h-screen bg-[#111618] overflow-hidden flex flex-col">
+        <main className="min-h-screen bg-[#0a1612] font-sans">
             <Navbar />
-            <WorkshopsMap />
+
+            {/* Map section — full viewport */}
+            <div className="h-[calc(100vh-72px)] bg-[#111618] overflow-hidden flex flex-col pt-[72px]">
+                <WorkshopsMap />
+            </div>
+
+            {/* Floating button + Modal */}
+            <AppointmentModal />
         </main>
     );
 }

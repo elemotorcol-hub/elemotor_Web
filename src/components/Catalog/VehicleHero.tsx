@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CalendarDays, View } from 'lucide-react';
+import { CalendarDays, Download, View } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { VehicleGallery } from '@/components/Catalog/VehicleGallery';
 import type { DetailModel, DetailTrim } from '@/services/catalogModels.service';
@@ -65,7 +65,7 @@ export function VehicleHero({ model, activeTrim }: VehicleHeroProps) {
             </div>
 
             {/* 3. Gradient Overlay */}
-            <div className="absolute inset-0 bg-linear-to-t lg:bg-linear-to-r from-[#060B14]/80 via-transparent to-[#060B14] lg:from-transparent lg:via-transparent lg:to-[#060B14] pointer-events-none z-20" />
+            <div className="absolute inset-0 bg-linear-to-t lg:bg-linear-to-r from-[#060B14] via-[#060B14]/10 to-transparent lg:from-transparent lg:via-transparent lg:to-[#060B14] pointer-events-none z-20" />
 
             {/* 4. Text Content */}
             <div className="container mx-auto px-6 relative z-30 w-full flex-1 flex flex-col lg:flex-row items-center justify-end pb-16 lg:pb-0">
@@ -85,7 +85,7 @@ export function VehicleHero({ model, activeTrim }: VehicleHeroProps) {
                         {activeTrim.name} · {model.year}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-center lg:justify-start w-full sm:w-auto">
-                        <Link href={`/cotizar?modelo=${model.slug}`} className="w-full sm:w-auto">
+                        <Link href={`/cotizar?modelo=${model.id}`} className="w-full sm:w-auto">
                             <Button className="bg-[#00D4AA] hover:bg-[#00B38F] text-slate-900 font-black tracking-widest uppercase py-4 px-8 rounded-lg shadow-[0_0_20px_rgba(0,212,170,0.2)] hover:shadow-[0_0_40px_rgba(0,212,170,0.5)] transition-shadow w-full h-[60px]">
                                 <CalendarDays className="w-5 h-5 mr-3 inline" />
                                 Cotizar este modelo
@@ -98,6 +98,21 @@ export function VehicleHero({ model, activeTrim }: VehicleHeroProps) {
                                     Ver en 3D
                                 </Button>
                             </Link>
+                        )}
+                        {model.datasheetUrl && (
+                            <button
+                                onClick={() => {
+                                    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+                                    const proxyUrl = `${apiBase}/api/upload/pdf-download?url=${encodeURIComponent(model.datasheetUrl!)}`;
+                                    window.location.href = proxyUrl;
+                                }}
+                                className="w-full sm:w-auto"
+                            >
+                                <Button variant="ghost" className="border border-white/20 hover:border-[#00D4AA]/50 bg-white/5 hover:bg-[#00D4AA]/10 text-white font-bold tracking-widest uppercase py-4 px-8 rounded-lg backdrop-blur-md w-full sm:w-auto h-[60px] transition-all">
+                                    <Download className="w-5 h-5 mr-3 inline text-slate-300" />
+                                    Ficha Técnica
+                                </Button>
+                            </button>
                         )}
                     </div>
 

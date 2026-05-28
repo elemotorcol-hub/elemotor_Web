@@ -12,8 +12,8 @@ const contactData: Record<string, {
     CO: {
         address: 'Ak 27 #55-16',
         city: 'Bucaramanga, Santander',
-        phones: ['+57 (300) 123-4567'],
-        emails: ['atencionalcliente@elemotor.com.co'],
+        phones: ['314 466 3469'],
+        emails: ['comercial@elemotor.com.co'],
         mapSrc: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3959.13867767628!2d-73.11461229999999!3d7.1099231000000005!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e683f006f63e109%3A0x7c6503f27678a31e!2sELEMOTOR!5e0!3m2!1ses-419!2sco!4v1773678039061!5m2!1ses-419!2sco',
     },
     EC: {
@@ -44,10 +44,14 @@ export function Footer() {
                                 className="h-8 md:h-10 w-auto object-contain brightness-110"
                             />
                         </Link>
-                        <p className="text-gray-500 mb-8 leading-relaxed">
+                        <p className="text-gray-500 mb-4 leading-relaxed">
                             Líderes en importación de vehículos eléctricos de alta gama. <br />
                             Vanguardia, lujo y sostenibilidad.
                         </p>
+                        <div className="mb-8 space-y-1 border-l-2 border-[#00D4AA]/40 pl-3">
+                            <p className="text-white text-sm font-semibold leading-snug">Vehículos importados directamente por Elemotor.</p>
+                            <p className="text-slate-400 text-sm leading-snug">No somos representantes oficiales de la marca en Colombia.</p>
+                        </div>
                         <div className="flex gap-4">
                             <a
                                 href="https://www.facebook.com/p/Electric-Motor-Colombia-SAS-61573094475720/"
@@ -121,18 +125,41 @@ export function Footer() {
                         </nav>
                     </div>
 
-                    {/* Col 4: Map Placeholder */}
+                    {/* Col 4: Ubicaciones */}
                     <div>
                         <h4 className="text-lg font-bold mb-8 uppercase tracking-wider text-[#00D4AA]">Ubicación</h4>
-                        <div className="relative aspect-square w-full rounded-2xl overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-700">
-                            <iframe
-                                src={contact.mapSrc}
-                                width="400" height="325"
-                                style={{ border: 0 }}
-                                allowFullScreen
-                                loading="lazy" 
-                                referrerPolicy="no-referrer-when-downgrade">
-                            </iframe>
+                        <div className="flex flex-col gap-3">
+                            {[
+                                {
+                                    name: 'EleMotor Bucaramanga',
+                                    address: 'Ak 27 #55-16, Bucaramanga',
+                                    href: 'https://maps.google.com/?q=ELEMOTOR,Ak+27+%2355-16,Bucaramanga,Santander,Colombia',
+                                },
+                                {
+                                    name: 'EleMotor Barrancabermeja',
+                                    address: 'Carrera 29 #48-31, Barrancabermeja',
+                                    href: 'https://maps.google.com/?q=Carrera+29+%2348-31,Barrancabermeja,Santander,Colombia',
+                                },
+                                {
+                                    name: 'EleMotor Ecuador',
+                                    address: 'Av. Pampite y Chimborazo, Quito',
+                                    href: 'https://maps.google.com/?q=Av+Pampite+y+Chimborazo,Centro+Plaza+Local+104,Quito,Ecuador',
+                                },
+                            ].map((loc) => (
+                                <a
+                                    key={loc.name}
+                                    href={loc.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-start gap-3 p-3 rounded-xl border border-white/5 hover:border-[#00D4AA]/30 hover:bg-white/5 transition-all duration-300 group"
+                                >
+                                    <MapPin className="w-4 h-4 text-[#00D4AA] shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                                    <div>
+                                        <p className="text-white text-sm font-semibold group-hover:text-[#00D4AA] transition-colors">{loc.name}</p>
+                                        <p className="text-gray-500 text-xs mt-0.5">{loc.address}</p>
+                                    </div>
+                                </a>
+                            ))}
                         </div>
                     </div>
                 </div>
