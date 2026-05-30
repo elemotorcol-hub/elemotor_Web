@@ -14,6 +14,7 @@ const quoteSchema = z.object({
     country: z.string().min(1, 'Selecciona un país'),
     trackingCode: z.string().optional(),
     model_id: z.string().min(1, 'Selecciona un modelo'),
+    trim_id: z.string().optional(),
     color: z.string().optional(),
     assigned_to: z.string().optional(),
     budget_range: z.string().min(1, 'Selecciona un presupuesto'),
@@ -51,6 +52,7 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
             country: 'Colombia',
             trackingCode: '',
             model_id: initialModelId || vehicles[0]?.id || '',
+            trim_id: '',
             color: initialColor || '',
             assigned_to: '',
             budget_range: '',
@@ -64,22 +66,33 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
     const preferredChannel = watch('preferred_channel');
     const paymentMethod = watch('payment_method');
     const selectedColor = watch('color');
+    const selectedTrimId = watch('trim_id');
 
-    // Colores únicos del modelo seleccionado (deduplicados por nombre)
+    const availableTrims = React.useMemo(() => {
+        const vehicle = vehicles.find(v => String(v.id) === String(selectedModelId));
+        return vehicle?.trims?.filter(t => t.active) ?? [];
+    }, [selectedModelId, vehicles]);
+
+    // Colores únicos según trim seleccionado; si no hay trim, de todos los trims activos
     const availableColors = React.useMemo(() => {
         const vehicle = vehicles.find(v => String(v.id) === String(selectedModelId));
         if (!vehicle?.trims) return [];
+        const sourceTrims = selectedTrimId
+            ? vehicle.trims.filter(t => String(t.id) === String(selectedTrimId))
+            : vehicle.trims.filter(t => t.active);
         const seen = new Set<string>();
-        return vehicle.trims
+        return sourceTrims
             .flatMap(t => t.colors ?? [])
             .filter(c => {
                 if (seen.has(c.name)) return false;
                 seen.add(c.name);
                 return true;
             });
-    }, [selectedModelId, vehicles]);
+    }, [selectedModelId, selectedTrimId, vehicles]);
 
     useEffect(() => {
+        setValue('trim_id', '');
+        setValue('color', '');
         onModelChange(selectedModelId);
     }, [selectedModelId, onModelChange]);
 
@@ -97,6 +110,7 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
                 country: data.country,
                 trackingCode: data.trackingCode || undefined,
                 color: data.color || undefined,
+                trimId: data.trim_id || undefined,
                 paymentMethod: data.payment_method || undefined,
                 assignedToId: data.assigned_to ? parseInt(data.assigned_to) : undefined,
                 preferredChannel: data.preferred_channel,
@@ -249,6 +263,24 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
                                 className={inputClasses}
                             />
                         )}
+                    </div>
+                </div>
+
+                {/* Referencia / Versión */}
+                <div>
+                    <label className={labelClasses}>Referencia / Versión</label>
+                    <div className="relative">
+                        <select
+                            {...register('trim_id')}
+                            disabled={availableTrims.length === 0}
+                            className={`${inputClasses} appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                            <option value="">Selecciona una referencia</option>
+                            {availableTrims.map(t => (
+                                <option key={t.id} value={t.id}>{t.name}</option>
+                            ))}
+                        </select>
+                        <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                 </div>
 

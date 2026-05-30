@@ -131,6 +131,27 @@ export function useInventory() {
         }
     };
 
+    const hardDeleteModel = async (id: number) => {
+        try {
+            const modelDataRes = await modelService.getModelById(id);
+            const trims = modelDataRes?.trims || [];
+
+            for (const trim of trims) {
+                try {
+                    await trimService.hardDelete(trim.id);
+                } catch (trimErr: any) {
+                    throw new Error(`Error eliminando la versión ${trim.name || trim.id}: ${trimErr.message || 'Error desconocido'}`);
+                }
+            }
+
+            await modelService.hardDelete(id);
+            await fetchModels();
+            return { success: true };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    };
+
     return {
         searchTerm,
         setSearchTerm,
@@ -140,7 +161,7 @@ export function useInventory() {
         setSelectedType,
         selectedStatus,
         setSelectedStatus,
-        filteredModels: models, // map locally to models array avoiding component rename refactor
+        filteredModels: models,
         models,
         brands,
         isLoading,
@@ -150,6 +171,7 @@ export function useInventory() {
         totalItems,
         refreshModels: fetchModels,
         deleteModel,
-        updateModel: toggleModelStatus
+        updateModel: toggleModelStatus,
+        hardDeleteModel,
     };
 }

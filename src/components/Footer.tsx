@@ -50,7 +50,7 @@ export function Footer() {
                         </p>
                         <div className="mb-8 space-y-1 border-l-2 border-[#00D4AA]/40 pl-3">
                             <p className="text-white text-sm font-semibold leading-snug">Vehículos importados directamente por Elemotor.</p>
-                            <p className="text-slate-400 text-sm leading-snug">No somos representantes oficiales de la marca en Colombia.</p>
+                            <p className="text-slate-400 text-sm leading-snug">No somos representantes oficiales de las marcas en Colombia.</p>
                         </div>
                         <div className="flex gap-4">
                             <a

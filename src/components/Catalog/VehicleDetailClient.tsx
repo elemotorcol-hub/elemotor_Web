@@ -6,6 +6,7 @@ import { VehicleHero } from '@/components/Catalog/VehicleHero';
 import { VehicleSpecs } from '@/components/Catalog/VehicleSpecs';
 import { VehicleFeatures } from '@/components/Catalog/VehicleFeatures';
 import { VehiclePhotoGallery } from '@/components/Catalog/VehiclePhotoGallery';
+import { PaymentMethods } from '@/components/PaymentMethods';
 import type { DetailModel, DetailTrim } from '@/services/catalogModels.service';
 
 interface VehicleDetailClientProps {
@@ -88,6 +89,11 @@ export function VehicleDetailClient({ model }: VehicleDetailClientProps) {
             {/* Features */}
             <div className="container mx-auto px-6 max-w-7xl">
                 <VehicleFeatures features={features} />
+            </div>
+
+            {/* Payment methods */}
+            <div className="container mx-auto px-6 max-w-5xl">
+                <PaymentMethods variant="inline" />
             </div>
 
             {/* Gallery & Video — full width sections */}

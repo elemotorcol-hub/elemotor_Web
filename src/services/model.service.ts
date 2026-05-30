@@ -37,5 +37,11 @@ export const modelService = {
         return fetchApi(`/api/models/${id}`, {
             method: 'DELETE',
         });
+    },
+
+    hardDelete: async (id: number) => {
+        return fetchApi(`/api/models/${id}/permanent`, {
+            method: 'DELETE',
+        });
     }
 };

@@ -15,7 +15,7 @@ export default function InventoryTable() {
         selectedType, setSelectedType,
         selectedStatus, setSelectedStatus,
         models, filteredModels, brands,
-        isLoading, page, setPage, totalPages, totalItems, refreshModels, deleteModel, updateModel
+        isLoading, page, setPage, totalPages, totalItems, refreshModels, deleteModel, updateModel, hardDeleteModel
     } = useInventory();
     const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
     const [slideOverMode, setSlideOverMode] = useState<'add' | 'edit'>('add');
@@ -31,6 +31,10 @@ export default function InventoryTable() {
     // Modal de Confirmación de Desactivación
     const [modelToDelete, setModelToDelete] = useState<VehicleModel | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Modal de Confirmación de Eliminación Permanente
+    const [modelToHardDelete, setModelToHardDelete] = useState<VehicleModel | null>(null);
+    const [isHardDeleting, setIsHardDeleting] = useState(false);
 
     // Cache of resolved thumbnail URLs keyed by modelId — populated lazily when gallery opens
     const [thumbnailCache, setThumbnailCache] = useState<Record<number, string>>({});
@@ -241,15 +245,15 @@ export default function InventoryTable() {
                                                 <Edit2 size={16} />
                                             </button>
                                             {model.active !== false ? (
-                                                <button 
+                                                <button
                                                     onClick={() => setModelToDelete(model)}
-                                                    className="p-2 hover:text-amber-500 hover:bg-amber-500/10 rounded-md transition-all" 
+                                                    className="p-2 hover:text-amber-500 hover:bg-amber-500/10 rounded-md transition-all"
                                                     title="Desactivar Modelo"
                                                 >
                                                     <Ban size={16} />
                                                 </button>
                                             ) : (
-                                                <button 
+                                                <button
                                                     onClick={async () => {
                                                         if (window.confirm('¿Seguro que deseas reactivar este modelo?')) {
                                                             setDeleteError(null);
@@ -262,12 +266,19 @@ export default function InventoryTable() {
                                                             }
                                                         }
                                                     }}
-                                                    className="p-2 hover:text-cyan-400 hover:bg-cyan-400/10 rounded-md transition-all" 
+                                                    className="p-2 hover:text-cyan-400 hover:bg-cyan-400/10 rounded-md transition-all"
                                                     title="Reactivar Modelo"
                                                 >
                                                     <RefreshCw size={16} />
                                                 </button>
                                             )}
+                                            <button
+                                                onClick={() => setModelToHardDelete(model)}
+                                                className="p-2 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
+                                                title="Eliminar permanentemente"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -333,6 +344,76 @@ export default function InventoryTable() {
                 onClose={() => setPreviewModelId(null)}
                 onFirstImageResolved={handleFirstImageResolved}
             />
+
+            {/* Modal de Eliminación Permanente */}
+            {modelToHardDelete && (
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-slate-900 border border-red-500/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+                        <div className="p-6">
+                            <div className="flex items-start gap-4">
+                                <div className="shrink-0 w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                                    <Trash2 className="w-5 h-5 text-red-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-semibold text-slate-100 flex items-center justify-between">
+                                        Eliminar permanentemente
+                                        <button
+                                            onClick={() => !isHardDeleting && setModelToHardDelete(null)}
+                                            className="text-slate-500 hover:text-slate-300 transition-colors"
+                                            disabled={isHardDeleting}
+                                        >
+                                            <X size={18} />
+                                        </button>
+                                    </h3>
+                                    <div className="mt-3 text-sm text-slate-300 space-y-3">
+                                        <p>
+                                            Estás a punto de eliminar el modelo <strong>{modelToHardDelete.name}</strong> y todas sus versiones.
+                                        </p>
+                                        <div className="bg-red-500/10 rounded-lg p-3 border border-red-500/20">
+                                            <p className="font-semibold text-red-400">
+                                                Esta acción es permanente e irreversible. Se eliminarán el modelo y todas sus versiones de la base de datos.
+                                            </p>
+                                        </div>
+                                        <p className="font-medium">¿Deseas continuar?</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="px-6 py-4 bg-slate-800/50 border-t border-slate-700/50 flex justify-end gap-3">
+                            <button
+                                onClick={() => setModelToHardDelete(null)}
+                                disabled={isHardDeleting}
+                                className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-slate-100 transition-colors disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    setIsHardDeleting(true);
+                                    setDeleteError(null);
+                                    const res = await hardDeleteModel(Number(modelToHardDelete.id));
+                                    if (!res.success) {
+                                        setDeleteError(res.error || 'Ocurrió un error inesperado al eliminar el modelo.');
+                                    }
+                                    setIsHardDeleting(false);
+                                    setModelToHardDelete(null);
+                                }}
+                                disabled={isHardDeleting}
+                                className="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+                            >
+                                {isHardDeleting ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Eliminando...
+                                    </>
+                                ) : (
+                                    <>Eliminar permanentemente</>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Custom Delete Confirmation Modal */}
             {modelToDelete && (

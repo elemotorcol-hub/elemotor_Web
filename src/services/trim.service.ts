@@ -33,5 +33,11 @@ export const trimService = {
         return fetchApi(`/api/trims/${id}`, {
             method: 'DELETE',
         });
+    },
+
+    hardDelete: async (id: number) => {
+        return fetchApi(`/api/trims/${id}/permanent`, {
+            method: 'DELETE',
+        });
     }
 };
