@@ -170,11 +170,20 @@ export function QuoteSlideOver({ onClose, quote, onUpdate }: QuoteSlideOverProps
                                     <Car className="w-3 h-3 text-[#10B981]" />
                                     Modelo
                                 </label>
-                                <input 
+                                <input
                                     {...register('modelInterest')}
                                     className="w-full bg-white/5 border border-white/5 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all"
                                 />
                                 {errors.modelInterest && <p className="text-[10px] text-red-400">{errors.modelInterest.message}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                    <Car className="w-3 h-3 text-[#10B981]" />
+                                    Referencia / Versión
+                                </label>
+                                <div className="w-full bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5 text-sm text-slate-400">
+                                    {quote.trim?.name || '—'}
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">

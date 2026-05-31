@@ -4,6 +4,7 @@ export const metadata = {
     title: 'Perfil de cliente — Admin Elemotor',
 };
 
-export default function ClienteDetailPage({ params }: { params: { id: string } }) {
-    return <ClientProfileView userId={Number(params.id)} />;
+export default async function ClienteDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    return <ClientProfileView userId={Number(id)} />;
 }

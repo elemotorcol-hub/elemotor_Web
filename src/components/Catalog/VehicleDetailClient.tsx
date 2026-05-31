@@ -76,6 +76,8 @@ export function VehicleDetailClient({ model }: VehicleDetailClientProps) {
                         trims={model.trims}
                         selectedTrimId={activeTrim.id}
                         onTrimChange={setActiveTrim}
+                        modelId={model.id}
+                        datasheetUrl={model.datasheetUrl}
                     />
                 </div>
             )}

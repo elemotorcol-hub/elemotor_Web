@@ -6,6 +6,7 @@ const ModelCarousel = dynamic(() => import('@/components/ModelCarousel').then(mo
 const ValueProps = dynamic(() => import('@/components/ValueProps').then(mod => mod.ValueProps));
 const CTABanner = dynamic(() => import('@/components/CTABanner').then(mod => mod.CTABanner));
 const PaymentMethods = dynamic(() => import('@/components/PaymentMethods').then(mod => mod.PaymentMethods));
+const WarrantySection = dynamic(() => import('@/components/WarrantySection').then(mod => mod.WarrantySection));
 const Footer = dynamic(() => import('@/components/Footer').then(mod => mod.Footer));
 
 export default function Home() {
@@ -28,6 +29,10 @@ export default function Home() {
 
         <section>
           <PaymentMethods variant="section" />
+        </section>
+
+        <section>
+          <WarrantySection />
         </section>
 
         <section>

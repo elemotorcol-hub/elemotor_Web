@@ -250,7 +250,12 @@ export default function QuotesTable() {
                                         <p className="font-semibold text-slate-200">{q.name}</p>
                                         <p className="text-slate-500 text-xs mt-0.5">{q.email}</p>
                                     </td>
-                                    <td className="px-5 py-4 text-slate-300">{q.modelInterest || '—'}</td>
+                                    <td className="px-5 py-4">
+                                        <p className="text-slate-300">{q.modelInterest || q.model?.name || '—'}</p>
+                                        {q.trim?.name && (
+                                            <p className="text-xs text-slate-500 mt-0.5">{q.trim.name}</p>
+                                        )}
+                                    </td>
                                     <td className="px-5 py-4 text-slate-400 text-xs whitespace-nowrap">{formatShortDate(q.createdAt)}</td>
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-2">

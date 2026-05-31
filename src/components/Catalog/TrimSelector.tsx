@@ -1,93 +1,148 @@
 'use client';
 
-import * as React from 'react';
+import Link from 'next/link';
+import { BatteryCharging, Navigation, Zap, Gauge, ChevronRight, FileText } from 'lucide-react';
 import { DetailTrim } from '@/services/catalogModels.service';
 
 interface TrimSelectorProps {
     trims: DetailTrim[];
     selectedTrimId: number;
     onTrimChange: (trim: DetailTrim) => void;
+    modelId: number;
+    datasheetUrl?: string | null;
 }
 
-const TRIM_STATUS_LABELS: Record<string, string> = {
+const STATUS_LABEL: Record<string, string> = {
     stock: 'EN STOCK',
     transit: 'PREVENTA',
     order: 'POR PEDIDO',
 };
-
-const TRIM_STATUS_COLORS: Record<string, string> = {
-    stock: 'text-emerald-400',
-    transit: 'text-amber-400',
-    order: 'text-sky-400',
+const STATUS_DOT: Record<string, string> = {
+    stock: 'bg-emerald-400',
+    transit: 'bg-amber-400',
+    order: 'bg-sky-400',
 };
 
-const DESKTOP_COLS: Record<number, string> = {
-    1: 'lg:grid-cols-1',
-    2: 'lg:grid-cols-2',
-    3: 'lg:grid-cols-3',
-    4: 'lg:grid-cols-4',
-};
+function extractTraction(name: string): string | null {
+    if (/\b4WD\b/i.test(name)) return '4WD';
+    if (/\b2WD\b/i.test(name)) return '2WD';
+    if (/\bAWD\b/i.test(name)) return 'AWD';
+    if (/\bRWD\b/i.test(name)) return 'RWD';
+    if (/\bFWD\b/i.test(name)) return 'FWD';
+    return null;
+}
 
-export function TrimSelector({ trims, selectedTrimId, onTrimChange }: TrimSelectorProps) {
+export function TrimSelector({ trims, selectedTrimId, onTrimChange, modelId, datasheetUrl }: TrimSelectorProps) {
     if (!trims || trims.length === 0) return null;
-
-    const desktopCols = DESKTOP_COLS[Math.min(trims.length, 4)] ?? 'lg:grid-cols-4';
 
     return (
         <section className="w-full">
-            <h2 className="text-xl font-bold text-white mb-5">Versiones disponibles</h2>
-            <div className={`grid gap-4 grid-cols-1 sm:grid-cols-2 ${desktopCols}`}>
-                {trims.map((trim) => {
+            {/* Header */}
+            <h2 className="text-2xl font-black text-white mb-6">Versiones disponibles</h2>
+
+            {/* List */}
+            <div className="flex flex-col gap-4">
+                {trims.map((trim, idx) => {
                     const isSelected = trim.id === selectedTrimId;
-                    const statusLabel = TRIM_STATUS_LABELS[trim.status] ?? trim.status;
-                    const statusColor = TRIM_STATUS_COLORS[trim.status] ?? 'text-slate-400';
+                    const statusLabel = STATUS_LABEL[trim.status] ?? trim.status;
+                    const dotColor = STATUS_DOT[trim.status] ?? 'bg-slate-400';
+                    const traction = extractTraction(trim.name);
+                    const range = trim.spec?.rangeCltcKm ?? trim.spec?.rangeWltpKm;
+                    const battery = trim.spec?.batteryKwh ? parseFloat(trim.spec.batteryKwh) : null;
+                    const hp = trim.spec?.horsepower;
+                    const cotizarHref = `/cotizar?modelo=${modelId}&trim=${trim.id}`;
 
                     return (
-                        <button
+                        <div
                             key={trim.id}
-                            onClick={() => onTrimChange(trim)}
-                            aria-pressed={isSelected}
-                            className={`min-h-[160px] p-5 rounded-2xl border transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00D4AA] ${
+                            className={`w-full flex flex-col rounded-2xl border transition-all duration-300 overflow-hidden ${
                                 isSelected
-                                    ? 'bg-[#00D4AA]/10 border-[#00D4AA]/50 shadow-[0_0_20px_rgba(0,212,170,0.1)]'
-                                    : 'bg-slate-900/40 border-white/5 hover:border-white/20 hover:bg-slate-900/60'
+                                    ? 'border-[#00D4AA]/60 bg-[#0A1A14] shadow-[0_0_30px_rgba(0,212,170,0.12)]'
+                                    : 'border-white/8 bg-[#0d1117] hover:border-white/20'
                             }`}
                         >
-                            <div className="flex flex-col justify-between h-full gap-3">
-                                {/* Top: nombre + badge seleccionado + status */}
-                                <div>
-                                    <div className="flex items-start justify-between gap-2 mb-1">
-                                        <span className="text-base font-black text-white leading-tight">
-                                            {trim.name}
+                            {/* Card top — clickable to select */}
+                            <button
+                                onClick={() => onTrimChange(trim)}
+                                className="text-left p-5 flex-1 focus:outline-none"
+                            >
+                                {/* Badges row */}
+                                <div className="flex items-center justify-between mb-3">
+                                    {idx === 0 ? (
+                                        <span className="text-[9px] font-black tracking-[0.18em] uppercase bg-[#00D4AA]/15 text-[#00D4AA] border border-[#00D4AA]/30 px-2 py-0.5 rounded">
+                                            RECOMENDADA
                                         </span>
-                                        {isSelected && (
-                                            <span className="shrink-0 text-[9px] font-black tracking-[0.2em] text-[#00D4AA] bg-[#00D4AA]/10 border border-[#00D4AA]/30 px-2 py-0.5 rounded-full uppercase">
-                                                Seleccionado
-                                            </span>
-                                        )}
-                                    </div>
-                                    <span className={`text-xs font-bold uppercase tracking-widest ${statusColor}`}>
+                                    ) : <span />}
+                                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                                        <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
                                         {statusLabel}
                                     </span>
                                 </div>
 
-                                {/* Medio: specs compactas */}
-                                {trim.spec && (
-                                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-400">
-                                        {trim.spec.batteryKwh && (
-                                            <span>{parseFloat(trim.spec.batteryKwh)} kWh</span>
-                                        )}
-                                        {(trim.spec.rangeCltcKm || trim.spec.rangeWltpKm) && (
-                                            <span>{trim.spec.rangeCltcKm ?? trim.spec.rangeWltpKm} km</span>
-                                        )}
-                                        {trim.spec.horsepower && (
-                                            <span>{trim.spec.horsepower} HP</span>
-                                        )}
-                                    </div>
-                                )}
+                                {/* Name */}
+                                <h3 className="text-lg font-black text-white leading-snug mb-4">
+                                    {trim.name}
+                                </h3>
 
+                                {/* Spec icons grid */}
+                                <div className="grid grid-cols-4 gap-2 mb-5">
+                                    {battery != null && (
+                                        <div className="flex flex-col items-center gap-1">
+                                            <BatteryCharging className="w-5 h-5 text-[#00D4AA]" strokeWidth={1.5} />
+                                            <span className="text-white text-[11px] font-bold">{battery} kWh</span>
+                                            <span className="text-slate-500 text-[9px] leading-tight text-center">Batería</span>
+                                        </div>
+                                    )}
+                                    {range != null && (
+                                        <div className="flex flex-col items-center gap-1">
+                                            <Navigation className="w-5 h-5 text-[#00D4AA]" strokeWidth={1.5} />
+                                            <span className="text-white text-[11px] font-bold">{range} km</span>
+                                            <span className="text-slate-500 text-[9px] leading-tight text-center">Autonomía</span>
+                                        </div>
+                                    )}
+                                    {hp != null && (
+                                        <div className="flex flex-col items-center gap-1">
+                                            <Zap className="w-5 h-5 text-[#00D4AA]" strokeWidth={1.5} />
+                                            <span className="text-white text-[11px] font-bold">{hp} HP</span>
+                                            <span className="text-slate-500 text-[9px] leading-tight text-center">Potencia</span>
+                                        </div>
+                                    )}
+                                    {traction && (
+                                        <div className="flex flex-col items-center gap-1">
+                                            <Gauge className="w-5 h-5 text-[#00D4AA]" strokeWidth={1.5} />
+                                            <span className="text-white text-[11px] font-bold">{traction}</span>
+                                            <span className="text-slate-500 text-[9px] leading-tight text-center">Tracción</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Price */}
+                                <p className="text-slate-400 text-sm text-center border-t border-white/5 pt-4">
+                                    Precio bajo cotización
+                                </p>
+                            </button>
+
+                            {/* Action buttons */}
+                            <div className="px-4 pb-4 flex gap-2">
+                                <Link
+                                    href={cotizarHref}
+                                    className="flex-1 flex items-center justify-center gap-1.5 bg-[#00D4AA] hover:bg-[#00bfa0] text-[#060B14] font-black text-[11px] uppercase tracking-wider py-2.5 px-3 rounded-xl transition-all"
+                                >
+                                    Cotizar <ChevronRight className="w-3.5 h-3.5" />
+                                </Link>
+                                {datasheetUrl ? (
+                                    <a
+                                        href={`/api/upload/pdf-download?url=${encodeURIComponent(datasheetUrl)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-[11px] uppercase tracking-wider py-2.5 px-3 rounded-xl transition-all"
+                                    >
+                                        <FileText className="w-3.5 h-3.5" />
+                                        Ficha
+                                    </a>
+                                ) : null}
                             </div>
-                        </button>
+                        </div>
                     );
                 })}
             </div>

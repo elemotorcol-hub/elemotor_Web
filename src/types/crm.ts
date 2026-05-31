@@ -29,6 +29,10 @@ export interface Quote {
         name: string;
         slug?: string;
     };
+    trim?: {
+        id: number;
+        name: string;
+    };
     message?: string;
     notes?: Note[];
     source?: string;
