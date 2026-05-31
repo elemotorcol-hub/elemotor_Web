@@ -64,6 +64,13 @@ export const orderService = {
     },
 
     /**
+     * [Admin] Detalle completo de un pedido (historial + mantenimientos + documentos)
+     */
+    async getOrderDetailAdmin(id: number | string): Promise<any> {
+        return fetchApi(`/api/orders/${id}`);
+    },
+
+    /**
      * [Admin] Listar clientes — GET /api/users?role=client
      */
     async fetchUsers(): Promise<{ data: any[]; meta: any }> {
