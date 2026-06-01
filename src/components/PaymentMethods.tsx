@@ -152,7 +152,7 @@ export function PaymentMethods({ variant }: Props) {
                         className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-[#00D4AA] text-[#00D4AA] font-semibold text-sm bg-transparent hover:bg-[#00D4AA]/10 transition-colors mb-8"
                     >
                         <MessageCircle className="w-4 h-4" />
-                        💬 Contactar un asesor
+                        Contactar un asesor
                     </a>
                     <div className="flex flex-wrap gap-2 mb-8">
                         {BANKS.map((bank) => (

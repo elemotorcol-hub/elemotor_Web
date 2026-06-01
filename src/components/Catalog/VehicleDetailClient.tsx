@@ -6,7 +6,7 @@ import { VehicleHero } from '@/components/Catalog/VehicleHero';
 import { VehicleSpecs } from '@/components/Catalog/VehicleSpecs';
 import { VehicleFeatures } from '@/components/Catalog/VehicleFeatures';
 import { VehiclePhotoGallery } from '@/components/Catalog/VehiclePhotoGallery';
-import { PaymentMethods } from '@/components/PaymentMethods';
+
 import type { DetailModel, DetailTrim } from '@/services/catalogModels.service';
 
 interface VehicleDetailClientProps {
@@ -69,9 +69,9 @@ export function VehicleDetailClient({ model }: VehicleDetailClientProps) {
                 activeTrim={activeTrim}
             />
 
-            {/* Trim selector — contained */}
+            {/* Trim selector — full width */}
             {model.trims.length > 1 && (
-                <div className="container mx-auto px-6 max-w-5xl pt-12">
+                <div className="w-full px-6 lg:px-12 pt-12 pb-16">
                     <TrimSelector
                         trims={model.trims}
                         selectedTrimId={activeTrim.id}
@@ -91,11 +91,6 @@ export function VehicleDetailClient({ model }: VehicleDetailClientProps) {
             {/* Features */}
             <div className="container mx-auto px-6 max-w-7xl">
                 <VehicleFeatures features={features} />
-            </div>
-
-            {/* Payment methods */}
-            <div className="container mx-auto px-6 max-w-5xl">
-                <PaymentMethods variant="inline" />
             </div>
 
             {/* Gallery & Video — full width sections */}

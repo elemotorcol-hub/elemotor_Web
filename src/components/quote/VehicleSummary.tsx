@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Battery, Zap, Gauge, CheckCircle2 } from 'lucide-react';
 import { VehicleModel } from '@/types/inventory';
+import { PaymentMethods } from '@/components/PaymentMethods';
 
 interface Props {
     vehicle?: VehicleModel;
@@ -90,6 +91,9 @@ export function VehicleSummary({ vehicle }: Props) {
                         </li>
                     </ul>
                 </div>
+
+                {/* Payment Methods */}
+                <PaymentMethods variant="inline" />
 
                 {/* Footer Note */}
                 <div className="mt-auto p-4 bg-[#00D4AA]/5 rounded-xl border border-[#00D4AA]/10">

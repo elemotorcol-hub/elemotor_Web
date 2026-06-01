@@ -1,7 +1,8 @@
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
-import { BatteryCharging, Navigation, Zap, Gauge, ChevronRight, FileText } from 'lucide-react';
+import { BatteryCharging, Navigation, Zap, Gauge, ChevronRight, ChevronLeft, FileText } from 'lucide-react';
 import { DetailTrim } from '@/services/catalogModels.service';
 
 interface TrimSelectorProps {
@@ -32,16 +33,51 @@ function extractTraction(name: string): string | null {
     return null;
 }
 
+const VISIBLE = 4; // cards visible at once before showing arrows
+
 export function TrimSelector({ trims, selectedTrimId, onTrimChange, modelId, datasheetUrl }: TrimSelectorProps) {
     if (!trims || trims.length === 0) return null;
+
+    const scrollRef = React.useRef<HTMLDivElement>(null);
+    const showArrows = trims.length > VISIBLE;
+
+    const scroll = (dir: 'left' | 'right') => {
+        if (!scrollRef.current) return;
+        const card = scrollRef.current.querySelector('[data-card]') as HTMLElement | null;
+        const amount = card ? card.offsetWidth + 16 : scrollRef.current.clientWidth / VISIBLE;
+        scrollRef.current.scrollBy({ left: dir === 'right' ? amount : -amount, behavior: 'smooth' });
+    };
 
     return (
         <section className="w-full">
             {/* Header */}
-            <h2 className="text-2xl font-black text-white mb-6">Versiones disponibles</h2>
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-black text-white">Versiones disponibles</h2>
+                {showArrows && (
+                    <div className="flex gap-2">
+                        <button onClick={() => scroll('left')} className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all">
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => scroll('right')} className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all">
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+            </div>
 
-            {/* List */}
-            <div className="flex flex-col gap-4">
+            {/* Cards — grid up to 4, then horizontal scroll */}
+            <div
+                ref={scrollRef}
+                className={`${showArrows ? 'flex gap-4 overflow-x-auto pb-1' : 'grid gap-4'} ${
+                    !showArrows && (
+                        trims.length === 1 ? 'grid-cols-1' :
+                        trims.length === 2 ? 'grid-cols-2' :
+                        trims.length === 3 ? 'grid-cols-3' :
+                        'grid-cols-4'
+                    )
+                }`}
+                style={{ scrollbarWidth: 'none' }}
+            >
                 {trims.map((trim, idx) => {
                     const isSelected = trim.id === selectedTrimId;
                     const statusLabel = STATUS_LABEL[trim.status] ?? trim.status;
@@ -55,7 +91,8 @@ export function TrimSelector({ trims, selectedTrimId, onTrimChange, modelId, dat
                     return (
                         <div
                             key={trim.id}
-                            className={`w-full flex flex-col rounded-2xl border transition-all duration-300 overflow-hidden ${
+                            data-card
+                            className={`${showArrows ? 'shrink-0 w-[calc(25%-12px)]' : 'w-full'} flex flex-col rounded-2xl border transition-all duration-300 overflow-hidden ${
                                 isSelected
                                     ? 'border-[#00D4AA]/60 bg-[#0A1A14] shadow-[0_0_30px_rgba(0,212,170,0.12)]'
                                     : 'border-white/8 bg-[#0d1117] hover:border-white/20'
