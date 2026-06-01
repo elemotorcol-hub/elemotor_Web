@@ -1,5 +1,7 @@
 'use client';
 
+import { MessageCircle } from 'lucide-react';
+
 const BANKS = [
     { name: 'Banco de Bogotá', bg: '#003087', text: '#FFFFFF', accent: '#1a4fa0' },
     { name: 'Bancolombia',     bg: '#FFD100', text: '#003366', accent: '#e6bc00' },
@@ -143,6 +145,15 @@ export function PaymentMethods({ variant }: Props) {
                         Tenemos convenios con los principales bancos del país para facilitar tu compra.
                         Tasas competitivas y plazos flexibles.
                     </p>
+                    <a
+                        href="https://wa.me/573117762260?text=Hola%2C%20me%20interesa%20información%20sobre%20financiamiento%20para%20un%20vehículo%20eléctrico"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-[#00D4AA] text-[#00D4AA] font-semibold text-sm bg-transparent hover:bg-[#00D4AA]/10 transition-colors mb-8"
+                    >
+                        <MessageCircle className="w-4 h-4" />
+                        💬 Contactar un asesor
+                    </a>
                     <div className="flex flex-wrap gap-2 mb-8">
                         {BANKS.map((bank) => (
                             <span
