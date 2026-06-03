@@ -16,7 +16,13 @@ export interface MaintenanceRecord {
   workshop: {
     id: number;
     name: string;
+    address: string | null;
     city: string | null;
+    state: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    googleMapsUrl: string | null;
+    phone: string | null;
   } | null;
 }
 

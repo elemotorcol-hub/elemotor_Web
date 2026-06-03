@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { BatteryCharging, Navigation, Zap, Gauge, ChevronRight, ChevronLeft, FileText } from 'lucide-react';
+import { BatteryCharging, Navigation, Zap, Gauge, ChevronRight, ChevronLeft } from 'lucide-react';
 import { DetailTrim } from '@/services/catalogModels.service';
 
 interface TrimSelectorProps {
@@ -167,17 +167,6 @@ export function TrimSelector({ trims, selectedTrimId, onTrimChange, modelId, dat
                                 >
                                     Cotizar <ChevronRight className="w-3.5 h-3.5" />
                                 </Link>
-                                {datasheetUrl ? (
-                                    <a
-                                        href={`/api/upload/pdf-download?url=${encodeURIComponent(datasheetUrl)}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-[11px] uppercase tracking-wider py-2.5 px-3 rounded-xl transition-all"
-                                    >
-                                        <FileText className="w-3.5 h-3.5" />
-                                        Ficha
-                                    </a>
-                                ) : null}
                             </div>
                         </div>
                     );

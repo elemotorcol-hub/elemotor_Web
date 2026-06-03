@@ -59,3 +59,19 @@ html {
     @apply font-sans;
   }
 }
+
+@media print {
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+
+  body {
+    background: white !important;
+    color: #0f172a !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+}

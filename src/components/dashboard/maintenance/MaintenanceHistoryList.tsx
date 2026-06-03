@@ -1,11 +1,12 @@
 'use client';
 
-import { CheckCircle2, Wrench, AlertCircle, Clock, Star } from 'lucide-react';
+import { CheckCircle2, Wrench, AlertCircle, Clock, Star, MapPin, Navigation } from 'lucide-react';
 import { MaintenanceRecord } from '@/types/maintenance';
 
 interface MaintenanceHistoryListProps {
   records: MaintenanceRecord[];
   totalCost: number;
+  onFocusWorkshop?: (workshopId: number) => void;
 }
 
 function StarRating({ rating }: { rating: number | null }) {
@@ -31,7 +32,7 @@ function formatDate(dateStr: string): string {
   }).format(new Date(dateStr));
 }
 
-export function MaintenanceHistoryList({ records, totalCost }: MaintenanceHistoryListProps) {
+export function MaintenanceHistoryList({ records, totalCost, onFocusWorkshop }: MaintenanceHistoryListProps) {
   return (
     <div className="bg-[#15201D] border border-white/5 rounded-3xl p-8">
       {/* Header */}
@@ -97,11 +98,23 @@ export function MaintenanceHistoryList({ records, totalCost }: MaintenanceHistor
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3 text-xs">
+                <div className="flex flex-wrap items-center gap-2 text-xs">
                   {record.workshop && (
-                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-400 border border-white/5">
-                      📍 {record.workshop.name}{record.workshop.city ? `, ${record.workshop.city}` : ''}
-                    </span>
+                    <>
+                      <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 text-slate-400 border border-white/5">
+                        <MapPin className="w-3 h-3 flex-shrink-0" />
+                        {record.workshop.name}{record.workshop.city ? `, ${record.workshop.city}` : ''}
+                      </span>
+                      {record.workshop.latitude && record.workshop.longitude && onFocusWorkshop && (
+                        <button
+                          onClick={() => onFocusWorkshop(record.workshop!.id)}
+                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#10B981]/10 hover:bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/20 transition-colors"
+                        >
+                          <Navigation className="w-3 h-3" />
+                          Ver en mapa
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
 

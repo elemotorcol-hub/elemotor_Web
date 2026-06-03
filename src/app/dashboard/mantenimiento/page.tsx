@@ -1,18 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Wrench, CheckCircle2, Plus, Loader2 } from 'lucide-react';
+import { Wrench, CheckCircle2, Loader2, CalendarClock } from 'lucide-react';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import { MaintenanceAccessBlocker } from '@/components/dashboard/maintenance/MaintenanceAccessBlocker';
 import { MaintenanceStatusCard } from '@/components/dashboard/maintenance/MaintenanceStatusCard';
 import { MaintenanceHistoryList } from '@/components/dashboard/maintenance/MaintenanceHistoryList';
+import { MaintenanceMap } from '@/components/dashboard/maintenance/MaintenanceMap';
 import { MarkMaintenanceDoneModal } from '@/components/dashboard/maintenance/ScheduleMaintenanceModal';
 import { ScheduleAppointmentModal } from '@/components/dashboard/maintenance/ScheduleAppointmentModal';
-import { CalendarClock } from 'lucide-react';
 
 export default function MantenimientoPage() {
     const [isMarkDoneModalOpen, setIsMarkDoneModalOpen] = useState(false);
     const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+    const [focusedWorkshopId, setFocusedWorkshopId] = useState<number | null>(null);
     const {
         isLoading,
         isDelivered,
@@ -84,11 +85,18 @@ export default function MantenimientoPage() {
                 />
             )}
 
-            {/* History list */}
-            <MaintenanceHistoryList
-                records={records}
-                totalCost={summary.totalCost}
-            />
+            {/* Map + History grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6 items-start">
+                <MaintenanceHistoryList
+                    records={records}
+                    totalCost={summary.totalCost}
+                    onFocusWorkshop={(id) => setFocusedWorkshopId(id)}
+                />
+                <MaintenanceMap
+                    records={records}
+                    focusedWorkshopId={focusedWorkshopId}
+                />
+            </div>
 
             {/* Mark done modal */}
             <MarkMaintenanceDoneModal
