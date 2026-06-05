@@ -120,6 +120,7 @@ export function Footer() {
                             <Link href="/calculadora" className="text-gray-400 hover:text-white transition-colors">Calculadora</Link>
                             <Link href="/nosotros" className="text-gray-400 hover:text-white transition-colors">Nosotros</Link>
                             <Link href="/blog" className="text-gray-400 hover:text-white transition-colors">Blog</Link>
+                            <Link href="/garantias" className="text-gray-400 hover:text-white transition-colors">Política de Garantía</Link>
                             <Link href="/terminos" className="text-gray-400 hover:text-white transition-colors">Términos y Condiciones</Link>
                             <Link href="/privacidad" className="text-gray-400 hover:text-white transition-colors">Política de Privacidad</Link>
                         </nav>

@@ -71,14 +71,17 @@ export function VehicleDetailClient({ model }: VehicleDetailClientProps) {
 
             {/* Trim selector — full width */}
             {model.trims.length > 1 && (
-                <div className="w-full px-6 lg:px-12 pt-12 pb-16">
-                    <TrimSelector
-                        trims={model.trims}
-                        selectedTrimId={activeTrim.id}
-                        onTrimChange={setActiveTrim}
-                        modelId={model.id}
-                        datasheetUrl={model.datasheetUrl}
-                    />
+                <div className="w-full pt-12 pb-16 overflow-hidden">
+                    {/* Horizontal padding only on sm+; on mobile the TrimSelector scroll needs full width */}
+                    <div className="px-4 sm:px-6 lg:px-12">
+                        <TrimSelector
+                            trims={model.trims}
+                            selectedTrimId={activeTrim.id}
+                            onTrimChange={setActiveTrim}
+                            modelId={model.id}
+                            datasheetUrl={model.datasheetUrl}
+                        />
+                    </div>
                 </div>
             )}
 

@@ -27,7 +27,7 @@ export default async function DashboardLayout({
     const userForLayout = {
         name: firstName,
         lastName: lastName,
-        role: session.user.role === 'admin' ? 'Administrador' : 'Cliente Premium'
+        role: session.user.role === 'admin' ? 'Asesor Comercial' : 'Cliente Premium'
     };
 
     return (

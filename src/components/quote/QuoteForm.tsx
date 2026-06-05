@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Lock, ArrowRight, MessageCircle, Phone, Mail } from 'lucide-react';
+import { Lock, ArrowRight, MessageCircle, Phone, Mail, CheckCircle2, XCircle, X } from 'lucide-react';
 import { VehicleModel } from '@/types/inventory';
 import { submitQuoteAction } from '../../actions/quote';
 
@@ -37,28 +37,38 @@ interface Props {
     vehicles: VehicleModel[];
     advisors: Advisor[];
     initialModelId?: string;
+    initialTrimId?: string;
     initialColor?: string;
     onModelChange: (modelId: string) => void;
 }
 
-export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, onModelChange }: Props) {
-    const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<QuoteFormValues>({
+const DEFAULT_VALUES: QuoteFormValues = {
+    fullName: '',
+    email: '',
+    phone: '',
+    city: '',
+    country: 'Colombia',
+    trackingCode: '',
+    model_id: '',
+    trim_id: '',
+    color: '',
+    assigned_to: '',
+    budget_range: '',
+    payment_method: '',
+    preferred_channel: 'whatsapp',
+    message: '',
+};
+
+export function QuoteForm({ vehicles, advisors, initialModelId, initialTrimId, initialColor, onModelChange }: Props) {
+    const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+    const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm<QuoteFormValues>({
         resolver: zodResolver(quoteSchema),
         defaultValues: {
-            fullName: '',
-            email: '',
-            phone: '',
-            city: '',
-            country: 'Colombia',
-            trackingCode: '',
+            ...DEFAULT_VALUES,
             model_id: initialModelId || vehicles[0]?.id || '',
-            trim_id: '',
+            trim_id: initialTrimId || '',
             color: initialColor || '',
-            assigned_to: '',
-            budget_range: '',
-            payment_method: '',
-            preferred_channel: 'whatsapp',
-            message: '',
         }
     });
 
@@ -68,18 +78,19 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
     const selectedColor = watch('color');
     const selectedTrimId = watch('trim_id');
 
+    // Backend ya devuelve solo trims activos — no filtrar por t.active (campo no incluido en respuesta)
     const availableTrims = React.useMemo(() => {
         const vehicle = vehicles.find(v => String(v.id) === String(selectedModelId));
-        return vehicle?.trims?.filter(t => t.active) ?? [];
+        return vehicle?.trims ?? [];
     }, [selectedModelId, vehicles]);
 
-    // Colores únicos según trim seleccionado; si no hay trim, de todos los trims activos
+    // Colores únicos según trim seleccionado; si no hay trim, de todos los trims
     const availableColors = React.useMemo(() => {
         const vehicle = vehicles.find(v => String(v.id) === String(selectedModelId));
         if (!vehicle?.trims) return [];
         const sourceTrims = selectedTrimId
             ? vehicle.trims.filter(t => String(t.id) === String(selectedTrimId))
-            : vehicle.trims.filter(t => t.active);
+            : vehicle.trims;
         const seen = new Set<string>();
         return sourceTrims
             .flatMap(t => t.colors ?? [])
@@ -90,15 +101,24 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
             });
     }, [selectedModelId, selectedTrimId, vehicles]);
 
+    // Cuando cambia el modelo, limpiar trim y color y notificar al padre
     useEffect(() => {
         setValue('trim_id', '');
         setValue('color', '');
         onModelChange(selectedModelId);
-    }, [selectedModelId, onModelChange]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedModelId]);
+
+    // Pre-seleccionar trim desde URL param
+    useEffect(() => {
+        if (initialTrimId) {
+            setValue('trim_id', initialTrimId);
+        }
+    }, [initialTrimId, setValue]);
 
     const onSubmit = async (data: QuoteFormValues) => {
+        setNotification(null);
         try {
-
             const modelId = parseInt(data.model_id);
             const budgetRangeValue = data.budget_range ? parseInt(data.budget_range) : undefined;
 
@@ -118,21 +138,23 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
                 source: 'web'
             };
 
-            // Only add optional numeric fields if they are valid
             if (!isNaN(modelId)) backendData.modelId = modelId;
             if (budgetRangeValue && !isNaN(budgetRangeValue)) backendData.budgetRange = budgetRangeValue;
 
             const result = await submitQuoteAction(backendData);
 
             if (result.success) {
-                alert('¡Cotización enviada con éxito! Un asesor te contactará pronto.');
-                // En un caso real aquí se podría redirigir o limpiar el formulario
+                setNotification({ type: 'success', message: '¡Cotización enviada con éxito! Un asesor te contactará pronto.' });
+                reset({
+                    ...DEFAULT_VALUES,
+                    model_id: initialModelId || vehicles[0]?.id || '',
+                    preferred_channel: 'whatsapp',
+                });
             } else {
-                alert(result.error || 'Ocurrió un error al enviar tu cotización.');
+                setNotification({ type: 'error', message: result.error || 'Ocurrió un error al enviar tu cotización.' });
             }
-        } catch (error) {
-            console.error('Error submitting quote:', error);
-            alert('Error inesperado de red al conectar con el servidor.');
+        } catch {
+            setNotification({ type: 'error', message: 'Error inesperado de red al conectar con el servidor.' });
         }
     };
 
@@ -143,8 +165,26 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
                 <p className="text-slate-400 text-sm">Un asesor te contactará en menos de 2 horas</p>
             </div>
 
+            {/* Notificación inline */}
+            {notification && (
+                <div className={`flex items-start gap-3 rounded-xl px-4 py-3.5 mb-6 border text-sm font-medium ${
+                    notification.type === 'success'
+                        ? 'bg-[#00D4AA]/10 border-[#00D4AA]/30 text-[#00D4AA]'
+                        : 'bg-red-500/10 border-red-500/30 text-red-400'
+                }`}>
+                    {notification.type === 'success'
+                        ? <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+                        : <XCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                    }
+                    <span className="flex-1">{notification.message}</span>
+                    <button onClick={() => setNotification(null)} className="shrink-0 opacity-60 hover:opacity-100 transition-opacity">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 flex-1">
-                {/* File 1: Nombre y Correo */}
+                {/* Nombre y Correo */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <label className={labelClasses}>Nombre Completo</label>
@@ -158,7 +198,7 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
                     </div>
                 </div>
 
-                {/* File 2: Teléfono y Ciudad */}
+                {/* Teléfono y Ciudad */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <label className={labelClasses}>Teléfono</label>
@@ -181,13 +221,13 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
                                 <option value="Cartagena">Cartagena</option>
                                 <option value="Otra">Otra ciudad</option>
                             </select>
-                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                         </div>
                         {errors.city && <p className="text-xs text-red-500 mt-1 font-medium">{errors.city.message}</p>}
                     </div>
                 </div>
 
-                {/* Country and Tracking Code */}
+                {/* País y Código de seguimiento */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <label className={labelClasses}>País</label>
@@ -200,17 +240,16 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
                                 <option value="Panama">Panamá</option>
                                 <option value="Otro">Otro</option>
                             </select>
-                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                         </div>
-                        {errors.country && <p className="text-xs text-red-500 mt-1 font-medium">{errors.country.message}</p>}
                     </div>
                     <div>
                         <label className={labelClasses}>Código de Seguimiento (Opcional)</label>
-                        <input 
-                            {...register('trackingCode')} 
-                            type="text" 
-                            placeholder="Ej: ELE-2026-00001" 
-                            className={inputClasses} 
+                        <input
+                            {...register('trackingCode')}
+                            type="text"
+                            placeholder="Ej: ELE-2026-00001"
+                            className={inputClasses}
                         />
                         <p className="text-[9px] text-slate-500 mt-1">Si ya tienes un pedido asignado por un asesor, ingrésalo aquí.</p>
                     </div>
@@ -227,7 +266,7 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
                                     <option key={v.id} value={v.id}>{v.name}</option>
                                 ))}
                             </select>
-                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                         </div>
                         {errors.model_id && <p className="text-xs text-red-500 mt-1 font-medium">{errors.model_id.message}</p>}
                     </div>
@@ -280,7 +319,7 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
                                 <option key={t.id} value={t.id}>{t.name}</option>
                             ))}
                         </select>
-                        <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                     </div>
                 </div>
 
@@ -295,7 +334,7 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
                                     <option key={a.id} value={a.id}>{a.name}</option>
                                 ))}
                             </select>
-                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                         </div>
                     </div>
                 )}
@@ -312,7 +351,7 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
                             <option value="175000000">150M - 200M COP</option>
                             <option value="250000000">Más de 200M COP</option>
                         </select>
-                        <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                     </div>
                     {errors.budget_range && <p className="text-xs text-red-500 mt-1 font-medium">{errors.budget_range.message}</p>}
                 </div>
@@ -382,8 +421,7 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialColor, on
                     />
                 </div>
 
-                {/* Espaciador flexible para empujar botón abajo si hay espacio */}
-                <div className="flex-1"></div>
+                <div className="flex-1" />
 
                 {/* Botón enviar */}
                 <div className="mt-2 text-center">

@@ -34,9 +34,18 @@ export default function UsersTable() {
         fetchData(debouncedSearch);
     }, [debouncedSearch, fetchData]);
 
+    const getRoleLabel = (role: string): string => {
+        const labels: Record<string, string> = {
+            admin: 'Asesor Comercial',
+            super_admin: 'Super Admin',
+            client: 'Cliente',
+        };
+        return labels[role] ?? role;
+    };
+
     const getStatusBadge = (user: AdminUser) => {
         // En el backend actual no hay un campo 'status', lo simulamos o usamos info real si existe
-        return <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400"><CheckCircle2 className="w-3.5 h-3.5" /> {user.role}</span>;
+        return <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400"><CheckCircle2 className="w-3.5 h-3.5" /> {getRoleLabel(user.role)}</span>;
     };
 
     const formatDate = (dateString: string) => {

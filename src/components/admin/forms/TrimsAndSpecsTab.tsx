@@ -17,9 +17,36 @@ export default function TrimsAndSpecsTab({ mode }: { mode?: 'add' | 'edit' }) {
     const [expandedTrim, setExpandedTrim] = useState<number | null>(null);
     const [togglingTrimId, setTogglingTrimId] = useState<string | null>(null);
     const [trimToggleError, setTrimToggleError] = useState<string | null>(null);
+    const [deletingTrimId, setDeletingTrimId] = useState<string | null>(null);
+    const [trimToHardDelete, setTrimToHardDelete] = useState<{ fieldId: string; dbId: number; name: string; index: number } | null>(null);
+    const [trimDeactivatedInfo, setTrimDeactivatedInfo] = useState<string | null>(null);
 
     // Watch model active status to guard trim reactivation
     const modelActive = useWatch({ control, name: 'active' });
+
+    const handleHardDeleteTrim = async () => {
+        if (!trimToHardDelete) return;
+        const { fieldId, dbId, index } = trimToHardDelete;
+        setDeletingTrimId(fieldId);
+        setTrimToHardDelete(null);
+        setTrimToggleError(null);
+        try {
+            const res = await trimService.hardDelete(dbId);
+            if (res?.deactivated) {
+                // Tenía pedidos vinculados — se desactivó en lugar de eliminarse
+                setValue(`trims.${index}.active`, false, { shouldDirty: true });
+                setTrimDeactivatedInfo('La versión tiene pedidos u órdenes vinculadas y no puede eliminarse físicamente. Fue desactivada automáticamente y ya no aparecerá en el catálogo.');
+                setTimeout(() => setTrimDeactivatedInfo(null), 8000);
+            } else {
+                remove(index);
+            }
+        } catch (err: any) {
+            setTrimToggleError(err.message || 'Error al eliminar la versión.');
+            setTimeout(() => setTrimToggleError(null), 6000);
+        } finally {
+            setDeletingTrimId(null);
+        }
+    };
 
     const handleAddTrim = () => {
         append({
@@ -86,6 +113,14 @@ export default function TrimsAndSpecsTab({ mode }: { mode?: 'add' | 'edit' }) {
                 </div>
             )}
 
+            {/* Info: versión desactivada en lugar de eliminada */}
+            {trimDeactivatedInfo && (
+                <div className="flex items-start gap-2 bg-sky-950/40 border border-sky-800/50 rounded-lg px-4 py-3 text-sky-300 text-xs font-semibold">
+                    <AlertCircle size={14} className="shrink-0 mt-0.5 text-sky-400" />
+                    <span>{trimDeactivatedInfo}</span>
+                </div>
+            )}
+
             {fields.map((field, index) => {
                 const trimError = (errors?.trims as any)?.[index];
 
@@ -102,9 +137,13 @@ export default function TrimsAndSpecsTab({ mode }: { mode?: 'add' | 'edit' }) {
                             mode={mode}
                             isExpanded={expandedTrim === index}
                             isToggling={togglingTrimId === field.id}
+                            isDeleting={deletingTrimId === field.id}
                             onToggleExpand={() => setExpandedTrim(expandedTrim === index ? null : index)}
                             onToggleActive={(currentActive) =>
                                 handleToggleTrimActive(field.id, (field as any).dbId, currentActive, index)
+                            }
+                            onHardDelete={(name) =>
+                                setTrimToHardDelete({ fieldId: field.id, dbId: (field as any).dbId, name, index })
                             }
                             onRemove={() => remove(index)}
                         />
@@ -221,6 +260,43 @@ export default function TrimsAndSpecsTab({ mode }: { mode?: 'add' | 'edit' }) {
                     </button>
                 </div>
             )}
+
+            {/* Modal de confirmación de eliminación permanente de versión */}
+            {trimToHardDelete && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+                    <div className="bg-slate-900 border border-red-500/30 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+                        <div className="p-6 flex items-start gap-4">
+                            <div className="shrink-0 w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                                <Trash2 size={18} className="text-red-500" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-base font-semibold text-slate-100">Eliminar versión permanentemente</h3>
+                                <p className="text-sm text-slate-400 mt-2">
+                                    ¿Eliminar <strong className="text-white">{trimToHardDelete.name}</strong>? Esta acción es irreversible y borrará todas las imágenes, colores y specs asociados.
+                                </p>
+                                <p className="text-xs text-red-400 mt-2 font-medium">No se puede deshacer.</p>
+                            </div>
+                        </div>
+                        <div className="px-6 py-4 bg-slate-800/50 border-t border-slate-700/50 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setTrimToHardDelete(null)}
+                                className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-slate-100 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleHardDeleteTrim}
+                                className="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                            >
+                                <Trash2 size={14} />
+                                Eliminar permanentemente
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -236,15 +312,17 @@ interface TrimHeaderProps {
     mode?: 'add' | 'edit';
     isExpanded: boolean;
     isToggling: boolean;
+    isDeleting: boolean;
     onToggleExpand: () => void;
     onToggleActive: (currentActive: boolean) => void;
+    onHardDelete: (name: string) => void;
     onRemove: () => void;
 }
 
 function TrimHeader({
     trimIndex, fieldId, dbId, mode,
-    isExpanded, isToggling,
-    onToggleExpand, onToggleActive, onRemove
+    isExpanded, isToggling, isDeleting,
+    onToggleExpand, onToggleActive, onHardDelete, onRemove
 }: TrimHeaderProps) {
     const { control } = useFormContext<VehicleModelFormData>();
 
@@ -276,7 +354,7 @@ function TrimHeader({
                 </div>
             </button>
 
-            {/* Edit mode: status badge + toggle button */}
+            {/* Edit mode: status badge + toggle button + hard delete */}
             {mode === 'edit' && dbId && (
                 <div className="flex items-center gap-2 px-3">
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-colors ${
@@ -289,7 +367,7 @@ function TrimHeader({
                     <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onToggleActive(!!isActive); }}
-                        disabled={isToggling}
+                        disabled={isToggling || isDeleting}
                         className={`p-1.5 rounded-md transition-colors ${
                             isActive
                                 ? 'text-slate-500 hover:text-amber-500 hover:bg-amber-500/10'
@@ -300,6 +378,17 @@ function TrimHeader({
                         {isToggling
                             ? <Loader2 size={14} className="animate-spin" />
                             : isActive ? <Ban size={14} /> : <RefreshCw size={14} />}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onHardDelete(trimName || 'esta versión'); }}
+                        disabled={isToggling || isDeleting}
+                        className="p-1.5 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+                        title="Eliminar versión permanentemente"
+                    >
+                        {isDeleting
+                            ? <Loader2 size={14} className="animate-spin" />
+                            : <Trash2 size={14} />}
                     </button>
                 </div>
             )}

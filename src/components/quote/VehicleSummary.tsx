@@ -11,19 +11,6 @@ const BANKS = [
     { name: 'BBVA',            bg: '#004481', text: '#FFFFFF', accent: '#1a5a9a' },
 ];
 
-const STACKED: string[] = [
-    'rotate(-8deg) translate(-8px, 4px)',
-    'rotate(-3deg) translate(-3px, 2px)',
-    'rotate(3deg) translate(3px, 2px)',
-    'rotate(8deg) translate(8px, 4px)',
-];
-
-const FANNED: string[] = [
-    'rotate(-15deg) translateX(-140px)',
-    'rotate(-5deg) translateX(-47px)',
-    'rotate(5deg) translateX(47px)',
-    'rotate(15deg) translateX(140px)',
-];
 
 interface Props {
     vehicle?: VehicleModel;
@@ -114,89 +101,44 @@ export function VehicleSummary({ vehicle }: Props) {
                 </div>
 
                 {/* Financing Section */}
-                <div className="mt-auto rounded-2xl overflow-hidden border border-white/5 bg-[#060B14]/60">
-                    <div className="flex flex-col md:flex-row items-center gap-8 p-7">
-                        {/* Left: text */}
-                        <div className="flex-1 min-w-0">
-                            <p className="text-[#00D4AA] text-[10px] font-bold uppercase tracking-[0.2em] mb-3">
-                                Financiamiento
-                            </p>
-                            <h3 className="text-2xl font-black text-white leading-tight mb-3">
-                                Financiamiento<br />disponible
-                            </h3>
-                            <p className="text-slate-400 text-sm leading-relaxed mb-5">
-                                Tenemos convenios con los principales bancos del país para facilitar tu compra.
-                                Tasas competitivas y plazos flexibles.
-                            </p>
-                            <a
-                                href="https://wa.me/573117762260?text=Hola%2C%20me%20interesa%20información%20sobre%20financiamiento%20para%20un%20vehículo%20eléctrico"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[#00D4AA] text-[#00D4AA] font-semibold text-sm bg-transparent hover:bg-[#00D4AA]/10 transition-colors mb-5"
-                            >
-                                <MessageCircle className="w-4 h-4" />
-                                Contactar un asesor
-                            </a>
-                            <div className="flex flex-wrap gap-2 mb-4">
-                                {BANKS.map((bank) => (
+                <div className="mt-6 rounded-2xl overflow-hidden border border-white/5 bg-[#060B14]/60">
+                    <div className="p-7">
+                        <p className="text-[#00D4AA] text-[10px] font-bold uppercase tracking-[0.2em] mb-3">
+                            Financiamiento
+                        </p>
+                        <h3 className="text-2xl font-black text-white leading-tight mb-3">
+                            Financiamiento<br />disponible
+                        </h3>
+                        <p className="text-slate-400 text-sm leading-relaxed mb-5">
+                            Tenemos convenios con los principales bancos del país para facilitar tu compra.
+                            Tasas competitivas y plazos flexibles.
+                        </p>
+                        <a
+                            href="https://wa.me/573117762260?text=Hola%2C%20me%20interesa%20información%20sobre%20financiamiento%20para%20un%20vehículo%20eléctrico"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[#00D4AA] text-[#00D4AA] font-semibold text-sm bg-transparent hover:bg-[#00D4AA]/10 transition-colors mb-5"
+                        >
+                            <MessageCircle className="w-4 h-4" />
+                            Contactar un asesor
+                        </a>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {BANKS.map((bank) => (
+                                <span
+                                    key={bank.name}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-white/10 text-slate-300"
+                                >
                                     <span
-                                        key={bank.name}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-white/10 text-slate-300"
-                                    >
-                                        <span
-                                            className="w-2 h-2 rounded-full flex-shrink-0"
-                                            style={{ backgroundColor: bank.bg }}
-                                        />
-                                        {bank.name}
-                                    </span>
-                                ))}
-                            </div>
-                            <p className="text-slate-600 text-xs">
-                                * Consulta condiciones y requisitos con tu asesor Elemotor.
-                            </p>
+                                        className="w-2 h-2 rounded-full flex-shrink-0"
+                                        style={{ backgroundColor: bank.bg }}
+                                    />
+                                    {bank.name}
+                                </span>
+                            ))}
                         </div>
-
-                        {/* Right: card deck */}
-                        <div className="shrink-0 flex items-center justify-center" style={{ minWidth: '260px', minHeight: '220px' }}>
-                            <div className="group relative" style={{ width: '260px', height: '220px' }}>
-                                {BANKS.map((bank, i) => (
-                                    <div
-                                        key={bank.name}
-                                        className="absolute top-0 left-0 w-52 h-32 rounded-2xl select-none"
-                                        style={{
-                                            backgroundColor: bank.bg,
-                                            color: bank.text,
-                                            zIndex: i + 1,
-                                            boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
-                                            transform: STACKED[i],
-                                            transition: 'transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            const parent = (e.currentTarget as HTMLElement).parentElement;
-                                            if (!parent) return;
-                                            const cards = parent.querySelectorAll<HTMLElement>(':scope > div');
-                                            cards.forEach((card, idx) => { card.style.transform = FANNED[idx]; });
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            const parent = (e.currentTarget as HTMLElement).parentElement;
-                                            if (!parent) return;
-                                            const cards = parent.querySelectorAll<HTMLElement>(':scope > div');
-                                            cards.forEach((card, idx) => { card.style.transform = STACKED[idx]; });
-                                        }}
-                                    >
-                                        <div className="absolute inset-0 rounded-2xl overflow-hidden">
-                                            <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${bank.accent}66 0%, transparent 60%)` }} />
-                                            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-20" style={{ backgroundColor: bank.text }} />
-                                            <div className="absolute -right-2 -bottom-8 w-16 h-16 rounded-full opacity-10" style={{ backgroundColor: bank.text }} />
-                                        </div>
-                                        <div className="relative h-full flex flex-col justify-between p-4">
-                                            <span className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-60">Convenio activo</span>
-                                            <span className="font-black text-base leading-tight">{bank.name}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                        <p className="text-slate-600 text-xs">
+                            * Consulta condiciones y requisitos con tu asesor Elemotor.
+                        </p>
                     </div>
 
                     {/* Garantías button */}

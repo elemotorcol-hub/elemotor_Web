@@ -16,6 +16,15 @@ interface QuoteSlideOverProps {
     onUpdate: (data: Omit<Partial<Quote>, 'notes'> & { notes?: string }) => Promise<void>;
 }
 
+const getRoleLabel = (role: string): string => {
+    const labels: Record<string, string> = {
+        admin: 'Asesor Comercial',
+        super_admin: 'Super Admin',
+        client: 'Cliente',
+    };
+    return labels[role] ?? role;
+};
+
 export function QuoteSlideOver({ onClose, quote, onUpdate }: QuoteSlideOverProps) {
     const [advisors, setAdvisors] = useState<AdminUser[]>([]);
 
@@ -212,7 +221,7 @@ export function QuoteSlideOver({ onClose, quote, onUpdate }: QuoteSlideOverProps
                                 <option value="" className="bg-[#0A110F]">Sin asignar</option>
                                 {advisors.map((advisor) => (
                                     <option key={advisor.id} value={advisor.id} className="bg-[#0A110F]">
-                                        {advisor.name} ({advisor.role})
+                                        {advisor.name} ({getRoleLabel(advisor.role)})
                                     </option>
                                 ))}
                             </select>

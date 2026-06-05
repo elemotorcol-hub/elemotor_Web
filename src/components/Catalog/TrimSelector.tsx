@@ -65,18 +65,20 @@ export function TrimSelector({ trims, selectedTrimId, onTrimChange, modelId, dat
                 )}
             </div>
 
-            {/* Cards — grid up to 4, then horizontal scroll */}
+            {/* Cards — horizontal scroll on mobile, grid on desktop */}
             <div
                 ref={scrollRef}
-                className={`${showArrows ? 'flex gap-4 overflow-x-auto pb-1' : 'grid gap-4'} ${
-                    !showArrows && (
-                        trims.length === 1 ? 'grid-cols-1' :
-                        trims.length === 2 ? 'grid-cols-2' :
-                        trims.length === 3 ? 'grid-cols-3' :
-                        'grid-cols-4'
-                    )
-                }`}
-                style={{ scrollbarWidth: 'none' }}
+                className="flex gap-4 overflow-x-auto pb-2 sm:pb-1 sm:grid sm:overflow-x-visible"
+                style={{
+                    scrollbarWidth: 'none',
+                    // gridTemplateColumns only affects sm+ (where display:grid kicks in via sm:grid)
+                    // On mobile the flex layout ignores this property
+                    gridTemplateColumns:
+                        trims.length === 1 ? 'repeat(1, minmax(0, 1fr))'
+                        : trims.length === 2 ? 'repeat(2, minmax(0, 1fr))'
+                        : trims.length === 3 ? 'repeat(3, minmax(0, 1fr))'
+                        : 'repeat(4, minmax(0, 1fr))',
+                }}
             >
                 {trims.map((trim, idx) => {
                     const isSelected = trim.id === selectedTrimId;
@@ -92,7 +94,7 @@ export function TrimSelector({ trims, selectedTrimId, onTrimChange, modelId, dat
                         <div
                             key={trim.id}
                             data-card
-                            className={`${showArrows ? 'shrink-0 w-[calc(25%-12px)]' : 'w-full'} flex flex-col rounded-2xl border transition-all duration-300 overflow-hidden ${
+                            className={`shrink-0 w-[168px] sm:w-full sm:shrink flex flex-col rounded-2xl border transition-all duration-300 overflow-hidden ${
                                 isSelected
                                     ? 'border-[#00D4AA]/60 bg-[#0A1A14] shadow-[0_0_30px_rgba(0,212,170,0.12)]'
                                     : 'border-white/8 bg-[#0d1117] hover:border-white/20'
@@ -104,7 +106,7 @@ export function TrimSelector({ trims, selectedTrimId, onTrimChange, modelId, dat
                                 className="text-left p-5 flex-1 focus:outline-none"
                             >
                                 {/* Badges row */}
-                                <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center justify-between gap-1 mb-3 flex-wrap">
                                     {idx === 0 ? (
                                         <span className="text-[9px] font-black tracking-[0.18em] uppercase bg-[#00D4AA]/15 text-[#00D4AA] border border-[#00D4AA]/30 px-2 py-0.5 rounded">
                                             RECOMENDADA
@@ -117,12 +119,12 @@ export function TrimSelector({ trims, selectedTrimId, onTrimChange, modelId, dat
                                 </div>
 
                                 {/* Name */}
-                                <h3 className="text-lg font-black text-white leading-snug mb-4">
+                                <h3 className="text-base sm:text-lg font-black text-white leading-snug mb-4 break-words hyphens-auto">
                                     {trim.name}
                                 </h3>
 
                                 {/* Spec icons grid */}
-                                <div className="grid grid-cols-4 gap-2 mb-5">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
                                     {battery != null && (
                                         <div className="flex flex-col items-center gap-1">
                                             <BatteryCharging className="w-5 h-5 text-[#00D4AA]" strokeWidth={1.5} />

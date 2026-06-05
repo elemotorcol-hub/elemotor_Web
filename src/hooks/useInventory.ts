@@ -144,8 +144,18 @@ export function useInventory() {
                 }
             }
 
-            await modelService.hardDelete(id);
+            const res = await modelService.hardDelete(id);
             await fetchModels();
+
+            // El backend puede hacer fallback a soft-delete si hay pedidos/cotizaciones vinculadas
+            if (res?.deactivated) {
+                return {
+                    success: true,
+                    deactivated: true,
+                    message: 'El modelo tiene versiones con pedidos u órdenes vinculadas y no puede eliminarse físicamente. Fue desactivado automáticamente y ya no aparecerá en el catálogo.',
+                };
+            }
+
             return { success: true };
         } catch (error: any) {
             return { success: false, error: error.message };

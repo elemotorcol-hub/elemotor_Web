@@ -7,11 +7,20 @@ import { AdminUser, userAdminService } from '@/services/user_admin.service';
 interface UserSlideOverProps {
     isOpen: boolean;
     onClose: () => void;
-    onUserUpdated: () => void;
+    onUserUpdated: () => void | Promise<void>;
     user?: AdminUser | null;
 }
 
 const inputClass = "w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/50 transition-all";
+
+const getRoleLabel = (role: string): string => {
+    const labels: Record<string, string> = {
+        admin: 'Asesor Comercial',
+        super_admin: 'Super Admin',
+        client: 'Cliente',
+    };
+    return labels[role] ?? role;
+};
 
 export default function UserSlideOver({ isOpen, onClose, onUserUpdated, user }: UserSlideOverProps) {
     const isCreateMode = !user;
@@ -38,12 +47,13 @@ export default function UserSlideOver({ isOpen, onClose, onUserUpdated, user }: 
     const handleSaveEdit = async () => {
         if (!user) return;
         setLoading(true);
+        setError(null);
         try {
             await userAdminService.updateRole(user.id, role);
-            onUserUpdated();
+            await onUserUpdated();
             onClose();
-        } catch {
-            setError('Error al actualizar el rol del usuario');
+        } catch (e: any) {
+            setError(e?.message || 'Error al actualizar el rol del usuario');
         } finally {
             setLoading(false);
         }
@@ -134,8 +144,8 @@ export default function UserSlideOver({ isOpen, onClose, onUserUpdated, user }: 
                                                 onChange={(e) => setForm(f => ({ ...f, role: e.target.value }))}
                                                 className={`${inputClass} appearance-none`}
                                             >
-                                                <option value="admin">Administrador (Admin)</option>
-                                                <option value="super_admin">Super Administrador</option>
+                                                <option value="admin">Asesor Comercial</option>
+                                                <option value="super_admin">Super Admin</option>
                                                 <option value="client">Cliente</option>
                                             </select>
                                         </div>
@@ -155,7 +165,7 @@ export default function UserSlideOver({ isOpen, onClose, onUserUpdated, user }: 
                                             <h3 className="text-lg font-bold text-white text-center">{user.name}</h3>
                                             <div className="mt-2 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400">
                                                 <Shield className="w-3.5 h-3.5" />
-                                                Rol: {user.role}
+                                                Rol: {getRoleLabel(user.role)}
                                             </div>
                                         </div>
                                     )}
@@ -190,9 +200,9 @@ export default function UserSlideOver({ isOpen, onClose, onUserUpdated, user }: 
                                                         onChange={(e) => setRole(e.target.value)}
                                                         className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/50 transition-all appearance-none"
                                                     >
-                                                        <option value="client">Cliente (Client)</option>
-                                                        <option value="admin">Administrador (Admin)</option>
-                                                        <option value="super_admin">Super Administrador</option>
+                                                        <option value="client">Cliente</option>
+                                                        <option value="admin">Asesor Comercial</option>
+                                                        <option value="super_admin">Super Admin</option>
                                                     </select>
                                                 </div>
                                                 <p className="text-[10px] text-slate-500 mt-2 px-1">* Los cambios de rol afectan los permisos de acceso de forma inmediata.</p>

@@ -394,6 +394,8 @@ export default function InventoryTable() {
                                     const res = await hardDeleteModel(Number(modelToHardDelete.id));
                                     if (!res.success) {
                                         setDeleteError(res.error || 'Ocurrió un error inesperado al eliminar el modelo.');
+                                    } else if ((res as any).deactivated) {
+                                        setReactivationInfo((res as any).message);
                                     }
                                     setIsHardDeleting(false);
                                     setModelToHardDelete(null);

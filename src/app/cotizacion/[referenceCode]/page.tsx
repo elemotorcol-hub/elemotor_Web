@@ -1,61 +1,30 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import {
-    Battery, Zap, Gauge, Clock, CheckCircle2, User, MapPin,
-    Calendar, CreditCard, MessageSquare, Phone, Tag, Layers,
-    ChevronRight, AlertCircle,
-} from 'lucide-react';
 import { PrintButton } from './PrintButton';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
-const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-    pending:     { label: 'Pendiente',       color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200' },
-    contacted:   { label: 'Contactado',      color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200' },
-    responded:   { label: 'Respondido',      color: 'text-indigo-700',  bg: 'bg-indigo-50 border-indigo-200' },
-    negotiation: { label: 'En Negociación',  color: 'text-violet-700',  bg: 'bg-violet-50 border-violet-200' },
-    closed_won:  { label: 'Aprobada',        color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-    closed_lost: { label: 'Cerrada',         color: 'text-slate-600',   bg: 'bg-slate-100 border-slate-300' },
-};
+const FONT = "'Inter', 'Helvetica Neue', Arial, system-ui, sans-serif";
+const API_BASE = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 const PAYMENT_LABELS: Record<string, string> = {
-    cash:        'Contado',
-    financing:   'Financiamiento',
-    leasing:     'Leasing',
-    trade_in:    'Con entrega de vehículo',
-};
-
-const CHANNEL_LABELS: Record<string, string> = {
-    whatsapp:    'WhatsApp',
-    email:       'Correo electrónico',
-    phone:       'Llamada telefónica',
-    presential:  'Visita presencial',
+    cash: 'Contado', financing: 'Financiamiento',
+    leasing: 'Leasing', trade_in: 'Con entrega de vehículo',
 };
 
 async function getQuote(referenceCode: string) {
+    const url = `${API_BASE}/api/quotes/public/${referenceCode}`;
     try {
-        const res = await fetch(`${API_BASE}/api/quotes/public/${referenceCode}`, {
-            next: { revalidate: 60 },
-        });
+        const res = await fetch(url, { next: { revalidate: 60 } });
         if (res.status === 404) return null;
-        if (!res.ok) throw new Error(`API error ${res.status}`);
-        return res.json();
-    } catch {
-        return null;
-    }
+        if (!res.ok) return null;
+        return await res.json();
+    } catch { return null; }
 }
 
-interface Props {
-    params: Promise<{ referenceCode: string }>;
-}
+interface Props { params: Promise<{ referenceCode: string }> }
 
 export async function generateMetadata({ params }: Props) {
     const { referenceCode } = await params;
-    return {
-        title: `Cotización ${referenceCode} | Elemotor`,
-        description: 'Documento de cotización de vehículo eléctrico Elemotor',
-        robots: 'noindex',
-    };
+    return { title: `Cotización ${referenceCode} | Elemotor`, robots: 'noindex' };
 }
 
 export default async function QuoteDocumentPage({ params }: Props) {
@@ -63,380 +32,683 @@ export default async function QuoteDocumentPage({ params }: Props) {
     const quote = await getQuote(referenceCode);
     if (!quote) notFound();
 
-    const status = STATUS_LABELS[quote.status] ?? { label: quote.status, color: 'text-slate-600', bg: 'bg-slate-100 border-slate-200' };
+    const trimData = quote.trim ?? quote.model?.trims?.[0] ?? null;
+    const spec = trimData?.spec ?? null;
+    const images: { url: string }[] = trimData?.images ?? [];
+    const heroImage = images[0]?.url ?? null;
+    const galleryImages = images.slice(0, 6);
+    const featureImages = images.slice(0, 2);
 
-    // Get vehicle image: prefer trim image, then model's first trim image
-    const vehicleImage: string =
-        quote.trim?.images?.[0]?.url ||
-        quote.model?.trims?.[0]?.images?.[0]?.url ||
-        '/placeholder-car.png';
-
-    const spec = quote.trim?.spec;
-
-    const formattedDate = new Date(quote.createdAt).toLocaleDateString('es-CO', {
-        day: '2-digit', month: 'long', year: 'numeric',
+    const date = new Date(quote.createdAt).toLocaleDateString('es-CO', {
+        day: 'numeric', month: 'long', year: 'numeric',
     });
 
+    const price = quote.budgetRange
+        ? new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number(quote.budgetRange))
+        : null;
+
+    const energyRows = spec ? [
+        spec.batteryKwh     && { label: 'Capacidad de Batería',  value: `${spec.batteryKwh} kWh` },
+        spec.rangeWltpKm    && { label: 'Autonomía WLTP',         value: `${spec.rangeWltpKm} km` },
+        (!spec.rangeWltpKm && spec.rangeCltcKm) && { label: 'Autonomía CLTC', value: `${spec.rangeCltcKm} km` },
+        spec.kwhPer100km    && { label: 'Consumo Promedio',        value: `${spec.kwhPer100km} kWh/100km` },
+        spec.chargeTime3080 && { label: 'Carga 30→80%',           value: String(spec.chargeTime3080) },
+    ].filter(Boolean) as { label: string; value: string }[] : [];
+
+    const perfRows = spec ? [
+        spec.horsepower && { label: 'Potencia Máxima',  value: `${spec.horsepower} HP` },
+        spec.torque     && { label: 'Torque Máximo',    value: `${spec.torque} Nm` },
+        spec.zeroTo100  && { label: '0 – 100 km/h',    value: `${spec.zeroTo100} s` },
+        spec.topSpeed   && { label: 'Vel. Máxima',      value: `${spec.topSpeed} km/h` },
+        spec.adasLevel  && { label: 'Nivel ADAS',       value: `Nivel ${spec.adasLevel}` },
+        spec.screenSize && { label: 'Pantalla Central', value: `${spec.screenSize}"` },
+        spec.trunkLiters && { label: 'Maletero',        value: `${spec.trunkLiters} L` },
+    ].filter(Boolean) as { label: string; value: string }[] : [];
+
+    const quickStats = spec ? [
+        spec.rangeWltpKm    ? { val: String(spec.rangeWltpKm), unit: 'KM',  sub: 'AUTONOMÍA WLTP' }
+            : spec.rangeCltcKm ? { val: String(spec.rangeCltcKm), unit: 'KM', sub: 'AUTONOMÍA CLTC' } : null,
+        spec.zeroTo100      ? { val: String(spec.zeroTo100),  unit: 'S',   sub: '0 – 100 KM/H' }     : null,
+        spec.horsepower     ? { val: String(spec.horsepower), unit: 'HP',  sub: 'POTENCIA MÁX.' }     : null,
+        spec.chargeTime3080 ? { val: String(spec.chargeTime3080), unit: '', sub: 'CARGA 30→80%' }     : null,
+    ].filter(Boolean) as { val: string; unit: string; sub: string }[] : [];
+
     return (
-        <div className="min-h-screen bg-slate-100 print:bg-white">
-            {/* ── Header bar ── */}
-            <header className="bg-white border-b border-slate-200 sticky top-0 z-10 print:static print:border-b-2 print:border-[#00D4AA]">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Image
-                            src="/logo-dark.svg"
-                            alt="Elemotor"
-                            width={130}
-                            height={36}
-                            className="h-8 w-auto"
-                            onError={(e: any) => { e.currentTarget.style.display = 'none'; }}
-                        />
-                        <span className="hidden sm:block h-5 w-px bg-slate-200" />
-                        <span className="hidden sm:block text-xs font-semibold text-slate-400 uppercase tracking-widest">
-                            Documento de Cotización
-                        </span>
+        <div style={{ background: '#080E0C', color: '#fff', fontFamily: FONT, minHeight: '100vh' }}>
+
+            {/* ════════════════════════════════════
+                HEADER
+            ════════════════════════════════════ */}
+            <header style={{
+                borderBottom: '1px solid rgba(0,214,143,0.15)',
+                background: '#0a1410',
+                padding: '16px 40px',
+            }}>
+                <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                    <div>
+                        <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-1px', color: '#fff', lineHeight: 1 }}>
+                            ELE<span style={{ color: '#00D68F' }}>MOTOR</span>
+                        </div>
+                        <div style={{ fontSize: 9, color: '#4B6A5E', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', marginTop: 3 }}>
+                            Movilidad Eléctrica Premium
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold ${status.bg} ${status.color}`}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                            {status.label}
-                        </span>
-                        <PrintButton />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 9, color: '#4B6A5E', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                                Cotización de Vehículo
+                            </div>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: '#00D68F', marginTop: 2 }}>
+                                {quote.referenceCode}
+                            </div>
+                            <div style={{ fontSize: 10, color: '#6B7280', marginTop: 1 }}>{date} · Válida 10 días</div>
+                        </div>
+                        <div className="no-print">
+                            <PrintButton />
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 print:py-4">
+            {/* ════════════════════════════════════
+                HERO — Vehículo
+            ════════════════════════════════════ */}
+            <section style={{
+                background: 'linear-gradient(135deg, #080E0C 0%, #0D1F18 50%, #080E0C 100%)',
+                borderBottom: '1px solid rgba(0,214,143,0.12)',
+                overflow: 'hidden',
+                position: 'relative',
+            }}>
+                {/* Decorative glow */}
+                <div style={{
+                    position: 'absolute', top: '-100px', right: '15%',
+                    width: 500, height: 500, borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(0,214,143,0.07) 0%, transparent 70%)',
+                    pointerEvents: 'none',
+                }} />
 
-                {/* ── Reference + Date ── */}
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <div style={{ maxWidth: 1200, margin: '0 auto', padding: '56px 40px 48px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40, alignItems: 'center' }}
+                     className="hero-grid">
+
+                    {/* Left: info */}
                     <div>
-                        <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-0.5">Número de Cotización</p>
-                        <h1 className="text-2xl font-black text-slate-900 font-mono tracking-tight">{quote.referenceCode}</h1>
+                        {/* Green label */}
+                        <div style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 8,
+                            background: 'rgba(0,214,143,0.08)', border: '1px solid rgba(0,214,143,0.25)',
+                            borderRadius: 999, padding: '5px 14px', marginBottom: 20,
+                        }}>
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00D68F', display: 'inline-block' }} />
+                            <span style={{ fontSize: 10, fontWeight: 800, color: '#00D68F', letterSpacing: '0.18em', textTransform: 'uppercase' }}>
+                                {quote.model?.brand?.name ?? 'Vehículo Eléctrico'}
+                            </span>
+                        </div>
+
+                        {/* Model name */}
+                        <h1 style={{
+                            fontSize: 'clamp(42px, 6vw, 72px)',
+                            fontWeight: 900,
+                            color: '#fff',
+                            lineHeight: 0.95,
+                            letterSpacing: '-2px',
+                            marginBottom: 14,
+                        }}>
+                            {quote.model?.name ?? 'Vehículo'}
+                        </h1>
+
+                        {/* Trim */}
+                        {trimData?.name && (
+                            <div style={{ fontSize: 22, fontWeight: 800, color: '#00D68F', letterSpacing: '-0.5px', marginBottom: 8 }}>
+                                {trimData.name.toUpperCase()}
+                            </div>
+                        )}
+
+                        {/* Meta */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
+                            {[
+                                quote.model?.year && `Modelo ${quote.model.year}`,
+                                quote.model?.type?.toUpperCase(),
+                            ].filter(Boolean).map((t) => (
+                                <span key={String(t)} style={{
+                                    fontSize: 11, color: '#6B7280', fontWeight: 600,
+                                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                                    borderRadius: 6, padding: '4px 10px',
+                                }}>
+                                    {t}
+                                </span>
+                            ))}
+                        </div>
+
+                        {/* Feature badges */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                            {['Importación Directa', 'Garantía Total', 'Financiamiento'].map((b) => (
+                                <div key={b} style={{
+                                    fontSize: 10, fontWeight: 700, color: '#9CA3AF',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    borderRadius: 999, padding: '6px 14px',
+                                    background: 'rgba(255,255,255,0.03)',
+                                }}>
+                                    ✓ {b}
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                        <Calendar className="w-4 h-4" />
-                        <span>{formattedDate}</span>
-                    </div>
-                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
-
-                    {/* ── LEFT COLUMN ── */}
-                    <div className="space-y-5">
-
-                        {/* Vehicle card */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                            <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
+                    {/* Right: image */}
+                    <div style={{ position: 'relative', minHeight: 280 }}>
+                        {heroImage ? (
+                            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                                {/* Glow under the car */}
+                                <div style={{
+                                    position: 'absolute', bottom: 0, left: '10%', right: '10%', height: '30%',
+                                    background: 'radial-gradient(ellipse, rgba(0,214,143,0.18) 0%, transparent 70%)',
+                                    filter: 'blur(20px)',
+                                }} />
                                 <Image
-                                    src={vehicleImage}
+                                    src={heroImage}
                                     alt={quote.model?.name ?? 'Vehículo'}
                                     fill
-                                    className="object-cover"
+                                    style={{ objectFit: 'contain', filter: 'drop-shadow(0 20px 40px rgba(0,214,143,0.15))' }}
                                     priority
+                                    sizes="(max-width: 768px) 100vw, 580px"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                                {quote.model?.brand && (
-                                    <div className="absolute top-4 left-4 flex items-center gap-2">
-                                        {quote.model.brand.logoUrl && (
-                                            <Image
-                                                src={quote.model.brand.logoUrl}
-                                                alt={quote.model.brand.name}
-                                                width={32}
-                                                height={32}
-                                                className="w-8 h-8 object-contain bg-white/90 rounded-lg p-1"
-                                            />
-                                        )}
-                                        <span className="text-xs font-bold text-white bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-lg">
-                                            {quote.model.brand.name}
-                                        </span>
-                                    </div>
-                                )}
                             </div>
-
-                            <div className="p-5 sm:p-6">
-                                <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-                                    <div>
-                                        <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">
-                                            {quote.model?.name ?? 'Vehículo'}
-                                        </h2>
-                                        {quote.trim && (
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <Layers className="w-3.5 h-3.5 text-slate-400" />
-                                                <span className="text-sm font-semibold text-[#00B38F]">{quote.trim.name}</span>
-                                                {quote.trim.status && (
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200">
-                                                        {quote.trim.status === 'stock' ? 'En Stock' : quote.trim.status === 'transit' ? 'En Tránsito' : 'Por Pedido'}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
-                                        {quote.model?.year && (
-                                            <p className="text-xs text-slate-400 mt-1 font-medium">{quote.model.year} · {quote.model.type?.toUpperCase()}</p>
-                                        )}
-                                    </div>
-                                    {quote.color && (
-                                        <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
-                                            <Tag className="w-3.5 h-3.5 text-slate-400" />
-                                            <span className="font-medium">{quote.color}</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Specs grid */}
-                                {spec && (
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                        {spec.rangeWltpKm && (
-                                            <SpecCard
-                                                icon={<Zap className="w-4 h-4 text-[#00B38F]" />}
-                                                label="Autonomía WLTP"
-                                                value={`${spec.rangeWltpKm} km`}
-                                            />
-                                        )}
-                                        {!spec.rangeWltpKm && spec.rangeCltcKm && (
-                                            <SpecCard
-                                                icon={<Zap className="w-4 h-4 text-[#00B38F]" />}
-                                                label="Autonomía CLTC"
-                                                value={`${spec.rangeCltcKm} km`}
-                                            />
-                                        )}
-                                        {spec.batteryKwh && (
-                                            <SpecCard
-                                                icon={<Battery className="w-4 h-4 text-[#00B38F]" />}
-                                                label="Batería"
-                                                value={`${spec.batteryKwh} kWh`}
-                                            />
-                                        )}
-                                        {spec.zeroTo100 && (
-                                            <SpecCard
-                                                icon={<Gauge className="w-4 h-4 text-[#00B38F]" />}
-                                                label="0 – 100 km/h"
-                                                value={`${spec.zeroTo100}s`}
-                                            />
-                                        )}
-                                        {spec.chargeTime3080 && (
-                                            <SpecCard
-                                                icon={<Clock className="w-4 h-4 text-[#00B38F]" />}
-                                                label="Carga 30→80%"
-                                                value={spec.chargeTime3080}
-                                            />
-                                        )}
-                                        {spec.horsepower && (
-                                            <SpecCard
-                                                icon={<Zap className="w-4 h-4 text-[#00B38F]" />}
-                                                label="Potencia"
-                                                value={`${spec.horsepower} HP`}
-                                            />
-                                        )}
-                                        {spec.topSpeed && (
-                                            <SpecCard
-                                                icon={<Gauge className="w-4 h-4 text-[#00B38F]" />}
-                                                label="Vel. máxima"
-                                                value={`${spec.topSpeed} km/h`}
-                                            />
-                                        )}
-                                        {spec.trunkLiters && (
-                                            <SpecCard
-                                                icon={<CheckCircle2 className="w-4 h-4 text-[#00B38F]" />}
-                                                label="Maletero"
-                                                value={`${spec.trunkLiters} L`}
-                                            />
-                                        )}
-                                        {spec.screenSize && (
-                                            <SpecCard
-                                                icon={<CheckCircle2 className="w-4 h-4 text-[#00B38F]" />}
-                                                label="Pantalla"
-                                                value={`${spec.screenSize}"`}
-                                            />
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Dimensions (if available) */}
-                        {spec && (spec.lengthMm || spec.widthMm || spec.heightMm || spec.wheelbaseMm || spec.curbWeightKg) && (
-                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
-                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Dimensiones</h3>
-                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
-                                    {spec.lengthMm && <DimCell label="Largo" value={`${(spec.lengthMm / 1000).toFixed(2)} m`} />}
-                                    {spec.widthMm && <DimCell label="Ancho" value={`${(spec.widthMm / 1000).toFixed(2)} m`} />}
-                                    {spec.heightMm && <DimCell label="Alto" value={`${(spec.heightMm / 1000).toFixed(2)} m`} />}
-                                    {spec.wheelbaseMm && <DimCell label="Batalla" value={`${(spec.wheelbaseMm / 1000).toFixed(2)} m`} />}
-                                    {spec.curbWeightKg && <DimCell label="Peso" value={`${spec.curbWeightKg} kg`} />}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Description */}
-                        {quote.model?.description && (
-                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
-                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Descripción</h3>
-                                <p className="text-sm text-slate-600 leading-relaxed">{quote.model.description}</p>
-                            </div>
-                        )}
-
-                        {/* Client message */}
-                        {quote.message && (
-                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <MessageSquare className="w-4 h-4 text-slate-400" />
-                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Mensaje del Cliente</h3>
-                                </div>
-                                <p className="text-sm text-slate-700 leading-relaxed italic">&ldquo;{quote.message}&rdquo;</p>
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 280, color: '#4B6A5E', fontSize: 13 }}>
+                                Sin imagen disponible
                             </div>
                         )}
                     </div>
+                </div>
+            </section>
 
-                    {/* ── RIGHT COLUMN ── */}
-                    <div className="space-y-5">
-
-                        {/* Client info */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Datos del Interesado</h3>
-                            <div className="space-y-3">
-                                <InfoRow icon={<User className="w-4 h-4" />} label="Nombre" value={quote.name} />
-                                {quote.city && (
-                                    <InfoRow icon={<MapPin className="w-4 h-4" />} label="Ciudad" value={quote.city} />
-                                )}
-                                {quote.preferredChannel && (
-                                    <InfoRow
-                                        icon={<Phone className="w-4 h-4" />}
-                                        label="Canal preferido"
-                                        value={CHANNEL_LABELS[quote.preferredChannel] ?? quote.preferredChannel}
-                                    />
-                                )}
-                            </div>
+            {/* ════════════════════════════════════
+                STATS
+            ════════════════════════════════════ */}
+            {quickStats.length > 0 && (
+                <section style={{ background: '#0a1410', borderBottom: '1px solid rgba(0,214,143,0.1)' }}>
+                    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px' }}>
+                        <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: `repeat(${quickStats.length}, 1fr)` }}>
+                            {quickStats.map((s, i) => (
+                                <div key={i} style={{
+                                    padding: '32px 24px',
+                                    borderRight: i < quickStats.length - 1 ? '1px solid rgba(0,214,143,0.1)' : 'none',
+                                    textAlign: 'center',
+                                }}>
+                                    <div style={{ fontSize: 'clamp(36px, 5vw, 54px)', fontWeight: 900, color: '#00D68F', letterSpacing: '-1.5px', lineHeight: 1 }}>
+                                        {s.val}
+                                        {s.unit && (
+                                            <span style={{ fontSize: '40%', fontWeight: 700, color: '#4B6A5E', marginLeft: 4 }}>{s.unit}</span>
+                                        )}
+                                    </div>
+                                    <div style={{ fontSize: 9, fontWeight: 800, color: '#4B6A5E', letterSpacing: '0.2em', marginTop: 8, textTransform: 'uppercase' }}>
+                                        {s.sub}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
+                    </div>
+                </section>
+            )}
 
-                        {/* Quote details */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Detalle de Cotización</h3>
-                            <div className="space-y-3">
-                                {quote.budgetRange && (
-                                    <InfoRow
-                                        icon={<CreditCard className="w-4 h-4" />}
-                                        label="Presupuesto"
-                                        value={quote.budgetRange}
-                                    />
+            {/* ════════════════════════════════════
+                CLIENTE + ASESOR
+            ════════════════════════════════════ */}
+            <section style={{ background: '#080E0C', padding: '40px 40px' }}>
+                <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+                    <div className="info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+
+                        {/* Cliente */}
+                        <div style={{
+                            background: '#0F1A16',
+                            border: '1px solid rgba(0,214,143,0.12)',
+                            borderRadius: 16, padding: '24px 28px',
+                        }}>
+                            <div style={{ fontSize: 9, fontWeight: 800, color: '#00D68F', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 16 }}>
+                                ▸ Información del Cliente
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                <div>
+                                    <div style={{ fontSize: 9, color: '#4B6A5E', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Nombre</div>
+                                    <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{quote.name || '—'}</div>
+                                </div>
+                                {quote.user?.cedula && (
+                                    <div>
+                                        <div style={{ fontSize: 9, color: '#4B6A5E', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Identificación</div>
+                                        <div style={{ fontSize: 14, color: '#9CA3AF' }}>CC {quote.user.cedula}</div>
+                                    </div>
+                                )}
+                                {quote.city && (
+                                    <div>
+                                        <div style={{ fontSize: 9, color: '#4B6A5E', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Ciudad</div>
+                                        <div style={{ fontSize: 14, color: '#9CA3AF' }}>{quote.city}</div>
+                                    </div>
                                 )}
                                 {quote.paymentMethod && (
-                                    <InfoRow
-                                        icon={<CreditCard className="w-4 h-4" />}
-                                        label="Forma de pago"
-                                        value={PAYMENT_LABELS[quote.paymentMethod] ?? quote.paymentMethod}
-                                    />
-                                )}
-                                {quote.color && (
-                                    <InfoRow
-                                        icon={<Tag className="w-4 h-4" />}
-                                        label="Color de interés"
-                                        value={quote.color}
-                                    />
+                                    <div>
+                                        <div style={{ fontSize: 9, color: '#4B6A5E', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Forma de Pago</div>
+                                        <div style={{ fontSize: 14, color: '#9CA3AF' }}>{PAYMENT_LABELS[quote.paymentMethod] ?? quote.paymentMethod}</div>
+                                    </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Advisor */}
-                        {quote.assignedTo && (
-                            <div className="bg-[#00D4AA]/5 rounded-2xl border border-[#00D4AA]/20 p-5">
-                                <h3 className="text-xs font-black text-[#00957A] uppercase tracking-widest mb-3">Tu Asesor</h3>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-[#00D4AA]/20 flex items-center justify-center flex-shrink-0">
-                                        <User className="w-5 h-5 text-[#00957A]" />
+                        {/* Asesor */}
+                        <div style={{
+                            background: '#0F1A16',
+                            border: '1px solid rgba(0,214,143,0.12)',
+                            borderRadius: 16, padding: '24px 28px',
+                        }}>
+                            <div style={{ fontSize: 9, fontWeight: 800, color: '#00D68F', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 16 }}>
+                                ▸ Asesor Comercial
+                            </div>
+                            {quote.assignedTo ? (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                    <div>
+                                        <div style={{ fontSize: 9, color: '#4B6A5E', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Nombre</div>
+                                        <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{quote.assignedTo.name}</div>
+                                    </div>
+                                    {(quote.assignedTo.phone || quote.assignedTo.email) && (
+                                        <div>
+                                            <div style={{ fontSize: 9, color: '#4B6A5E', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Contacto</div>
+                                            <div style={{ fontSize: 14, color: '#9CA3AF' }}>
+                                                {quote.assignedTo.phone || quote.assignedTo.email}
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <div style={{ fontSize: 9, color: '#4B6A5E', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Cargo</div>
+                                        <div style={{ fontSize: 14, color: '#9CA3AF' }}>Asesor Senior Elemotor</div>
                                     </div>
                                     <div>
-                                        <p className="font-bold text-slate-900">{quote.assignedTo.name}</p>
-                                        <p className="text-xs text-slate-500">Asesor Comercial</p>
+                                        <div style={{ fontSize: 9, color: '#4B6A5E', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Referencia</div>
+                                        <div style={{ fontSize: 13, fontWeight: 700, color: '#00D68F', fontFamily: 'monospace' }}>{quote.referenceCode}</div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ fontSize: 13, color: '#4B6A5E' }}>Sin asesor asignado</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ════════════════════════════════════
+                ESPECIFICACIONES TÉCNICAS
+            ════════════════════════════════════ */}
+            {(energyRows.length > 0 || perfRows.length > 0) && (
+                <section style={{ background: '#0a1410', padding: '48px 40px', borderTop: '1px solid rgba(0,214,143,0.1)' }}>
+                    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
+                            <div style={{ width: 3, height: 28, background: '#00D68F', borderRadius: 2 }} />
+                            <div>
+                                <div style={{ fontSize: 9, fontWeight: 800, color: '#4B6A5E', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                                    Ficha Técnica
+                                </div>
+                                <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>
+                                    Especificaciones
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="spec-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                            {/* Energía */}
+                            {energyRows.length > 0 && (
+                                <div style={{ background: '#0F1A16', border: '1px solid rgba(0,214,143,0.1)', borderRadius: 16, overflow: 'hidden' }}>
+                                    <div style={{
+                                        padding: '12px 20px',
+                                        background: 'rgba(0,214,143,0.06)',
+                                        borderBottom: '1px solid rgba(0,214,143,0.1)',
+                                        fontSize: 9, fontWeight: 800, color: '#00D68F',
+                                        letterSpacing: '0.2em', textTransform: 'uppercase',
+                                    }}>
+                                        ⚡ Energía &amp; Batería
+                                    </div>
+                                    <div style={{ padding: '4px 0' }}>
+                                        {energyRows.map((row, i) => (
+                                            <div key={i} style={{
+                                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                padding: '12px 20px',
+                                                borderBottom: i < energyRows.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                                            }}>
+                                                <span style={{ fontSize: 12, color: '#6B7280' }}>{row.label}</span>
+                                                <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{row.value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Performance */}
+                            {perfRows.length > 0 && (
+                                <div style={{ background: '#0F1A16', border: '1px solid rgba(0,214,143,0.1)', borderRadius: 16, overflow: 'hidden' }}>
+                                    <div style={{
+                                        padding: '12px 20px',
+                                        background: 'rgba(0,214,143,0.06)',
+                                        borderBottom: '1px solid rgba(0,214,143,0.1)',
+                                        fontSize: 9, fontWeight: 800, color: '#00D68F',
+                                        letterSpacing: '0.2em', textTransform: 'uppercase',
+                                    }}>
+                                        🏎 Performance &amp; Tecnología
+                                    </div>
+                                    <div style={{ padding: '4px 0' }}>
+                                        {perfRows.map((row, i) => (
+                                            <div key={i} style={{
+                                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                padding: '12px 20px',
+                                                borderBottom: i < perfRows.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                                            }}>
+                                                <span style={{ fontSize: 12, color: '#6B7280' }}>{row.label}</span>
+                                                <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{row.value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* ════════════════════════════════════
+                GALERÍA + FEATURE CARDS
+            ════════════════════════════════════ */}
+            {galleryImages.length > 0 && (
+                <section style={{ background: '#080E0C', padding: '48px 40px', borderTop: '1px solid rgba(0,214,143,0.08)' }}>
+                    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28 }}>
+                            <div style={{ width: 3, height: 28, background: '#00D68F', borderRadius: 2 }} />
+                            <div>
+                                <div style={{ fontSize: 9, fontWeight: 800, color: '#4B6A5E', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                                    Diseño &amp; Detalles
+                                </div>
+                                <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>
+                                    Galería del Modelo
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Main gallery grid */}
+                        {galleryImages.length >= 3 ? (
+                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                                {/* Large image */}
+                                <div style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', gridRow: '1 / 3', background: '#0F1A16' }}>
+                                    <Image src={galleryImages[0].url} alt="Vista 1" fill style={{ objectFit: 'cover' }} sizes="60vw" />
+                                </div>
+                                {/* Small images */}
+                                {galleryImages.slice(1, 3).map((img, i) => (
+                                    <div key={i} style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', background: '#0F1A16' }}>
+                                        <Image src={img.url} alt={`Vista ${i + 2}`} fill style={{ objectFit: 'cover' }} sizes="30vw" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : galleryImages.length > 0 ? (
+                            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${galleryImages.length}, 1fr)`, gap: 12, marginBottom: 12 }}>
+                                {galleryImages.map((img, i) => (
+                                    <div key={i} style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', background: '#0F1A16' }}>
+                                        <Image src={img.url} alt={`Vista ${i + 1}`} fill style={{ objectFit: 'cover' }} sizes="50vw" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : null}
+
+                        {/* Remaining images row */}
+                        {galleryImages.length > 3 && (
+                            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(galleryImages.length - 3, 3)}, 1fr)`, gap: 12 }}>
+                                {galleryImages.slice(3, 6).map((img, i) => (
+                                    <div key={i} style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', background: '#0F1A16' }}>
+                                        <Image src={img.url} alt={`Vista ${i + 4}`} fill style={{ objectFit: 'cover' }} sizes="33vw" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </section>
+            )}
+
+            {/* ════════════════════════════════════
+                FEATURE CARDS
+            ════════════════════════════════════ */}
+            <section style={{ background: '#080E0C', padding: '0 40px 48px', borderTop: 'none' }}>
+                <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+                    <div className="feat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+
+                        {/* Card 1 */}
+                        {featureImages[0] ? (
+                            <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', aspectRatio: '3/2' }}>
+                                <Image src={featureImages[0].url} alt="Tecnología" fill style={{ objectFit: 'cover' }} sizes="33vw" />
+                                <div style={{
+                                    position: 'absolute', inset: 0,
+                                    background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)',
+                                }} />
+                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 20px' }}>
+                                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
+                                        {spec?.screenSize ? `Pantalla ${spec.screenSize}"` : 'Tecnología de Punta'}
+                                    </div>
+                                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
+                                        {spec?.screenSize
+                                            ? `Sistema táctil de ${spec.screenSize}" con OS propio, procesador Snapdragon y conectividad total.`
+                                            : 'Equipamiento tecnológico de última generación.'}
                                     </div>
                                 </div>
                             </div>
+                        ) : (
+                            <div style={{
+                                borderRadius: 16, aspectRatio: '3/2', background: '#0F1A16',
+                                border: '1px solid rgba(0,214,143,0.1)',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center',
+                            }}>
+                                <div style={{ fontSize: 36, marginBottom: 12 }}>🖥️</div>
+                                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Tecnología Avanzada</div>
+                                <div style={{ fontSize: 12, color: '#6B7280' }}>Sistema multimedia inteligente de última generación</div>
+                            </div>
                         )}
 
-                        {/* What's next */}
-                        <div className="bg-slate-50 rounded-2xl border border-slate-200 p-5">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Próximos Pasos</h3>
-                            <ol className="space-y-3">
-                                {[
-                                    'Un asesor se pondrá en contacto contigo',
-                                    'Agendaremos una cita de prueba de manejo',
-                                    'Te presentamos opciones de financiamiento',
-                                    'Formalizamos tu pedido',
-                                ].map((step, i) => (
-                                    <li key={i} className="flex items-start gap-2.5 text-sm text-slate-600">
-                                        <span className="w-5 h-5 rounded-full bg-[#00D4AA]/15 text-[#00957A] text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            {i + 1}
-                                        </span>
-                                        {step}
-                                    </li>
-                                ))}
-                            </ol>
-                        </div>
+                        {/* Card 2 */}
+                        {featureImages[1] ? (
+                            <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', aspectRatio: '3/2' }}>
+                                <Image src={featureImages[1].url} alt="Eficiencia" fill style={{ objectFit: 'cover' }} sizes="33vw" />
+                                <div style={{
+                                    position: 'absolute', inset: 0,
+                                    background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)',
+                                }} />
+                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 20px' }}>
+                                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Eficiencia Aerodinámica</div>
+                                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
+                                        {spec?.kwhPer100km
+                                            ? `Coeficiente de arrastre optimizado. Solo ${spec.kwhPer100km} kWh/100km para máxima autonomía.`
+                                            : 'Diseño aerodinámico optimizado para máxima eficiencia energética.'}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{
+                                borderRadius: 16, aspectRatio: '3/2', background: '#0F1A16',
+                                border: '1px solid rgba(0,214,143,0.1)',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center',
+                            }}>
+                                <div style={{ fontSize: 36, marginBottom: 12 }}>⚡</div>
+                                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Alta Eficiencia</div>
+                                <div style={{ fontSize: 12, color: '#6B7280' }}>Máxima autonomía por carga</div>
+                            </div>
+                        )}
 
-                        {/* Disclaimer */}
-                        <div className="bg-amber-50 rounded-2xl border border-amber-200 p-4">
-                            <div className="flex items-start gap-2.5">
-                                <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                                <p className="text-xs text-amber-700 leading-relaxed">
-                                    Esta cotización tiene vigencia de 15 días hábiles. Los precios, especificaciones y disponibilidad pueden variar. No constituye una oferta comercial definitiva.
-                                </p>
+                        {/* Card 3: Garantía */}
+                        <div style={{
+                            borderRadius: 16, aspectRatio: '3/2',
+                            background: 'linear-gradient(135deg, #00D68F 0%, #00A36B 100%)',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center',
+                            justifyContent: 'center', padding: 28, textAlign: 'center',
+                            position: 'relative', overflow: 'hidden',
+                        }}>
+                            <div style={{
+                                position: 'absolute', top: '-30px', right: '-30px',
+                                width: 120, height: 120, borderRadius: '50%',
+                                background: 'rgba(255,255,255,0.1)',
+                            }} />
+                            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 14 }}>
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            <div style={{ fontSize: 13, fontWeight: 900, color: '#fff', marginBottom: 8, letterSpacing: '0.06em' }}>
+                                GARANTÍA ELEMOTOR
+                            </div>
+                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.88)', lineHeight: 1.6 }}>
+                                5 años garantía mecánica · 8 años batería de tracción
                             </div>
                         </div>
                     </div>
                 </div>
+            </section>
 
-                {/* ── Footer ── */}
-                <footer className="mt-8 pt-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                        <Image
-                            src="/logo-dark.svg"
-                            alt="Elemotor"
-                            width={100}
-                            height={28}
-                            className="h-6 w-auto opacity-40"
-                            onError={(e: any) => { e.currentTarget.style.display = 'none'; }}
-                        />
-                        <span className="text-xs text-slate-400">elemotor.com.co</span>
+            {/* ════════════════════════════════════
+                PRECIO
+            ════════════════════════════════════ */}
+            <section style={{
+                background: 'linear-gradient(180deg, #0a1410 0%, #080E0C 100%)',
+                borderTop: '1px solid rgba(0,214,143,0.12)',
+                padding: '56px 40px',
+            }}>
+                <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+                    <div className="price-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40, alignItems: 'start' }}>
+
+                        {/* Left: price */}
+                        <div>
+                            <div style={{ fontSize: 9, fontWeight: 800, color: '#4B6A5E', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 8 }}>
+                                Inversión Total
+                            </div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: '#00D68F', marginBottom: 16 }}>
+                                Importación Directa · Sin Intermediarios
+                            </div>
+
+                            {price ? (
+                                <div style={{
+                                    fontSize: 'clamp(32px, 5vw, 52px)',
+                                    fontWeight: 900,
+                                    color: '#fff',
+                                    letterSpacing: '-1.5px',
+                                    lineHeight: 1,
+                                    marginBottom: 12,
+                                }}>
+                                    {price}
+                                </div>
+                            ) : (
+                                <div style={{ fontSize: 20, fontWeight: 700, color: '#4B6A5E', marginBottom: 12 }}>
+                                    Consultar con asesor
+                                </div>
+                            )}
+
+                            <div style={{ fontSize: 12, color: '#4B6A5E', marginBottom: 24 }}>
+                                Incluye gastos de nacionalización e IVA
+                                {quote.paymentMethod && (
+                                    <> · Pago: <span style={{ color: '#9CA3AF' }}>{PAYMENT_LABELS[quote.paymentMethod] ?? quote.paymentMethod}</span></>
+                                )}
+                            </div>
+
+                            {/* Incluye */}
+                            <div style={{ marginBottom: 24 }}>
+                                <div style={{ fontSize: 9, fontWeight: 800, color: '#4B6A5E', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 12 }}>
+                                    Incluye en el Valor
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                    {['Cargador Domiciliario 7kW', 'Kit de Carretera Pro', 'Tapetes de Lujo', 'Trámites RUNT'].map((item) => (
+                                        <div key={item} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: '#9CA3AF' }}>
+                                            <span style={{ color: '#00D68F', fontWeight: 800, fontSize: 14 }}>✓</span>
+                                            {item}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right: terms */}
+                        <div style={{
+                            background: '#0F1A16',
+                            border: '1px solid rgba(0,214,143,0.12)',
+                            borderRadius: 16, padding: '28px 28px',
+                        }}>
+                            <div style={{ fontSize: 9, fontWeight: 800, color: '#00D68F', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 20 }}>
+                                ▸ Términos de Pago
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                                {[
+                                    { step: '01', text: 'Reserva del 10% del valor total del vehículo.' },
+                                    { step: '02', text: '50% a la llegada del vehículo a puerto nacional.' },
+                                    { step: '03', text: 'Saldo contra entrega y trámites de matrícula.' },
+                                ].map((t, i, arr) => (
+                                    <div key={i} style={{
+                                        display: 'flex', gap: 16, padding: '16px 0',
+                                        borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                                    }}>
+                                        <div style={{
+                                            fontSize: 22, fontWeight: 900, color: 'rgba(0,214,143,0.25)',
+                                            letterSpacing: '-1px', lineHeight: 1, flexShrink: 0, width: 32,
+                                        }}>
+                                            {t.step}
+                                        </div>
+                                        <div style={{ fontSize: 13, color: '#9CA3AF', lineHeight: 1.5, paddingTop: 2 }}>
+                                            {t.text}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div style={{
+                                marginTop: 20, padding: '14px 16px',
+                                background: 'rgba(0,214,143,0.06)',
+                                border: '1px solid rgba(0,214,143,0.15)',
+                                borderRadius: 10,
+                                fontSize: 11, color: '#6B7280', lineHeight: 1.6,
+                            }}>
+                                Cotización válida por <strong style={{ color: '#9CA3AF' }}>10 días hábiles</strong>. Precios sujetos a disponibilidad de inventario. No incluye matrícula ni traspaso.
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs text-slate-400 font-mono">{quote.referenceCode}</span>
-                        <PrintButton />
+                </div>
+            </section>
+
+            {/* ════════════════════════════════════
+                FOOTER
+            ════════════════════════════════════ */}
+            <footer style={{
+                background: '#050B08',
+                borderTop: '1px solid rgba(0,214,143,0.1)',
+                padding: '28px 40px',
+            }}>
+                <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                    <div>
+                        <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px', marginBottom: 4 }}>
+                            ELE<span style={{ color: '#00D68F' }}>MOTOR</span>
+                        </div>
+                        <div style={{ fontSize: 11, color: '#4B6A5E' }}>
+                            Ak 27 #55-16, Bucaramanga · 314 466 3469 · comercial@elemotor.com.co
+                        </div>
                     </div>
-                </footer>
-            </main>
-        </div>
-    );
-}
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: '#00D68F' }}>{quote.referenceCode}</div>
+                        <div style={{ fontSize: 10, color: '#4B6A5E', marginTop: 2 }}>{date}</div>
+                    </div>
+                </div>
+                <div style={{ maxWidth: 1200, margin: '16px auto 0', borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: 16 }}>
+                    <p style={{ fontSize: 9, color: '#2D4A3E', lineHeight: 1.7, textAlign: 'center' }}>
+                        No somos representantes oficiales de las marcas en Colombia. Esta cotización es un documento informativo y no constituye una oferta comercial definitiva.
+                        Los precios, especificaciones y disponibilidad están sujetos a cambios sin previo aviso.
+                    </p>
+                </div>
+            </footer>
 
-// ── Subcomponents ──────────────────────────────────────────────────────────────
-
-function SpecCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-    return (
-        <div className="flex flex-col items-center text-center bg-slate-50 border border-slate-100 rounded-xl p-3 gap-1.5">
-            {icon}
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider leading-tight">{label}</span>
-            <span className="text-sm font-bold text-slate-900">{value}</span>
-        </div>
-    );
-}
-
-function DimCell({ label, value }: { label: string; value: string }) {
-    return (
-        <div className="flex flex-col items-center text-center py-2 px-1">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">{label}</span>
-            <span className="text-sm font-bold text-slate-800">{value}</span>
-        </div>
-    );
-}
-
-function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-    return (
-        <div className="flex items-center justify-between gap-2 text-sm">
-            <div className="flex items-center gap-2 text-slate-400 flex-shrink-0">
-                {icon}
-                <span className="text-xs font-semibold text-slate-400">{label}</span>
-            </div>
-            <span className="font-semibold text-slate-800 text-right">{value}</span>
+            <style>{`
+                * { box-sizing: border-box; }
+                @media (max-width: 640px) {
+                    .hero-grid, .info-grid, .spec-grid,
+                    .price-grid, .feat-grid { grid-template-columns: 1fr !important; }
+                    .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+                    .stats-grid > div { border-right: none !important; border-bottom: 1px solid rgba(0,214,143,0.1); }
+                }
+                @media print {
+                    .no-print { display: none !important; }
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                }
+            `}</style>
         </div>
     );
 }

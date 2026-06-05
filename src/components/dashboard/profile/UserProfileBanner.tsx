@@ -6,6 +6,15 @@ interface UserProfileBannerProps {
     onEditClick?: () => void;
 }
 
+const getRoleLabel = (role: string): string => {
+    const labels: Record<string, string> = {
+        admin: 'Asesor Comercial',
+        super_admin: 'Super Admin',
+        client: 'Cliente',
+    };
+    return labels[role] ?? role;
+};
+
 export function UserProfileBanner({ user, onEditClick }: UserProfileBannerProps) {
     // Generate initials safely
     const generateInitials = (name: string) => {
@@ -43,7 +52,7 @@ export function UserProfileBanner({ user, onEditClick }: UserProfileBannerProps)
                         <h2 className="text-3xl font-black text-white tracking-tight">{user.name}</h2>
                         
                         <span className="inline-flex items-center justify-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-full self-center">
-                            {user.role}
+                            {getRoleLabel(user.role)}
                         </span>
                     </div>
 
