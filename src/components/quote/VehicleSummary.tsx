@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Battery, Zap, Gauge, CheckCircle2, MessageCircle, ShieldCheck } from 'lucide-react';
 import { VehicleModel } from '@/types/inventory';
+import { PaymentMethods } from '@/components/PaymentMethods';
 
 const BANKS = [
     { name: 'Banco de Bogotá', bg: '#003087', text: '#FFFFFF', accent: '#1a4fa0' },
@@ -103,21 +104,41 @@ export function VehicleSummary({ vehicle }: Props) {
                 {/* Financing Section */}
                 <div className="mt-6 rounded-2xl overflow-hidden border border-white/5 bg-[#060B14]/60">
                     <div className="p-7">
-                        <p className="text-[#00D4AA] text-[10px] font-bold uppercase tracking-[0.2em] mb-3">
-                            Financiamiento
-                        </p>
-                        <h3 className="text-2xl font-black text-white leading-tight mb-3">
-                            Financiamiento<br />disponible
-                        </h3>
-                        <p className="text-slate-400 text-sm leading-relaxed mb-5">
-                            Tenemos convenios con los principales bancos del país para facilitar tu compra.
-                            Tasas competitivas y plazos flexibles.
-                        </p>
+                        {/* Header row: texto + tarjetas apiladas */}
+                        <div className="flex items-center justify-between gap-4 mb-3">
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[#00D4AA] text-[10px] font-bold uppercase tracking-[0.2em] mb-3">
+                                    Financiamiento
+                                </p>
+                                <h3 className="text-2xl font-black text-white leading-tight mb-3">
+                                    Financiamiento<br />disponible
+                                </h3>
+                                <p className="text-slate-400 text-sm leading-relaxed">
+                                    Tenemos convenios con los principales bancos del país para facilitar tu compra.
+                                    Tasas competitivas y plazos flexibles.
+                                </p>
+                            </div>
+
+                            {/* Tarjetas animadas — mismo componente que la landing */}
+                            {/* position:absolute saca el deck del flujo → el wrapper
+                                ocupa solo el espacio visual (176×110) sin whitespace extra.
+                                overflow visible = la animación de abanico puede salir del borde */}
+                            <div className="shrink-0 relative" style={{ width: '176px', height: '110px' }}>
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%) scale(0.55)',
+                                }}>
+                                    <PaymentMethods variant="deck-only" />
+                                </div>
+                            </div>
+                        </div>
                         <a
                             href="https://wa.me/573117762260?text=Hola%2C%20me%20interesa%20información%20sobre%20financiamiento%20para%20un%20vehículo%20eléctrico"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[#00D4AA] text-[#00D4AA] font-semibold text-sm bg-transparent hover:bg-[#00D4AA]/10 transition-colors mb-5"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[#00D4AA] text-[#00D4AA] font-semibold text-sm bg-transparent hover:bg-[#00D4AA]/10 transition-colors mt-5 mb-5"
                         >
                             <MessageCircle className="w-4 h-4" />
                             Contactar un asesor

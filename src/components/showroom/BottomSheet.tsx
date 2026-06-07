@@ -11,11 +11,13 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 
 interface BottomSheetProps {
     children: React.ReactNode;
+    selectedModel?: { brand: { name: string }; name: string; year: number } | null;
+    selectedTrim?: { name: string } | null;
 }
 
-const PEEK_HEIGHT = 72; // px always visible at bottom
+const PEEK_HEIGHT = 96; // px always visible at bottom
 
-export function BottomSheet({ children }: BottomSheetProps) {
+export function BottomSheet({ children, selectedModel, selectedTrim }: BottomSheetProps) {
     const sheetRef = useRef<HTMLDivElement>(null);
     const [sheetHeight, setSheetHeight] = useState(0); // full content height
     const [translateY, setTranslateY] = useState(0); // how much it's translated down (0 = fully open)
@@ -102,21 +104,33 @@ export function BottomSheet({ children }: BottomSheetProps) {
             >
                 {/* Drag Handle */}
                 <div
-                    className="sticky top-0 z-10 flex flex-col items-center pt-3 pb-2 bg-[#0A110F] cursor-grab select-none touch-none"
+                    className="sticky top-0 z-10 flex flex-col items-center pt-3 pb-3 bg-[#0A110F] cursor-grab select-none touch-none border-b border-white/5"
                     onPointerDown={onPointerDown}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
                     onPointerCancel={onPointerUp}
                 >
-                    <div className="w-10 h-1 rounded-full bg-white/20" />
+                    <div className="w-10 h-1 rounded-full bg-white/20 mb-3" />
 
-                    {/* Peek label — visible when collapsed */}
-                    <div className="flex items-center justify-between w-full px-5 mt-2.5">
-                        <p className="text-[10px] font-bold tracking-[0.2em] text-emerald-500/80">
-                            CONFIGURAR VEHÍCULO
-                        </p>
+                    <div className="flex items-center justify-between w-full px-5">
+                        <div>
+                            <p className="text-[9px] font-bold tracking-[0.2em] text-emerald-500/80 mb-0.5">
+                                CONFIGURAR VEHÍCULO
+                            </p>
+                            {selectedModel ? (
+                                <p className="text-white text-sm font-bold leading-none">
+                                    {selectedModel.brand.name}{' '}
+                                    <span className="text-emerald-400">{selectedModel.name}</span>
+                                    {selectedTrim && (
+                                        <span className="text-slate-500 text-xs font-normal ml-1">{selectedTrim.name}</span>
+                                    )}
+                                </p>
+                            ) : (
+                                <p className="text-slate-600 text-xs">Selecciona un modelo</p>
+                            )}
+                        </div>
                         <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
-                            <svg width="12" height="7" viewBox="0 0 12 7" fill="none">
+                            <svg width="14" height="8" viewBox="0 0 12 7" fill="none">
                                 <path d="M1 6L6 1L11 6" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" />
                             </svg>
                         </div>

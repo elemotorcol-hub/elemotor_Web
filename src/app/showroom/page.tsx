@@ -268,19 +268,30 @@ function ShowroomPageInner() {
                 MOBILE LAYOUT  (< lg)
                 Full viewer + bottom sheet
             ══════════════════════════════════════ */}
-            <div className="lg:hidden min-h-screen bg-[#050B09] font-sans select-none pt-16">
-                {/* 3D Viewer — 80% of viewport height */}
-                <div className="relative h-[80dvh] bg-[#050B09]">
+            <div className="lg:hidden bg-[#050B09] font-sans select-none" style={{ height: '100dvh', overflow: 'hidden' }}>
+                {/* 3D Viewer — fixed between navbar and bottom sheet */}
+                <div className="relative bg-[#050B09]" style={{ position: 'fixed', top: 80, left: 0, right: 0, bottom: 96 }}>
+
                     {/* Live badge */}
-                    <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5">
+                    <div className="absolute top-3 left-4 z-20 flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-emerald-500 text-[9px] font-bold tracking-[0.15em]">
-                            SHOWROOM VIRTUAL
-                        </span>
+                        <span className="text-emerald-500 text-[9px] font-bold tracking-[0.15em]">SHOWROOM VIRTUAL</span>
                     </div>
 
+                    {/* Nombre modelo — top center */}
+                    {selectedModel && (
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 text-center pointer-events-none">
+                            <p className="text-white text-xs font-bold tracking-wide leading-none">
+                                {selectedModel.brand.name} <span className="text-emerald-400">{selectedModel.name}</span>
+                            </p>
+                            {selectedTrim && (
+                                <p className="text-slate-500 text-[9px] mt-0.5">{selectedTrim.name}</p>
+                            )}
+                        </div>
+                    )}
+
                     {/* View toggle — top right */}
-                    <div className="absolute top-4 right-4 z-20">
+                    <div className="absolute top-3 right-4 z-20">
                         <ViewToggle viewMode={viewMode} onToggle={handleToggleViewMode} />
                     </div>
 
@@ -295,14 +306,12 @@ function ShowroomPageInner() {
                     {/* No 3D model placeholder */}
                     {!isLoadingModels && !isLoading3d && !model3dUrl && !error && (
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-center px-6">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-full border border-white/10 flex items-center justify-center">
-                                <svg className="w-8 h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <div className="w-14 h-14 mx-auto mb-3 rounded-full border border-white/10 flex items-center justify-center">
+                                <svg className="w-7 h-7 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
                                 </svg>
                             </div>
-                            <p className="text-slate-500 text-xs tracking-wider">
-                                MODELO 3D NO DISPONIBLE
-                            </p>
+                            <p className="text-slate-500 text-[10px] tracking-wider">MODELO 3D NO DISPONIBLE</p>
                         </div>
                     )}
 
@@ -317,49 +326,38 @@ function ShowroomPageInner() {
                         bodyColor={bodyColor}
                     />
 
-
                     {/* Loading overlay */}
                     <ViewerLoader progress={loaderProgress} visible={showLoader} />
 
-                    {/* Controls — bottom right (reset + lighting) */}
-                    <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
-                        <button
-                            onClick={handleResetCamera}
-                            aria-label="Resetear cámara"
-                            className="w-9 h-9 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all"
-                        >
-                            <RefreshCw className="w-3.5 h-3.5" />
+                    {/* Controls — bottom right */}
+                    <div className="absolute bottom-3 right-3 z-20 flex flex-col gap-2">
+                        <button onClick={handleResetCamera} aria-label="Resetear cámara"
+                            className="w-11 h-11 rounded-full bg-[#15201D]/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 active:bg-white/10 transition-all">
+                            <RefreshCw className="w-4 h-4" />
                         </button>
-                        <button
-                            onClick={handleToggleLightMode}
-                            aria-label={lightMode === 'day' ? 'Modo noche' : 'Modo día'}
-                            className="w-9 h-9 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all"
-                        >
-                            {lightMode === 'day'
-                                ? <Moon className="w-3.5 h-3.5" />
-                                : <Sun className="w-3.5 h-3.5 text-amber-400" />
-                            }
+                        <button onClick={handleToggleLightMode} aria-label={lightMode === 'day' ? 'Modo noche' : 'Modo día'}
+                            className="w-11 h-11 rounded-full bg-[#15201D]/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 active:bg-white/10 transition-all">
+                            {lightMode === 'day' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-400" />}
                         </button>
-                        <button
-                            onClick={() => setShowHelp(true)}
-                            aria-label="Ayuda"
-                            className="w-9 h-9 rounded-full bg-[#15201D]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all"
-                        >
-                            <HelpCircle className="w-3.5 h-3.5" />
+                        <button onClick={() => setShowHelp(true)} aria-label="Ayuda"
+                            className="w-11 h-11 rounded-full bg-[#15201D]/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 active:bg-white/10 transition-all">
+                            <HelpCircle className="w-4 h-4" />
                         </button>
                     </div>
 
+                    {/* Hint de arrastre — bottom left */}
+                    <div className="absolute bottom-3 left-4 z-20 pointer-events-none">
+                        <p className="text-emerald-500/60 text-[8px] font-bold tracking-[0.15em]">ARRASTRA · PELLIZCA</p>
+                    </div>
+
                     {/* Radial glow */}
-                    <div
-                        className="absolute inset-0 pointer-events-none transition-all duration-1000"
-                        style={{
-                            background: `radial-gradient(ellipse 70% 50% at 50% 60%, ${accentColor}0A 0%, transparent 70%)`,
-                        }}
+                    <div className="absolute inset-0 pointer-events-none transition-all duration-1000"
+                        style={{ background: `radial-gradient(ellipse 70% 50% at 50% 60%, ${accentColor}0A 0%, transparent 70%)` }}
                     />
                 </div>
 
                 {/* Mobile bottom sheet with configurator */}
-                <BottomSheet>
+                <BottomSheet selectedModel={selectedModel} selectedTrim={selectedTrim}>
                     {ConfiguratorContent}
                     <CTAFooter quoteParams={getQuoteParams()} trim={selectedTrim} />
                 </BottomSheet>

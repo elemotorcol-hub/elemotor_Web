@@ -54,7 +54,7 @@ export function WhatsAppWidget() {
 
     return (
         <div className="fixed bottom-8 right-8 z-[90] flex flex-col items-center gap-3">
-            {/* Redes sociales */}
+            {/* Redes sociales — comentadas temporalmente
             {socialLinks.map(({ label, href, bg, hover, shadow, icon }) => (
                 <a
                     key={label}
@@ -69,6 +69,7 @@ export function WhatsAppWidget() {
                     </span>
                 </a>
             ))}
+            */}
 
             {/* WhatsApp */}
             <a

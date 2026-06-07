@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Lock, ArrowRight, MessageCircle, Phone, Mail, CheckCircle2, XCircle, X } from 'lucide-react';
+import { Lock, ArrowRight, MessageCircle, Phone, Mail, CheckCircle2, XCircle, X, Banknote, CreditCard, Building2, RefreshCw } from 'lucide-react';
 import { VehicleModel } from '@/types/inventory';
 import { submitQuoteAction } from '../../actions/quote';
 
@@ -358,22 +358,42 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialTrimId, i
 
                 {/* Forma de pago */}
                 <div>
-                    <label className={labelClasses}>Forma de pago</label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <label className={labelClasses}>Forma de pago / Financiamiento</label>
+                    <div className="grid grid-cols-2 gap-2">
                         {[
-                            { value: 'credito_banco', label: 'Crédito banco' },
-                            { value: 'recursos_propios', label: 'Recursos propios' },
-                            { value: 'no_definido', label: 'No tengo claro todavía' },
-                        ].map(opt => (
-                            <button
-                                key={opt.value}
-                                type="button"
-                                onClick={() => setValue('payment_method', opt.value)}
-                                className={`py-3 px-4 rounded-xl border text-[13px] font-bold transition-all text-center ${paymentMethod === opt.value ? 'bg-[#00D4AA] border-[#00D4AA] text-[#0A0F1C]' : 'bg-[#121c19] border-white/10 text-slate-300 hover:border-white/20'}`}
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
+                            { value: 'cash',      label: 'Contado',             Icon: Banknote,  accent: '#00D4AA' },
+                            { value: 'financing', label: 'Financiamiento',       Icon: Building2, accent: '#3B82F6' },
+                            { value: 'leasing',   label: 'Leasing',             Icon: CreditCard,accent: '#A855F7' },
+                            { value: 'trade_in',  label: 'Entrega de vehículo', Icon: RefreshCw, accent: '#F59E0B' },
+                        ].map(({ value, label, Icon, accent }) => {
+                            const isSelected = paymentMethod === value;
+                            return (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    onClick={() => setValue('payment_method', value)}
+                                    className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border text-left transition-all duration-200 ${
+                                        isSelected
+                                            ? 'border-[#00D4AA] bg-[#00D4AA]/10'
+                                            : 'border-white/8 bg-[#121c19] hover:border-white/20'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0 transition-all"
+                                        style={{
+                                            backgroundColor: isSelected ? `${accent}22` : 'rgba(255,255,255,0.05)',
+                                            color: isSelected ? accent : '#64748b',
+                                        }}>
+                                        <Icon className="w-3.5 h-3.5" />
+                                    </div>
+                                    <span className="text-[12px] font-bold" style={{ color: isSelected ? '#fff' : '#94a3b8' }}>
+                                        {label}
+                                    </span>
+                                    {isSelected && (
+                                        <span className="ml-auto w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: accent }} />
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                     {errors.payment_method && <p className="text-xs text-red-500 mt-1 font-medium">{errors.payment_method.message}</p>}
                 </div>

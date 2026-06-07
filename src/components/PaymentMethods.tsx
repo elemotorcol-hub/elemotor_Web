@@ -26,7 +26,7 @@ const FANNED: string[] = [
 ];
 
 interface Props {
-    variant: 'section' | 'inline';
+    variant: 'section' | 'inline' | 'deck-only';
 }
 
 export function PaymentMethods({ variant }: Props) {
@@ -107,6 +107,14 @@ export function PaymentMethods({ variant }: Props) {
             ))}
         </div>
     );
+
+    if (variant === 'deck-only') {
+        return (
+            <div className="flex items-center justify-center" style={{ width: '320px', height: '200px' }}>
+                {deck}
+            </div>
+        );
+    }
 
     if (!isSection) {
         return (
