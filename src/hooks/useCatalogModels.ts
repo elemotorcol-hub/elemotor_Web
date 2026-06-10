@@ -30,6 +30,11 @@ const MODEL_TYPE_MAP: Record<CatalogModel['type'], CategoryTuple> = {
     Sedan: 'Sedán',
     Hatchback: 'Hatchback',
     Pickup: 'Pick-Up',
+    Truck: 'Camión',
+    Bus: 'Bus',
+    Minibus: 'Minibús',
+    Taxi: 'Taxi',
+    Van: 'Van',
 };
 
 const TRIM_STATUS_MAP: Record<string, Vehicle['stockStatus']> = {
@@ -63,6 +68,7 @@ function adaptModelToVehicle(model: CatalogModel): Vehicle {
         brand: model.brand.name.toUpperCase(),
         model: model.name.toUpperCase(),
         category: MODEL_TYPE_MAP[model.type] ?? 'SUV',
+        segment: model.segment ?? 'particular',
         price,
         battery_kwh: battery,
         range_cltc_km: range,

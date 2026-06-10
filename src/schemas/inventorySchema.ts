@@ -95,7 +95,8 @@ export const vehicleModelSchema = z.object({
         .min(2, 'Slug requerido')
         .max(120, 'Slug demasiado largo')
         .regex(/^[a-z0-9-]+$/, 'Formato inválido (solo minúsculas y guiones)'),
-    type: z.enum(['suv', 'sedan', 'hatchback', 'pickup']),
+    type: z.enum(['suv', 'sedan', 'hatchback', 'pickup', 'truck', 'bus', 'minibus', 'taxi', 'van']),
+    segment: z.enum(['particular', 'corporate']).default('particular'),
     year: z.coerce.number({ message: 'Debe ser un número' })
         .int('Año debe ser solo números enteros')
         .min(1900, 'Año inválido')

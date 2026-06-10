@@ -70,7 +70,7 @@ export default function GeneralTab({ mode }: { mode?: 'add' | 'edit' }) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-bold text-slate-300">Slug</label>
                     <input
@@ -93,12 +93,34 @@ export default function GeneralTab({ mode }: { mode?: 'add' | 'edit' }) {
                             <option value="sedan">Sedán</option>
                             <option value="hatchback">Hatchback</option>
                             <option value="pickup">Pickup</option>
+                            <option value="truck">Camión de Carga</option>
+                            <option value="bus">Bus</option>
+                            <option value="minibus">Minibús / Van</option>
+                            <option value="taxi">Taxi Verde</option>
+                            <option value="van">Van Empresarial</option>
                         </select>
                         <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-500">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </div>
                     {errors.type && <span className="text-red-500 text-xs mt-1">{errors.type.message}</span>}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-bold text-slate-300">Segmento</label>
+                    <div className="relative">
+                        <select
+                            {...register('segment')}
+                            className={`w-full bg-[#0f172a]/40 border ${errors.segment ? 'border-red-500' : 'border-[#1e293b]'} rounded-lg px-4 py-3 text-[14px] font-medium text-white focus:outline-none focus:border-[#10B981] transition-all appearance-none cursor-pointer`}
+                        >
+                            <option value="particular">Particular</option>
+                            <option value="corporate">Empresarial / Corporativo</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-500">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                    {errors.segment && <span className="text-red-500 text-xs mt-1">{errors.segment.message}</span>}
                 </div>
 
                 <div className="flex flex-col gap-2">

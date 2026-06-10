@@ -1,4 +1,4 @@
-export const VehicleCategories = ['SUV', 'Sedán', 'Hatchback', 'Pick-Up'] as const;
+export const VehicleCategories = ['SUV', 'Sedán', 'Hatchback', 'Pick-Up', 'Camión', 'Bus', 'Minibús', 'Taxi', 'Van'] as const;
 export type CategoryTuple = typeof VehicleCategories[number];
 
 export interface Vehicle {
@@ -7,6 +7,7 @@ export interface Vehicle {
     brand: string;
     model: string;
     category: CategoryTuple;
+    segment?: 'particular' | 'corporate';
     price: number;
     image: string;
     stockStatus: 'EN STOCK' | 'PREVENTA' | 'POR PEDIDO';

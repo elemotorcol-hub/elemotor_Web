@@ -32,6 +32,7 @@ function mapApiToFormData(apiModel: any): VehicleModelFormData {
         const map: Record<string, string> = {
             'SUV': 'suv', 'Sedan': 'sedan', 'Hatchback': 'hatchback',
             'Pickup': 'pickup', 'Van': 'van', 'Coupe': 'coupe',
+            'Truck': 'truck', 'Bus': 'bus', 'Minibus': 'minibus', 'Taxi': 'taxi',
         };
         return map[type] || 'suv';
     };
@@ -48,6 +49,7 @@ function mapApiToFormData(apiModel: any): VehicleModelFormData {
         featured: apiModel.featured ?? false,
         active: apiModel.active ?? true,
         status: apiModel.active ? 'Active' : 'Draft',
+        segment: (apiModel.segment as 'particular' | 'corporate') ?? 'particular',
         thumbnail: '',
         datasheet: apiModel.datasheetUrl ? {
             file_url: apiModel.datasheetUrl,
@@ -121,6 +123,7 @@ const EMPTY_FORM: VehicleModelFormData = {
     brand_id: '',
     slug: '',
     type: 'suv',
+    segment: 'particular',
     year: new Date().getFullYear(),
     basePrice: 0,
     status: 'Draft',
@@ -214,8 +217,12 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
             'sedan': 'Sedan',
             'hatchback': 'Hatchback',
             'pickup': 'Pickup',
-            // Aliases in case form still has these (will be removed from schema)
-            'van': 'SUV',
+            'truck': 'Truck',
+            'bus': 'Bus',
+            'minibus': 'Minibus',
+            'taxi': 'Taxi',
+            'van': 'Van',
+            // Legacy aliases
             'coupe': 'Sedan',
         };
         return map[type.toLowerCase()] || 'SUV';
@@ -293,6 +300,7 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
             name: data.name,
             slug: data.slug,
             type: formatModelType(data.type),
+            segment: data.segment ?? 'particular',
             year: Number(data.year),
             description: data.description || undefined,
             basePrice: Number(data.basePrice),
@@ -374,6 +382,7 @@ export default function ModelSlideOver({ isOpen, onClose, mode, initialData, onS
             name: data.name,
             slug: data.slug,
             type: formatModelType(data.type),
+            segment: data.segment ?? 'particular',
             year: Number(data.year),
             description: data.description || undefined,
             basePrice: Number(data.basePrice),

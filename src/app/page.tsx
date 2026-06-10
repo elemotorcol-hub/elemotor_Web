@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
 import { Navbar } from '@/components/Navbar';
+import { HeroPrincipal } from '@/components/HeroPrincipal';
 import { Hero } from '@/components/Hero';
 import { getPublishedPosts } from '@/services/blog.service';
 import type { PostSummary } from '@/services/blog.service';
@@ -42,6 +43,8 @@ export default async function Home() {
       </header>
 
       <main>
+        <HeroPrincipal />
+
         <Hero />
 
         <article>

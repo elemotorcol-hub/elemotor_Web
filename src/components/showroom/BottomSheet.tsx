@@ -73,14 +73,16 @@ export function BottomSheet({ children, selectedModel, selectedTrim }: BottomShe
     const onPointerUp = useCallback(() => {
         if (!isDragging) return;
         setIsDragging(false);
-        // Snap to open or closed based on midpoint
-        const mid = getCollapsedY() / 2;
-        if (translateY < mid) {
-            open();
-        } else {
-            close();
+        // Si el movimiento fue menor a 8px, se considera tap → toggle
+        const dragDelta = Math.abs(translateY - dragStartTranslate.current);
+        if (dragDelta < 8) {
+            isOpen ? close() : open();
+            return;
         }
-    }, [isDragging, translateY, getCollapsedY, open, close]);
+        // Si fue arrastre real → snap al punto medio
+        const mid = getCollapsedY() / 2;
+        translateY < mid ? open() : close();
+    }, [isDragging, translateY, isOpen, getCollapsedY, open, close]);
 
     return (
         <>
@@ -98,7 +100,7 @@ export function BottomSheet({ children, selectedModel, selectedTrim }: BottomShe
                 style={{
                     transform: sheetHeight ? `translateY(${translateY}px)` : 'translateY(100%)',
                     transition: isDragging ? 'none' : 'transform 0.35s cubic-bezier(0.32,0.72,0,1)',
-                    maxHeight: '90vh',
+                    maxHeight: 'calc(100dvh - 88px)', // deja al menos 88px libres para el Navbar
                     overflowY: isOpen ? 'auto' : 'hidden',
                 }}
             >

@@ -565,11 +565,17 @@ const ThreeViewer = forwardRef<ThreeViewerHandle, ThreeViewerProps>(
 
                     const { scaledSize, cameraDistance } = normalizeAndPlaceModel(model);
 
-                    // 3. Auto-fit cámara
+                    // 3. Auto-fit cámara — vista 3/4 lateral, carro completo visible con plato
+                    const camAngle = Math.PI / 8;              // 22.5° — ángulo 3/4 frontal-lateral
+                    const targetY  = scaledSize.y * 0.50;      // centro geométrico: plato + carro centrados
                     if (cameraRef.current) {
                         const camera = cameraRef.current;
-                        camera.position.set(0, scaledSize.y * 0.8, cameraDistance);
-                        camera.lookAt(0, scaledSize.y / 2, 0);
+                        camera.position.set(
+                            Math.sin(camAngle) * cameraDistance,
+                            scaledSize.y * 0.80,               // altura original — respeta maxPolarAngle
+                            Math.cos(camAngle) * cameraDistance,
+                        );
+                        camera.lookAt(0, targetY, 0);
                         camera.near = 0.1;
                         camera.far = 1000;
                         camera.fov = 45;
@@ -580,7 +586,7 @@ const ThreeViewer = forwardRef<ThreeViewerHandle, ThreeViewerProps>(
                     // 4. Ajuste de OrbitControls
                     if (controlsRef.current) {
                         const controls = controlsRef.current;
-                        controls.target.set(0, scaledSize.y / 2, 0);
+                        controls.target.set(0, targetY, 0);
                         controls.minDistance = scaledSize.length() * 0.3;
                         controls.maxDistance = scaledSize.length() * 3;
                         controls.update();

@@ -8,15 +8,23 @@ import { Vehicle } from '@/data/models';
 interface ModelCardProps {
     vehicle: Vehicle;
     priority?: boolean;
+    showCorporateBadge?: boolean;
 }
 
-export function ModelCard({ vehicle, priority = false }: ModelCardProps) {
+export function ModelCard({ vehicle, priority = false, showCorporateBadge = false }: ModelCardProps) {
     return (
         <div className="bg-[#0A0F1C] border border-white/5 rounded-2xl overflow-hidden group hover:border-[#00D4AA]/30 transition-all duration-500 shadow-2xl flex flex-col h-full relative">
             {/* Status Badge */}
             <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-[#00B38F]/10 border border-[#00D4AA]/20 rounded-md text-[10px] font-bold text-[#00D4AA] uppercase tracking-widest backdrop-blur-sm">
                 {vehicle.stockStatus}
             </div>
+
+            {/* Corporate Badge */}
+            {showCorporateBadge && (
+                <div className="absolute top-4 right-4 z-10 px-3 py-1 bg-blue-500/10 border border-blue-400/40 rounded-md text-[10px] font-bold text-blue-300 uppercase tracking-widest backdrop-blur-sm">
+                    Empresarial
+                </div>
+            )}
 
             {/* Vehículo Image */}
             <Link href={`/modelos/${vehicle.id}`} className="relative h-64 w-full bg-[#050B14] flex items-center justify-center p-6 overflow-hidden mt-10 block">

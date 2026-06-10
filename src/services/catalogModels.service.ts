@@ -48,11 +48,12 @@ export interface CatalogModel {
     id: number;
     name: string;
     slug: string;
-    type: 'SUV' | 'Sedan' | 'Hatchback' | 'Pickup';
+    type: 'SUV' | 'Sedan' | 'Hatchback' | 'Pickup' | 'Truck' | 'Bus' | 'Minibus' | 'Taxi' | 'Van';
     year: number;
     basePrice: string | null;   // Decimal comes as string from Prisma/JSON
     featured: boolean;
     active: boolean;
+    segment?: 'particular' | 'corporate';
     brand: {
         id: number;
         name: string;
@@ -78,9 +79,11 @@ export interface CatalogApiResponse {
 /**
  * Fetches ALL active models for the public catalog in a single API call.
  * Returns up to 100 models (sufficient for any realistic catalog).
+ * Optionally filter by segment: 'particular' | 'corporate'
  */
-export async function fetchActiveCatalogModels(): Promise<CatalogModel[]> {
-    const url = `${API_BASE_URL}/api/models?active=true&limit=100&page=1`;
+export async function fetchActiveCatalogModels(segment?: 'particular' | 'corporate'): Promise<CatalogModel[]> {
+    const segmentParam = segment ? `&segment=${segment}` : '';
+    const url = `${API_BASE_URL}/api/models?active=true&limit=100&page=1${segmentParam}`;
 
     const response = await fetch(url, {
         method: 'GET',
@@ -164,7 +167,7 @@ export interface DetailModel {
     id: number;
     name: string;
     slug: string;
-    type: 'SUV' | 'Sedan' | 'Hatchback' | 'Pickup';
+    type: 'SUV' | 'Sedan' | 'Hatchback' | 'Pickup' | 'Truck' | 'Bus' | 'Minibus' | 'Taxi' | 'Van';
     year: number;
     description: string | null;
     basePrice: string | null;     // Decimal serialised as string by Prisma

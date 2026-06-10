@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search, X, ChevronDown, TrendingUp, Zap, BarChart2, ExternalLink, Calendar, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Search, X, ChevronDown, TrendingUp, Zap, BarChart2, ExternalLink, Calendar, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
     ADVISORS,
     SOURCE_LABELS,
@@ -20,6 +20,8 @@ import { QuoteKpiCard } from './QuoteKpiCard';
 import { QuoteSlideOver } from './QuoteSlideOver';
 import { useQuoteFilters } from '@/hooks/useQuoteFilters';
 import { quoteService } from '@/services/quote.service';
+
+const PAGE_SIZE = 20;
 
 /* ─────────────────────────────────────────────────────
    Sub-components (Internal only for this file)
@@ -49,6 +51,10 @@ const SelectWrapper = ({ value, onChange, children, placeholder }: {
 ───────────────────────────────────────────────────── */
 export default function QuotesTable() {
     const [initialLoading, setInitialLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalRecords, setTotalRecords] = useState(0);
+
     const {
         quotes,
         setQuotes,
@@ -69,23 +75,37 @@ export default function QuotesTable() {
 
     const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
 
-    useEffect(() => {
-        const loadQuotes = async () => {
-            try {
-                const data = await quoteService.fetchQuotes();
-                if (Array.isArray(data)) {
-                    setQuotes(data);
-                } else if (data?.data && Array.isArray(data.data)) {
-                    setQuotes(data.data);
+    const loadQuotes = useCallback(async (page: number) => {
+        setInitialLoading(true);
+        try {
+            const data = await quoteService.fetchQuotes({ page, limit: PAGE_SIZE });
+            if (Array.isArray(data)) {
+                setQuotes(data);
+                setTotalPages(1);
+                setTotalRecords(data.length);
+            } else if (data?.data && Array.isArray(data.data)) {
+                setQuotes(data.data);
+                if (data.meta) {
+                    setTotalPages(Math.ceil(data.meta.total / PAGE_SIZE));
+                    setTotalRecords(data.meta.total);
                 }
-            } catch (error) {
-                console.error('Error loading quotes:', error);
-            } finally {
-                setInitialLoading(false);
             }
-        };
-        loadQuotes();
+        } catch (error) {
+            console.error('Error loading quotes:', error);
+        } finally {
+            setInitialLoading(false);
+        }
     }, [setQuotes]);
+
+    useEffect(() => {
+        loadQuotes(currentPage);
+    }, [loadQuotes, currentPage]);
+
+    const handlePageChange = (page: number) => {
+        if (page < 1 || page > totalPages) return;
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     /* ── Mutations ── */
     const handleUpdateQuote = async (id: number, data: Omit<Partial<Quote>, 'notes'> & { notes?: string }) => {
@@ -290,9 +310,59 @@ export default function QuotesTable() {
                     </table>
                 </div>
 
-                {/* Footer count */}
-                <div className="px-5 py-3 border-t border-slate-800 text-xs text-slate-600">
-                    Mostrando {filteredQuotes.length} de {quotes.length} cotizaciones
+                {/* Footer: count + pagination */}
+                <div className="px-5 py-3 border-t border-slate-800 flex items-center justify-between gap-4 flex-wrap">
+                    <span className="text-xs text-slate-600">
+                        Mostrando {filteredQuotes.length} de {totalRecords} cotizaciones
+                    </span>
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage <= 1 || initialLoading}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                aria-label="Página anterior"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+
+                            {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                                .reduce<(number | 'ellipsis')[]>((acc, p, idx, arr) => {
+                                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
+                                    acc.push(p);
+                                    return acc;
+                                }, [])
+                                .map((item, idx) =>
+                                    item === 'ellipsis' ? (
+                                        <span key={`ellipsis-${idx}`} className="px-1 text-slate-600 text-xs select-none">…</span>
+                                    ) : (
+                                        <button
+                                            key={item}
+                                            onClick={() => handlePageChange(item as number)}
+                                            disabled={initialLoading}
+                                            className={`min-w-[28px] h-7 px-1.5 rounded-lg text-xs font-semibold transition-colors disabled:cursor-not-allowed ${
+                                                currentPage === item
+                                                    ? 'bg-emerald-600 text-white'
+                                                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                            }`}
+                                        >
+                                            {item}
+                                        </button>
+                                    )
+                                )
+                            }
+
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage >= totalPages || initialLoading}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                aria-label="Página siguiente"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 

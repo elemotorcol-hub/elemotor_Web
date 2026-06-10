@@ -175,7 +175,7 @@ function ShowroomPageInner() {
         </>
     );
 
-    // ── Shared configurator content (used in both desktop panel & mobile sheet) ─
+    // ── Configurador desktop (modelo → trim → specs → colores) ────────────────
     const ConfiguratorContent = (
         <div className="space-y-6">
             <ModelSelector
@@ -201,6 +201,37 @@ function ShowroomPageInner() {
                     selectedColor={selectedIntColor}
                     onSelect={selectIntColor}
                 />
+            </div>
+        </div>
+    );
+
+    // ── Configurador móvil (colores primero, modelo/trim/specs abajo) ──────────
+    const MobileConfiguratorContent = (
+        <div className="space-y-6">
+            {/* Colores al tope — lo primero que ve el usuario al abrir el sheet */}
+            <ExteriorColorSelector
+                colors={exteriorColors}
+                selectedColor={selectedExtColor}
+                onSelect={selectExtColor}
+            />
+            <InteriorColorSelector
+                colors={interiorColors}
+                selectedColor={selectedIntColor}
+                onSelect={selectIntColor}
+            />
+            <div className="border-t border-white/5 pt-6 space-y-6">
+                <ModelSelector
+                    models={models}
+                    selectedModel={selectedModel}
+                    onSelect={handleSelectModel}
+                    disabled={isLoadingModels}
+                />
+                <TrimSelector
+                    trims={selectedModel?.trims ?? []}
+                    selectedTrim={selectedTrim}
+                    onSelect={handleSelectTrim}
+                />
+                <SpecsGrid spec={selectedTrim?.spec ?? null} trim={selectedTrim} />
             </div>
         </div>
     );
@@ -263,6 +294,29 @@ function ShowroomPageInner() {
                     ✓ Enlace copiado
                 </div>
             )}
+
+            {/* ── Mobile controls — fixed, above BottomSheet ───────── */}
+            <div className="lg:hidden fixed right-3 z-[35] flex flex-col gap-2" style={{ bottom: 112 }}>
+                <button onClick={handleResetCamera} aria-label="Resetear cámara"
+                    className="w-11 h-11 rounded-full bg-[#15201D]/90 border border-white/10 flex items-center justify-center text-slate-400 active:bg-white/10 transition-all">
+                    <RefreshCw className="w-4 h-4" />
+                </button>
+                <button onClick={handleToggleLightMode} aria-label={lightMode === 'day' ? 'Modo noche' : 'Modo día'}
+                    className="w-11 h-11 rounded-full bg-[#15201D]/90 border border-white/10 flex items-center justify-center text-slate-400 active:bg-white/10 transition-all">
+                    {lightMode === 'day' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-400" />}
+                </button>
+                <button onClick={handleShare} aria-label="Compartir"
+                    className="w-11 h-11 rounded-full bg-[#15201D]/90 border border-white/10 flex items-center justify-center text-slate-400 active:bg-white/10 transition-all">
+                    <Share2 className="w-4 h-4" />
+                </button>
+                <button onClick={() => setShowHelp(true)} aria-label="Ayuda"
+                    className="w-11 h-11 rounded-full bg-[#15201D]/90 border border-white/10 flex items-center justify-center text-slate-400 active:bg-white/10 transition-all">
+                    <HelpCircle className="w-4 h-4" />
+                </button>
+            </div>
+            <div className="lg:hidden fixed left-4 z-[35] pointer-events-none" style={{ bottom: 112 }}>
+                <p className="text-emerald-500/60 text-[8px] font-bold tracking-[0.15em]">ARRASTRA · PELLIZCA</p>
+            </div>
 
             {/* ══════════════════════════════════════
                 MOBILE LAYOUT  (< lg)
@@ -329,26 +383,6 @@ function ShowroomPageInner() {
                     {/* Loading overlay */}
                     <ViewerLoader progress={loaderProgress} visible={showLoader} />
 
-                    {/* Controls — bottom right */}
-                    <div className="absolute bottom-3 right-3 z-20 flex flex-col gap-2">
-                        <button onClick={handleResetCamera} aria-label="Resetear cámara"
-                            className="w-11 h-11 rounded-full bg-[#15201D]/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 active:bg-white/10 transition-all">
-                            <RefreshCw className="w-4 h-4" />
-                        </button>
-                        <button onClick={handleToggleLightMode} aria-label={lightMode === 'day' ? 'Modo noche' : 'Modo día'}
-                            className="w-11 h-11 rounded-full bg-[#15201D]/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 active:bg-white/10 transition-all">
-                            {lightMode === 'day' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-400" />}
-                        </button>
-                        <button onClick={() => setShowHelp(true)} aria-label="Ayuda"
-                            className="w-11 h-11 rounded-full bg-[#15201D]/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-400 active:bg-white/10 transition-all">
-                            <HelpCircle className="w-4 h-4" />
-                        </button>
-                    </div>
-
-                    {/* Hint de arrastre — bottom left */}
-                    <div className="absolute bottom-3 left-4 z-20 pointer-events-none">
-                        <p className="text-emerald-500/60 text-[8px] font-bold tracking-[0.15em]">ARRASTRA · PELLIZCA</p>
-                    </div>
 
                     {/* Radial glow */}
                     <div className="absolute inset-0 pointer-events-none transition-all duration-1000"
@@ -358,7 +392,7 @@ function ShowroomPageInner() {
 
                 {/* Mobile bottom sheet with configurator */}
                 <BottomSheet selectedModel={selectedModel} selectedTrim={selectedTrim}>
-                    {ConfiguratorContent}
+                    {MobileConfiguratorContent}
                     <CTAFooter quoteParams={getQuoteParams()} trim={selectedTrim} />
                 </BottomSheet>
             </div>

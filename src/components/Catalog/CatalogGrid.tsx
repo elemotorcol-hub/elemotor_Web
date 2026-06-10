@@ -8,6 +8,8 @@ import { useCatalogModels } from '@/hooks/useCatalogModels';
 
 const ITEMS_PER_PAGE = 6;
 
+type SegmentFilter = 'all' | 'particular' | 'corporate';
+
 // ─── Skeleton Card ────────────────────────────────────────────────────────────
 // Matches the visual dimensions of ModelCard while content loads
 function ModelCardSkeleton() {
@@ -50,6 +52,7 @@ export function CatalogGrid() {
     const { vehicles, maxAutonomy, availableCategories, isLoading, isError } =
         useCatalogModels();
 
+    const [selectedSegment, setSelectedSegment] = React.useState<SegmentFilter>('all');
     const [selectedCategory, setSelectedCategory] = React.useState('Todos');
     const [autonomyRange, setAutonomyRange] = React.useState<[number, number]>([0, maxAutonomy]);
     const [currentPage, setCurrentPage] = React.useState(1);
@@ -61,18 +64,25 @@ export function CatalogGrid() {
     // Reset pagination when filters change
     React.useEffect(() => {
         setCurrentPage(1);
+        setSelectedCategory('Todos');
+    }, [selectedSegment]);
+
+    React.useEffect(() => {
+        setCurrentPage(1);
     }, [selectedCategory, autonomyRange]);
 
     // Derived State: Filtered Vehicles
     const filteredVehicles = React.useMemo(() => {
         return vehicles.filter((vehicle) => {
+            const matchesSegment =
+                selectedSegment === 'all' || vehicle.segment === selectedSegment;
             const matchesCategory =
                 selectedCategory === 'Todos' || vehicle.category === selectedCategory;
             const matchesAutonomy =
                 vehicle.range_wltp_km >= autonomyRange[0] && vehicle.range_wltp_km <= autonomyRange[1];
-            return matchesCategory && matchesAutonomy;
+            return matchesSegment && matchesCategory && matchesAutonomy;
         });
-    }, [vehicles, selectedCategory, autonomyRange]);
+    }, [vehicles, selectedSegment, selectedCategory, autonomyRange]);
 
     // Derived State: Pagination
     const totalPages = Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE);
@@ -83,7 +93,7 @@ export function CatalogGrid() {
 
     return (
         <div className="container mx-auto px-6 max-w-7xl -mt-8 relative z-20">
-            {/* Filters — always rendered so the UI doesn't jump */}
+            {/* Unified filter card */}
             <CatalogFilters
                 categories={availableCategories}
                 selectedCategory={selectedCategory}
@@ -91,6 +101,8 @@ export function CatalogGrid() {
                 autonomyRange={autonomyRange}
                 onAutonomyChange={setAutonomyRange}
                 maxAutonomy={maxAutonomy}
+                selectedSegment={selectedSegment}
+                onSegmentChange={setSelectedSegment}
             />
 
             {/* Loading skeleton */}
@@ -123,6 +135,7 @@ export function CatalogGrid() {
                                 <ModelCard
                                     key={vehicle.id}
                                     vehicle={vehicle}
+                                    showCorporateBadge={vehicle.segment === 'corporate'}
                                     // Only prioritize loading the first 3 images (above the fold on desktop)
                                     priority={i < 3 && currentPage === 1}
                                 />

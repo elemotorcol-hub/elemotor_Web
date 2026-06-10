@@ -1,5 +1,7 @@
 export type Status = 'Active' | 'Draft';
+export type ModelSegment = 'particular' | 'corporate';
 export type BodyType = 'suv' | 'sedan' | 'hatchback' | 'pickup' | 'van' | 'coupe';
+export type ModelType = 'SUV' | 'Sedan' | 'Hatchback' | 'Pickup' | 'Truck' | 'Bus' | 'Minibus' | 'Taxi' | 'Van';
 export type ImageType = 'gallery' | 'hero' | 'interior' | 'exterior' | 'panoramic';
 export type Model3DFormat = 'glb' | 'gltf';
 
@@ -84,6 +86,7 @@ export interface VehicleModel {
     featured: boolean;
     active: boolean;
     status: Status; // Derived or mapped from active
+    segment?: ModelSegment;
     thumbnail: string; // Used for UI currently
     trims: Trim[];
     brand?: {

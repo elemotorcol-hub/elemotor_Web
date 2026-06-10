@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Rotate3d, Calculator, ArrowRight, ShieldCheck, Clock, Leaf, Headphones } from 'lucide-react';
@@ -14,7 +15,8 @@ const cards = [
         title: 'SHOWROOM\nVIRTUAL 3D',
         description: 'Explora cada detalle del vehículo desde tu dispositivo. Rota, acerca y descubre el interior y exterior a tu ritmo.',
         cta: 'ABRIR SHOWROOM',
-        bg: 'linear-gradient(135deg, #0a1628 0%, #0d1f3c 60%, #091812 100%)',
+        image: '/showroom_3d.webp',
+        overlay: 'linear-gradient(to right, rgba(6,13,11,0.92) 40%, rgba(6,13,11,0.4) 100%)',
         glowColor: '#00D4AA',
     },
     {
@@ -25,7 +27,8 @@ const cards = [
         title: 'CALCULADORA\nDE AHORRO',
         description: 'Descubre cuánto ahorras al cambiar a eléctrico. Compara costos de combustible vs carga eléctrica en tu ciudad.',
         cta: 'CALCULAR MI AHORRO',
-        bg: 'linear-gradient(135deg, #061812 0%, #0a2518 60%, #061812 100%)',
+        image: '/calculadora_ahorro.webp',
+        overlay: 'linear-gradient(to right, rgba(6,13,11,0.92) 40%, rgba(6,13,11,0.4) 100%)',
         glowColor: '#00D4AA',
     },
 ];
@@ -76,13 +79,23 @@ export function ExperienceSection() {
                             transition={{ duration: 0.6, delay: index * 0.15 }}
                             className="group"
                         >
-                            <div className="relative rounded-2xl border border-white/10 overflow-hidden h-full flex flex-col p-8 md:p-10 transition-all duration-300 hover:border-[#00D4AA]/40"
-                                style={{ background: card.bg }}
-                            >
+                            <div className="relative rounded-2xl border border-white/10 overflow-hidden h-full flex flex-col p-8 md:p-10 transition-all duration-300 hover:border-[#00D4AA]/40 bg-[#060D0B]">
+                                {/* Background image */}
+                                <Image
+                                    src={card.image}
+                                    alt=""
+                                    fill
+                                    className="object-cover object-center scale-105 group-hover:scale-100 transition-transform duration-700"
+                                    sizes="(max-width: 768px) 100vw, 50vw"
+                                />
+                                {/* Gradient overlay for text readability */}
+                                <div className="absolute inset-0" style={{ background: card.overlay }} />
                                 {/* Corner glow */}
-                                <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full blur-3xl pointer-events-none opacity-0 group-hover:opacity-30 transition-opacity duration-500"
+                                <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full blur-3xl pointer-events-none opacity-0 group-hover:opacity-20 transition-opacity duration-500"
                                     style={{ background: card.glowColor }} />
 
+                                {/* Content — above image/overlay */}
+                                <div className="relative z-10 flex flex-col h-full">
                                 {/* Top row: badge + 360 */}
                                 <div className="flex items-center justify-between mb-8">
                                     <span className="inline-flex items-center gap-1.5 border border-[#00D4AA]/40 text-[#00D4AA] text-[9px] font-black tracking-[0.18em] uppercase px-3 py-1.5 rounded-full">
@@ -117,6 +130,7 @@ export function ExperienceSection() {
                                     {card.cta}
                                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </Link>
+                                </div>{/* end content z-10 */}
                             </div>
                         </motion.div>
                     ))}
