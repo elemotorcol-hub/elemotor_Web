@@ -31,11 +31,11 @@ export default function GeneralTab({ mode }: { mode?: 'add' | 'edit' }) {
     // Auto-generate slug when name changes, if string hasn't been manually touched
     const name = watch('name');
     React.useEffect(() => {
-        if (name && !touchedFields.slug) {
+        if (mode !== 'edit' && name && !touchedFields.slug) {
             const generatedSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
             setValue('slug', generatedSlug, { shouldValidate: true });
         }
-    }, [name, setValue, touchedFields.slug]);
+    }, [mode, name, setValue, touchedFields.slug]);
 
     return (
         <div className="flex flex-col gap-6 w-full">

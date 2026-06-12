@@ -80,21 +80,37 @@ export interface QuoteData {
 }
 
 export interface ExtendedQuoteData extends QuoteData {
+    name?: string;
+    email?: string;
+    phone?: string;
     city?: string;
+    country?: string;
+    color?: string;
     preferredChannel?: string;
+    paymentMethod?: string;
+    trackingCode?: string;
     message?: string;
     images: string[];
     trimName?: string;
+    rawStatus?: string;
+    assignedTo?: { id: number; name: string; phone?: string; email?: string } | null;
 }
 
 export interface ApiQuoteResponse {
     id: number;
     referenceCode: string;
     status: string;
-    budgetRange?: number;
+    name?: string;
+    email?: string;
+    phone?: string;
     city?: string;
-    message?: string;
+    country?: string;
+    color?: string;
+    budgetRange?: number;
+    paymentMethod?: string;
     preferredChannel?: string;
+    trackingCode?: string;
+    message?: string;
     createdAt: string;
     model: {
         id: number;
@@ -107,6 +123,7 @@ export interface ApiQuoteResponse {
         name: string;
         images: Array<{ url: string }>;
     };
+    assignedTo?: { id: number; name: string; phone?: string; email?: string } | null;
 }
 
 export interface ClientDocument {

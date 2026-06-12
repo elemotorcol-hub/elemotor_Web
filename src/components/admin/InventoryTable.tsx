@@ -94,6 +94,11 @@ export default function InventoryTable() {
                         <option value="Sedan">Sedán</option>
                         <option value="Hatchback">Hatchback</option>
                         <option value="Pickup">Pickup</option>
+                        <option value="Truck">Camión</option>
+                        <option value="Bus">Bus</option>
+                        <option value="Minibus">Minibús</option>
+                        <option value="Taxi">Taxi</option>
+                        <option value="Van">Van</option>
                     </select>
 
                     <select
