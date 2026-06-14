@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Phone, X, User, Clock, FileText, DollarSign, Car } from 'lucide-react';
+import { Mail, Phone, X, User, Clock, FileText, DollarSign, Car, MapPin, MessageSquare, Globe, Hash, CreditCard, Building2 } from 'lucide-react';
 import { type Quote, type QuoteStatus, type Note } from '@/types/crm';
 import { STATUS_CONFIG } from '@/config/crm';
 import { quoteSchema, QuoteFormData } from '@/schemas/quoteSchema';
@@ -23,6 +23,25 @@ const getRoleLabel = (role: string): string => {
         client: 'Cliente',
     };
     return labels[role] ?? role;
+};
+
+const CHANNEL_LABELS: Record<string, string> = {
+    whatsapp: 'WhatsApp',
+    call: 'Llamada',
+    email: 'Email',
+};
+
+const PAYMENT_LABELS: Record<string, string> = {
+    credito_banco: 'Crédito bancario',
+    Recursos_propios: 'Recursos propios',
+    recursos_propios: 'Recursos propios',
+    leasing: 'Leasing',
+    no_definido: 'No definido',
+};
+
+const SEGMENT_LABELS: Record<string, string> = {
+    particular: 'Particular',
+    corporativo: 'Corporativo',
 };
 
 export function QuoteSlideOver({ onClose, quote, onUpdate }: QuoteSlideOverProps) {
@@ -214,17 +233,82 @@ export function QuoteSlideOver({ onClose, quote, onUpdate }: QuoteSlideOverProps
                                 <User className="w-3 h-3 text-[#10B981]" />
                                 Asesor Asignado
                             </label>
-                            <select 
-                                {...register('assignedToId')}
+                            <select
+                                value={String(watch('assignedToId') ?? '')}
+                                onChange={(e) => setValue('assignedToId', e.target.value ? Number(e.target.value) : undefined, { shouldValidate: true })}
                                 className="w-full bg-white/5 border border-white/5 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all appearance-none cursor-pointer"
                             >
                                 <option value="" className="bg-[#0A110F]">Sin asignar</option>
                                 {advisors.map((advisor) => (
-                                    <option key={advisor.id} value={advisor.id} className="bg-[#0A110F]">
+                                    <option key={advisor.id} value={String(advisor.id)} className="bg-[#0A110F]">
                                         {advisor.name} ({getRoleLabel(advisor.role)})
                                     </option>
                                 ))}
                             </select>
+                        </div>
+
+                        {/* Datos completos de la cotización */}
+                        <div className="space-y-3 pt-4 border-t border-white/5">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                <FileText className="w-3 h-3 text-[#10B981]" />
+                                Datos de la Cotización
+                            </label>
+                            <div className="grid grid-cols-2 gap-2">
+                                {quote.city && (
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5">
+                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-1"><MapPin className="w-2.5 h-2.5" />Ciudad</p>
+                                        <p className="text-sm text-slate-200">{quote.city}</p>
+                                    </div>
+                                )}
+                                {quote.preferredChannel && (
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5">
+                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-1"><Phone className="w-2.5 h-2.5" />Canal preferido</p>
+                                        <p className="text-sm text-slate-200">{CHANNEL_LABELS[quote.preferredChannel] ?? quote.preferredChannel}</p>
+                                    </div>
+                                )}
+                                {quote.segment && (
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5">
+                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-1"><Building2 className="w-2.5 h-2.5" />Segmento</p>
+                                        <p className="text-sm text-slate-200">{SEGMENT_LABELS[quote.segment] ?? quote.segment}</p>
+                                    </div>
+                                )}
+                                {quote.paymentMethod && (
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5">
+                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-1"><CreditCard className="w-2.5 h-2.5" />Financiamiento</p>
+                                        <p className="text-sm text-slate-200">{PAYMENT_LABELS[quote.paymentMethod] ?? quote.paymentMethod.replace(/_/g, ' ')}</p>
+                                    </div>
+                                )}
+                                {quote.source && (
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5">
+                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-1"><Globe className="w-2.5 h-2.5" />Fuente</p>
+                                        <p className="text-sm text-slate-200">{quote.source}</p>
+                                    </div>
+                                )}
+                                <div className="bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5">
+                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-1"><Clock className="w-2.5 h-2.5" />Creado</p>
+                                    <p className="text-sm text-slate-200">{formatDate(quote.createdAt)}</p>
+                                </div>
+                                <div className="bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5">
+                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-1"><Clock className="w-2.5 h-2.5" />Actualizado</p>
+                                    <p className="text-sm text-slate-200">{formatDate(quote.updatedAt)}</p>
+                                </div>
+                            </div>
+                            {quote.message && (
+                                <div className="bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5">
+                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-1"><MessageSquare className="w-2.5 h-2.5" />Mensaje del cliente</p>
+                                    <p className="text-sm text-slate-300 leading-relaxed">{quote.message}</p>
+                                </div>
+                            )}
+                            {(quote.utmSource || quote.utmMedium || quote.utmCampaign) && (
+                                <div className="bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5">
+                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-2"><Hash className="w-2.5 h-2.5" />UTM</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {quote.utmSource && <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-400">src: {quote.utmSource}</span>}
+                                        {quote.utmMedium && <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-400">med: {quote.utmMedium}</span>}
+                                        {quote.utmCampaign && <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-400">camp: {quote.utmCampaign}</span>}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Notes Feed */}

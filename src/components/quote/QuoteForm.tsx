@@ -84,21 +84,18 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialTrimId, i
         return vehicle?.trims ?? [];
     }, [selectedModelId, vehicles]);
 
-    // Colores únicos según trim seleccionado; si no hay trim, de todos los trims
+    // Colores del trim seleccionado; vacío si no hay trim elegido
     const availableColors = React.useMemo(() => {
+        if (!selectedTrimId) return [];
         const vehicle = vehicles.find(v => String(v.id) === String(selectedModelId));
         if (!vehicle?.trims) return [];
-        const sourceTrims = selectedTrimId
-            ? vehicle.trims.filter(t => String(t.id) === String(selectedTrimId))
-            : vehicle.trims;
+        const trim = vehicle.trims.find(t => String(t.id) === String(selectedTrimId));
         const seen = new Set<string>();
-        return sourceTrims
-            .flatMap(t => t.colors ?? [])
-            .filter(c => {
-                if (seen.has(c.name)) return false;
-                seen.add(c.name);
-                return true;
-            });
+        return (trim?.colors ?? []).filter(c => {
+            if (seen.has(c.name)) return false;
+            seen.add(c.name);
+            return true;
+        });
     }, [selectedModelId, selectedTrimId, vehicles]);
 
     // Cuando cambia el modelo, limpiar trim y color y notificar al padre

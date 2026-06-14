@@ -35,12 +35,22 @@ export function HeroPrincipal() {
     <section className="relative min-h-screen w-full flex flex-col overflow-hidden">
       {/* ── Fondo ── */}
       <div className="absolute inset-0 z-0">
+        {/* Desktop */}
         <Image
           src="/header_principal.webp"
           alt="Header principal Elemotor"
           fill
           priority
-          className="object-cover object-center"
+          className="hidden md:block object-cover object-center"
+          sizes="100vw"
+        />
+        {/* Móvil */}
+        <Image
+          src="/header_principal_movil.webp"
+          alt="Header principal Elemotor móvil"
+          fill
+          priority
+          className="block md:hidden object-cover object-center"
           sizes="100vw"
         />
         {/* Overlay oscuro general */}

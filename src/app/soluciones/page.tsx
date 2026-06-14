@@ -57,7 +57,7 @@ const SUBSEGMENTS = [
         description:
             'Vehículos robustos y especializados para empresas del sector energético, petrolero y minero. Equipados para operar en condiciones exigentes con la fiabilidad que tu operación requiere.',
         cta: 'Solicitar propuesta',
-        href: 'https://wa.me/573117762260?text=Hola%2C%20me%20interesa%20una%20cotizaci%C3%B3n%20para%20soluci%C3%B3n%20empresarial%20en%20el%20sector%20energ%C3%A9tico',
+        href: 'https://wa.me/573144663469?text=Hola%20Fernando%2C%20me%20interesa%20una%20cotizaci%C3%B3n%20empresarial%20para%20el%20sector%20energ%C3%A9tico',
     },
 ];
 
@@ -90,7 +90,7 @@ export default function SolucionesPage() {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <a
-                            href="https://wa.me/573117762260?text=Hola%2C%20me%20interesa%20una%20cotizaci%C3%B3n%20para%20soluci%C3%B3n%20empresarial"
+                            href="https://wa.me/573144663469?text=Hola%20Fernando%2C%20me%20interesa%20una%20cotizaci%C3%B3n%20empresarial%20para%20flota%20el%C3%A9ctrica"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center justify-center gap-2 bg-[#00D4AA] hover:bg-[#00BFAA] text-[#050B09] font-black text-sm uppercase tracking-widest px-8 py-4 rounded-xl transition-all shadow-[0_0_30px_rgba(0,212,170,0.25)] hover:shadow-[0_0_40px_rgba(0,212,170,0.4)]"
@@ -182,7 +182,7 @@ export default function SolucionesPage() {
                                 Estructuramos la solucion exacta para el tamano y necesidades de tu operacion.
                             </p>
                             <a
-                                href="https://wa.me/573117762260?text=Hola%2C%20me%20interesa%20una%20cotizaci%C3%B3n%20para%20soluci%C3%B3n%20empresarial"
+                                href="https://wa.me/573144663469?text=Hola%20Fernando%2C%20me%20interesa%20una%20cotizaci%C3%B3n%20empresarial%20para%20flota%20el%C3%A9ctrica"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center gap-2 bg-[#00D4AA] hover:bg-[#00BFAA] text-[#050B09] font-black text-sm uppercase tracking-widest px-10 py-5 rounded-xl transition-all shadow-[0_0_40px_rgba(0,212,170,0.3)] hover:shadow-[0_0_60px_rgba(0,212,170,0.5)]"

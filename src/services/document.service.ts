@@ -36,6 +36,13 @@ export const documentService = {
     },
 
     /**
+     * Listar documentos de un pedido — GET /api/documents/order/:orderId
+     */
+    async fetchOrderDocuments(orderId: number): Promise<Document[]> {
+        return fetchApi(`/api/documents/order/${orderId}`);
+    },
+
+    /**
      * [Generales] Subir un documento — POST /api/documents/upload
      * Debe enviarse como multipart/form-data
      */
@@ -59,5 +66,12 @@ export const documentService = {
      */
     async getDocumentUrls(id: number | string): Promise<{ previewUrl: string; downloadUrl: string; expiresAt: string | null; documentName: string }> {
         return fetchApi(`/api/documents/${id}/download`);
-    }
+    },
+
+    /**
+     * [Admin] Eliminar documento — DELETE /api/documents/:id
+     */
+    async deleteDocument(id: number | string): Promise<{ message: string }> {
+        return fetchApi(`/api/documents/${id}`, { method: 'DELETE' });
+    },
 };

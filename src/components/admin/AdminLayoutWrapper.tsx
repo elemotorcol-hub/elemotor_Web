@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { LogOut, Menu, ChevronLeft, User, Lock, Mail, X, CheckCircle2 } from 'lucide-react';
 import AdminSidebarNav from '@/app/admin/AdminSidebarNav';
 import { logoutAction } from '@/actions/authActions';
+import { NotificationBell } from '@/components/dashboard/NotificationBell';
 
 interface SessionUser {
     id?: string;
@@ -113,14 +114,15 @@ export default function AdminLayoutWrapper({ children, session }: { children: Re
             {/* Main Content */}
             <main className="relative z-10 flex min-w-0 flex-1 flex-col bg-[#0f172a] shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.5)]">
                 {/* Header (Toggle) */}
-                <header className="flex h-16 shrink-0 items-center gap-4 border-b border-white/5 bg-slate-950/40 px-6 backdrop-blur-md">
-                    <button 
+                <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-white/5 bg-slate-950/40 px-6 backdrop-blur-md">
+                    <button
                         onClick={toggleSidebar}
                         className="p-2 -ml-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors focus:outline-none"
                         title={isSidebarOpen ? "Ocultar menú" : "Mostrar menú"}
                     >
                         {isSidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
                     </button>
+                    <NotificationBell />
                 </header>
 
                 {/* Page Content */}

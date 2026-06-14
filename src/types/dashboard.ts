@@ -90,6 +90,8 @@ export interface ExtendedQuoteData extends QuoteData {
     paymentMethod?: string;
     trackingCode?: string;
     message?: string;
+    modelInterest?: string;
+    segment?: string;
     images: string[];
     trimName?: string;
     rawStatus?: string;
@@ -111,6 +113,8 @@ export interface ApiQuoteResponse {
     preferredChannel?: string;
     trackingCode?: string;
     message?: string;
+    modelInterest?: string;
+    segment?: string;
     createdAt: string;
     model: {
         id: number;

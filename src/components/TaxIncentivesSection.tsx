@@ -212,22 +212,13 @@ export function TaxIncentivesSection() {
                         </p>
                     </div>
 
-                    {/* CTA lateral */}
-                    <div className="hidden lg:flex flex-col gap-4 items-end">
+                    {/* Ahorro estimado */}
+                    <div className="hidden lg:flex flex-col items-end">
                         <div className="text-right">
                             <p className="text-white/40 text-[10px] tracking-wider uppercase mb-1">Ahorro estimado</p>
                             <p className="text-[#00D4AA] text-4xl font-black leading-none">+$30M</p>
                             <p className="text-slate-500 text-xs mt-1">en beneficios tributarios</p>
                         </div>
-                        <a
-                            href="https://wa.me/573117762260?text=Hola%2C%20quiero%20conocer%20los%20incentivos%20tributarios%20de%20la%20Ley%201715%20para%20veh%C3%ADculos%20el%C3%A9ctricos"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-[#00D4AA] hover:bg-[#00B38F] text-slate-900 font-black text-xs px-5 py-3 rounded-xl transition-all duration-300 uppercase tracking-wider shadow-[0_0_20px_rgba(0,212,170,0.25)] hover:shadow-[0_0_30px_rgba(0,212,170,0.4)]"
-                        >
-                            Contactar un asesor
-                            <ChevronRight className="w-3.5 h-3.5" />
-                        </a>
                     </div>
                 </motion.div>
 
@@ -275,7 +266,9 @@ export function TaxIncentivesSection() {
 
                         <div className="flex gap-3 flex-shrink-0">
                             <a
-                                href="/contacto"
+                                href="https://wa.me/573117762260?text=Hola%2C%20quiero%20conocer%20los%20incentivos%20tributarios%20de%20la%20Ley%201715%20para%20veh%C3%ADculos%20el%C3%A9ctricos"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 bg-[#00D4AA] hover:bg-[#00B38F] text-slate-900 font-black text-sm px-6 py-3.5 rounded-xl transition-all duration-300 uppercase tracking-wider shadow-[0_0_20px_rgba(0,212,170,0.3)] hover:shadow-[0_0_30px_rgba(0,212,170,0.5)] whitespace-nowrap"
                             >
                                 Hablar con un asesor

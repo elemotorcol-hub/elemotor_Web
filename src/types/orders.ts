@@ -44,6 +44,9 @@ export interface Order {
     totalPrice?: number;
     statusHistory?: OrderStatusHistory[];
     
+    // Delivery photo (uploaded after delivery)
+    deliveryPhotoUrl?: string;
+
     // Legacy mapping compatibility
     clientName?: string;
     vehicleModel?: string;

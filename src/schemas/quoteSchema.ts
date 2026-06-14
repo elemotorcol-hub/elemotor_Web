@@ -8,7 +8,7 @@ export const quoteSchema = z.object({
     modelInterest: z.string().min(1, 'Selecciona un modelo').optional().or(z.literal('')),
     status: z.enum(['pending', 'contacted', 'responded', 'negotiation', 'closed_won', 'closed_lost']),
     budgetRange: z.number().min(0, 'El monto no puede ser negativo').optional(),
-    assignedToId: z.number().optional(),
+    assignedToId: z.coerce.number().optional(),
     notes: z.string().max(3000, 'Las notas no pueden superar los 3000 caracteres').optional().or(z.literal('')),
     
     // Level 3 Detection

@@ -20,7 +20,7 @@ import { HelpCircle, Share2, RefreshCw, Sun, Moon } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { ModelSelector, TrimSelector, ExteriorColorSelector, InteriorColorSelector } from '@/components/showroom/ShowroomSelectors';
 import { SpecsGrid, CTAFooter } from '@/components/showroom/ShowroomConfig';
-import { ViewToggle } from '@/components/showroom/ViewToggle';
+
 import { ViewerLoader } from '@/components/showroom/ViewerLoader';
 import { BottomSheet } from '@/components/showroom/BottomSheet';
 import { useShowroomData } from '@/components/showroom/useShowroomData';
@@ -135,7 +135,11 @@ function ShowroomPageInner() {
     }, [selectTrim]);
 
     const handleResetCamera = useCallback(() => {
-        viewerRef.current?.resetCamera();
+        if (viewerRef.current) {
+            viewerRef.current.resetCamera();
+        } else {
+            window.location.reload();
+        }
     }, []);
 
     // ── View toggle with zoom animation ───────────────────────────────────────
@@ -344,10 +348,6 @@ function ShowroomPageInner() {
                         </div>
                     )}
 
-                    {/* View toggle — top right */}
-                    <div className="absolute top-3 right-4 z-20">
-                        <ViewToggle viewMode={viewMode} onToggle={handleToggleViewMode} />
-                    </div>
 
                     {/* Error state */}
                     {error && !isLoadingModels && (
@@ -413,10 +413,6 @@ function ShowroomPageInner() {
                         </span>
                     </div>
 
-                    {/* View toggle */}
-                    <div className="absolute top-5 left-1/2 -translate-x-1/2 z-20">
-                        <ViewToggle viewMode={viewMode} onToggle={handleToggleViewMode} />
-                    </div>
 
                     {/* No 3D model placeholder */}
                     {!isLoadingModels && !isLoading3d && !model3dUrl && !error && (

@@ -46,6 +46,16 @@ export const orderService = {
     },
 
     /**
+     * [Admin] Vincular pedido a un usuario por email — PATCH /api/orders/:id/link-user
+     */
+    async linkUser(id: number | string, email: string): Promise<{ message: string; userId: number }> {
+        return fetchApi(`/api/orders/${id}/link-user`, {
+            method: 'PATCH',
+            body: JSON.stringify({ email }),
+        });
+    },
+
+    /**
      * [Admin] Crear un nuevo pedido — POST /api/orders
      * Body: { userId, trimId, colorId, vin?, notes?, estimatedDelivery? }
      */
@@ -147,6 +157,15 @@ export const orderService = {
         } catch {
             return null;
         }
+    },
+
+    /**
+     * [Cliente] Subir foto de entrega de un pedido — POST /api/orders/:id/delivery-photo
+     */
+    async uploadDeliveryPhoto(id: number | string, file: File): Promise<Order> {
+        const form = new FormData();
+        form.append('deliveryPhoto', file);
+        return fetchApi(`/api/orders/${id}/delivery-photo`, { method: 'POST', body: form });
     },
 
     /**

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Wrench, CheckCircle2, Loader2, CalendarClock } from 'lucide-react';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import { MaintenanceAccessBlocker } from '@/components/dashboard/maintenance/MaintenanceAccessBlocker';
@@ -11,10 +11,13 @@ import { MarkMaintenanceDoneModal } from '@/components/dashboard/maintenance/Sch
 import { ScheduleAppointmentModal } from '@/components/dashboard/maintenance/ScheduleAppointmentModal';
 import { WorkshopsMap } from '@/components/talleres/WorkshopsMap';
 import { AppointmentModal } from '@/components/talleres/AppointmentModal';
+import { getSession } from '@/lib/auth.client';
 
 export default function MantenimientoPage() {
     const [isMarkDoneModalOpen, setIsMarkDoneModalOpen] = useState(false);
     const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+    const [userName, setUserName] = useState<string | undefined>(undefined);
+    const [userEmail, setUserEmail] = useState<string | undefined>(undefined);
 
     const [activeTab, setActiveTab] = useState<'historial' | 'talleres'>('historial');
     const {
@@ -27,6 +30,15 @@ export default function MantenimientoPage() {
         isSaving,
         createRecord,
     } = useMaintenance();
+
+    useEffect(() => {
+        getSession().then((session) => {
+            if (session?.user) {
+                setUserName(session.user.name);
+                setUserEmail(session.user.email);
+            }
+        }).catch(() => {});
+    }, []);
 
     // ─── Loading state ────────────────────────────────────────────────────────
     if (isLoading) {
@@ -121,6 +133,8 @@ export default function MantenimientoPage() {
                     <MaintenanceHistoryList
                         records={records}
                         totalCost={summary.totalCost}
+                        userName={userName}
+                        userEmail={userEmail}
                     />
 
                     {/* Mark done modal */}

@@ -6,6 +6,16 @@ import { motion } from 'framer-motion';
 import { Star, Quote } from 'lucide-react';
 import type { GoogleReview } from '@/services/google-reviews.service';
 
+// ─── Tipo para reseñas de clientes de la DB ───────────────────────────────────
+export interface ClientTestimonial {
+    id: number;
+    name: string;
+    comment: string;
+    rating: number;
+    photoUrl?: string;
+    createdAt: string;
+}
+
 // ─── Fotos de entrega (opcionales, se mapean por posición al review de Google) ─
 // Agrega las imágenes reales en /public/testimonios/ con estos nombres.
 // Si el archivo no existe, la tarjeta muestra solo la reseña de Google sin foto.
@@ -279,13 +289,86 @@ function CompactCard({ review, deliveryPhoto, index }: {
     );
 }
 
+// ─── Tarjeta de cliente DB ────────────────────────────────────────────────────
+
+function ClientCard({ testimonial, index }: { testimonial: ClientTestimonial; index: number }) {
+    const dateStr = new Date(testimonial.createdAt).toLocaleDateString('es-CO', {
+        year: 'numeric',
+        month: 'short',
+    });
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: index * 0.08 }}
+            className="group relative rounded-2xl overflow-hidden border border-white/5 hover:border-[#00D4AA]/30 transition-colors duration-300 flex"
+        >
+            {/* Foto o iniciales lateral */}
+            <div className="relative w-28 flex-shrink-0 overflow-hidden bg-[#0d1f1a]">
+                {testimonial.photoUrl ? (
+                    <Image
+                        src={testimonial.photoUrl}
+                        alt={testimonial.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-700"
+                        sizes="112px"
+                    />
+                ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#0d1f1a]">
+                        <div
+                            className="absolute inset-0 opacity-10"
+                            style={{
+                                backgroundImage: 'radial-gradient(circle, rgba(0,212,170,1) 1px, transparent 1px)',
+                                backgroundSize: '20px 20px',
+                            }}
+                        />
+                        <span className="relative text-[#00D4AA]/40 text-2xl font-black">
+                            {testimonial.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+                        </span>
+                    </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#0d1f1a]/60" />
+            </div>
+
+            {/* Contenido */}
+            <div className="bg-[#0d1f1a] p-4 flex flex-col justify-between flex-1">
+                <div>
+                    <div className="flex items-center justify-between mb-2">
+                        <StarRating count={testimonial.rating} />
+                        {/* Badge CLIENTE */}
+                        <span className="text-[9px] font-black tracking-wider text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 rounded-full px-2 py-0.5">
+                            CLIENTE
+                        </span>
+                    </div>
+                    <p className="text-white/70 text-xs leading-relaxed line-clamp-3">{testimonial.comment}</p>
+                </div>
+
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5">
+                    <div className="w-6 h-6 rounded-full overflow-hidden bg-[#00D4AA]/10 border border-[#00D4AA]/20 flex-shrink-0 flex items-center justify-center">
+                        <span className="text-[#00D4AA] text-[8px] font-black">
+                            {testimonial.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+                        </span>
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-white font-bold text-xs leading-none truncate">{testimonial.name}</p>
+                        <p className="text-slate-500 text-[9px] mt-0.5">{dateStr}</p>
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+}
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 interface TestimonialsSectionProps {
     reviews?: GoogleReview[];
+    clientTestimonials?: ClientTestimonial[];
 }
 
-export function TestimonialsSection({ reviews }: TestimonialsSectionProps) {
+export function TestimonialsSection({ reviews, clientTestimonials }: TestimonialsSectionProps) {
     // Si no hay reseñas de Google, usa las de respaldo
     const data = (reviews && reviews.length > 0) ? reviews : FALLBACK_REVIEWS;
     const featured = data[0];
@@ -348,6 +431,26 @@ export function TestimonialsSection({ reviews }: TestimonialsSectionProps) {
                         </div>
                     ))}
                 </motion.div>
+
+                {/* Reseñas de clientes DB */}
+                {clientTestimonials && clientTestimonials.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="mt-14"
+                    >
+                        <h3 className="text-xl font-black text-white tracking-tight uppercase mb-6">
+                            Reseñas de nuestros <span className="text-[#00D4AA]">clientes</span>
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {clientTestimonials.slice(0, 6).map((t, i) => (
+                                <ClientCard key={t.id} testimonial={t} index={i} />
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
 
             </div>
         </section>

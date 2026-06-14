@@ -1,8 +1,9 @@
 'use client';
 
-import { Bell, Menu, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Menu, ChevronLeft, ChevronRight } from 'lucide-react';
 import useSWR from 'swr';
 import { userService } from '@/services/user.service';
+import { NotificationBell } from './NotificationBell';
 
 interface Props {
     userName: string;
@@ -57,10 +58,7 @@ export function TopHeader({ userName, userLastName = '', role, onToggleSidebar, 
             {/* User Actions */}
             <div className="flex items-center gap-3 lg:gap-6">
                 {/* Notification Bell */}
-                <button className="hidden xs:flex w-10 h-10 rounded-full bg-white/5 border border-white/5 items-center justify-center text-slate-400 hover:text-white transition-colors relative">
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute top-2 right-2.5 w-2 h-2 bg-[#10B981] rounded-full"></span>
-                </button>
+                <NotificationBell />
 
                 {/* Profile Widget */}
                 <div className="flex items-center gap-3 cursor-pointer group">

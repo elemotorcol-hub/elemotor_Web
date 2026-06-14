@@ -3,14 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, ChevronRight, ArrowLeft, Settings as SettingsIcon } from 'lucide-react';
 import { UserProfileBanner } from '@/components/dashboard/profile/UserProfileBanner';
-import { AdvisorCard } from '@/components/dashboard/profile/AdvisorCard';
+import { AdvisorCard, AdvisorInfo } from '@/components/dashboard/profile/AdvisorCard';
 import { SettingsTabs } from '@/components/dashboard/settings/SettingsTabs';
 import { userService, UserProfile } from '@/services/user.service';
+import { getMyQuotesAction } from '@/actions/quote';
 
 export function ProfileView() {
     const [view, setView] = useState<'profile' | 'settings'>('profile');
     const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [advisor, setAdvisor] = useState<AdvisorInfo | null>(null);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -24,6 +26,40 @@ export function ProfileView() {
             }
         };
         fetchUser();
+    }, []);
+
+    useEffect(() => {
+        const fetchAdvisor = async () => {
+            try {
+                const result = await getMyQuotesAction({ page: 1, limit: 10 });
+                if (!result.success || !result.data) return;
+
+                // The API may return { data: Quote[] } or Quote[] directly
+                const quotes: any[] = Array.isArray(result.data)
+                    ? result.data
+                    : Array.isArray(result.data?.data)
+                    ? result.data.data
+                    : [];
+
+                // Find the most recent quote that has an assigned advisor
+                const quotesWithAdvisor = quotes.filter(
+                    (q: any) => q.assignedTo && q.assignedTo.name,
+                );
+
+                if (quotesWithAdvisor.length > 0) {
+                    const latest = quotesWithAdvisor[0];
+                    setAdvisor({
+                        name: latest.assignedTo.name,
+                        role: 'Asesor de Ventas',
+                        phone: latest.assignedTo.phone ?? undefined,
+                        email: latest.assignedTo.email ?? undefined,
+                    });
+                }
+            } catch (error) {
+                console.error('[ProfileView] Error fetching advisor from quotes:', error);
+            }
+        };
+        fetchAdvisor();
     }, []);
 
     if (loading || !user) {
@@ -77,7 +113,7 @@ export function ProfileView() {
 
                     {/* Right Col: Advisor */}
                     <div className="lg:col-span-1">
-                        <AdvisorCard />
+                        <AdvisorCard advisor={advisor} />
                     </div>
                 </div>
             ) : (

@@ -24,6 +24,8 @@ export interface Quote {
     city?: string;
     modelInterest?: string;
     budgetRange?: number;
+    segment?: string;
+    paymentMethod?: string;
     model?: {
         id: number;
         name: string;
@@ -39,6 +41,7 @@ export interface Quote {
     status: QuoteStatus;
     assignedToId?: number;
     assignedTo?: {
+        id: number;
         name: string;
     };
     utmSource?: string;
@@ -46,7 +49,7 @@ export interface Quote {
     utmCampaign?: string;
     createdAt: string; // ISO string
     updatedAt: string; // ISO string
-    preferredChannel: 'whatsapp' | 'call' | 'email';
+    preferredChannel?: 'whatsapp' | 'call' | 'email';
 }
 
 // Para compatibilidad con componentes existentes que usan 'Lead'

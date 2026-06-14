@@ -61,7 +61,7 @@ export function CatalogFilters({
                     )}
 
                     {/* Tipo */}
-                    {categories.map((cat) => (
+                    {categories.filter((cat) => cat.toLowerCase() !== 'todos').map((cat) => (
                         <button
                             key={cat}
                             onClick={() => onSelectCategory(cat)}

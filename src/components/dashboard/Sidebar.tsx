@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Car, Map, FileText, Settings, User, Headset, LucideIcon, LogOut, Wrench, FolderOpen, X } from 'lucide-react';
 import { logoutAction } from '@/actions/authActions';
+import { SupportTicketModal } from './SupportTicketModal';
 
 interface SidebarProps {
     isCollapsed?: boolean;
@@ -19,6 +21,7 @@ const MENU_ITEMS = [
     { name: 'Rastrear Pedido', href: '/dashboard/rastreo', icon: Map },
     { name: 'Mis Cotizaciones', href: '/dashboard/cotizaciones', icon: FileText },
     { name: 'Documentos', href: '/dashboard/documentos', icon: FolderOpen },
+    { name: 'Soporte', href: '/dashboard/soporte', icon: Headset },
 ];
 
 const BOTTOM_MENU_ITEMS = [
@@ -27,6 +30,7 @@ const BOTTOM_MENU_ITEMS = [
 
 export function Sidebar({ isCollapsed = false, isMobileOpen = false, onMobileClose }: SidebarProps) {
     const pathname = usePathname();
+    const [ticketModalOpen, setTicketModalOpen] = useState(false);
 
     const renderMenuItem = (item: { name: string, href: string, icon: LucideIcon }) => {
         const isActive = pathname === item.href;
@@ -50,6 +54,7 @@ export function Sidebar({ isCollapsed = false, isMobileOpen = false, onMobileClo
     };
 
     return (
+        <>
         <aside className={`
             bg-[#0A110F] h-screen flex flex-col fixed left-0 top-0 border-r border-slate-800/50 z-50 transition-all duration-300 ease-in-out
             ${isMobileOpen ? 'translate-x-0 w-[280px]' : '-translate-x-full lg:translate-x-0'}
@@ -114,7 +119,10 @@ export function Sidebar({ isCollapsed = false, isMobileOpen = false, onMobileClo
                             <p className="text-slate-400 text-xs leading-relaxed mb-4 pr-2">
                                 Contacta a nuestro equipo de soporte.
                             </p>
-                            <button className="w-full bg-transparent hover:bg-white/5 border border-white/10 text-slate-300 text-xs font-bold py-2.5 rounded-lg transition-colors">
+                            <button
+                                onClick={() => setTicketModalOpen(true)}
+                                className="w-full bg-transparent hover:bg-white/5 border border-white/10 text-slate-300 text-xs font-bold py-2.5 rounded-lg transition-colors"
+                            >
                                 Contactar Soporte
                             </button>
                             <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-emerald-500 opacity-5 blur-xl rounded-full pointer-events-none"></div>
@@ -123,5 +131,7 @@ export function Sidebar({ isCollapsed = false, isMobileOpen = false, onMobileClo
                 )}
             </div>
         </aside>
+        <SupportTicketModal isOpen={ticketModalOpen} onClose={() => setTicketModalOpen(false)} />
+        </>
     );
 }

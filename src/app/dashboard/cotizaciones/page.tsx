@@ -21,6 +21,347 @@ import { getMyQuotesAction, submitQuoteAction } from '@/actions/quote';
 import { getSession } from '@/lib/auth.client';
 import { downloadQuotePDF } from '@/lib/utils/pdfGenerator';
 
+// ─── Sub-Component: Quote Detail Modal ───────────────────────────────────────
+function QuoteDetailModal({
+    quote,
+    onClose,
+    onDownload,
+}: {
+    quote: ExtendedQuoteData;
+    onClose: () => void;
+    onDownload: () => void;
+}) {
+    const [copied, setCopied] = useState(false);
+    const quoteUrl = typeof window !== 'undefined' ? `${window.location.origin}/cotizacion/${quote.id}` : `/cotizacion/${quote.id}`;
+
+    const copyLink = () => {
+        navigator.clipboard.writeText(quoteUrl).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    };
+
+    const STATUS_INTERNAL: Record<string, string> = {
+        pending: 'Pendiente de revisión',
+        contacted: 'Contactado',
+        responded: 'Propuesta enviada',
+        negotiation: 'En negociación',
+        closed_won: 'Ganada',
+        closed_lost: 'Cerrada',
+    };
+
+    const CHANNEL_LABEL: Record<string, string> = {
+        whatsapp: 'WhatsApp',
+        phone: 'Teléfono',
+        email: 'Correo electrónico',
+    };
+
+    const PAYMENT_LABEL: Record<string, string> = {
+        credito_banco: 'Crédito bancario',
+        recursos_propios: 'Recursos propios',
+        Recursos_propios: 'Recursos propios',
+        leasing: 'Leasing',
+        no_definido: 'No definido',
+    };
+
+    const SEGMENT_LABEL: Record<string, string> = {
+        particular: 'Particular',
+        corporativo: 'Corporativo',
+    };
+
+    const advisor = quote.assignedTo;
+    const advisorInitials = advisor?.name
+        ? advisor.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+        : 'EL';
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+            <div
+                className="absolute inset-0 bg-black/70 backdrop-blur-xl animate-in fade-in duration-300"
+                onClick={onClose}
+            />
+
+            {/* Panel — slide up on mobile, centered on desktop */}
+            <div className="relative w-full sm:max-w-5xl bg-[#0F1A17] border border-white/8 sm:rounded-[36px] rounded-t-[36px] shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-400 flex flex-col max-h-[95dvh] overflow-hidden">
+
+                {/* Top accent bar */}
+                <div className="h-1 bg-gradient-to-r from-transparent via-[#10B981] to-transparent shrink-0" />
+
+                {/* Header strip */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
+                    <div className="flex items-center gap-3">
+                        <span className="font-mono text-[10px] font-black text-[#10B981] tracking-[0.2em] bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full">
+                            {quote.id}
+                        </span>
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                            quote.statusCode === 'approved'
+                                ? 'bg-[#10B981]/12 text-[#10B981] border-[#10B981]/25'
+                                : quote.statusCode === 'pending'
+                                ? 'bg-blue-500/12 text-blue-400 border-blue-500/25'
+                                : 'bg-slate-700/40 text-slate-400 border-slate-700/50'
+                        }`}>
+                            {quote.statusCode === 'approved' ? <CheckCircle2 className="w-3 h-3" />
+                                : quote.statusCode === 'pending' ? <Clock className="w-3 h-3" />
+                                : <AlertCircle className="w-3 h-3" />}
+                            {quote.status}
+                        </span>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+
+                {/* Body — two columns on desktop, scrollable on mobile */}
+                <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
+
+                    {/* ── Left: Vehicle visual ─────────────────────────────── */}
+                    <div className="w-full lg:w-[380px] bg-[#0A110F] flex flex-col shrink-0 border-b lg:border-b-0 lg:border-r border-white/5">
+                        {/* Image */}
+                        <div className="relative h-48 lg:h-52 mx-6 mt-6 mb-4 rounded-2xl overflow-hidden bg-[#050C0A]">
+                            <div className="absolute inset-0 bg-radial-gradient from-[#10B981]/8 to-transparent" />
+                            <Image
+                                src={quote.images?.[0] || 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=400&auto=format&fit=crop'}
+                                alt={quote.model}
+                                fill
+                                className="object-contain p-4"
+                                unoptimized
+                            />
+                        </div>
+
+                        {/* Vehicle info */}
+                        <div className="px-6 pb-6 space-y-3 flex-1">
+                            {quote.trimName && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] text-[10px] font-black uppercase tracking-widest">
+                                    <Car className="w-3 h-3" /> {quote.trimName}
+                                </span>
+                            )}
+                            <h2 className="text-2xl font-black text-white leading-tight tracking-tighter">{quote.model}</h2>
+
+                            <div className="space-y-2 pt-1">
+                                {quote.color && (
+                                    <div className="flex items-center gap-2">
+                                        <Palette className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                        <span className="text-slate-400 text-xs font-medium capitalize">{quote.color}</span>
+                                    </div>
+                                )}
+                                {quote.city && (
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                        <span className="text-slate-400 text-xs font-medium capitalize">{quote.city}{quote.country ? `, ${quote.country}` : ''}</span>
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                    <span className="text-slate-400 text-xs font-medium">{quote.date}</span>
+                                </div>
+                            </div>
+
+                            {/* Budget highlight */}
+                            <div className="mt-4 p-4 rounded-2xl bg-[#10B981]/8 border border-[#10B981]/15">
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Presupuesto</p>
+                                <p className="text-2xl font-black text-[#10B981]">{quote.amount}</p>
+                                {quote.paymentMethod && (
+                                    <p className="text-[10px] text-slate-500 font-medium mt-1 capitalize flex items-center gap-1">
+                                        <CreditCard className="w-3 h-3" />
+                                        {PAYMENT_LABEL[quote.paymentMethod] || quote.paymentMethod.replace(/_/g, ' ')}
+                                    </p>
+                                )}
+                                {quote.segment && (
+                                    <p className="text-[10px] text-slate-500 font-medium mt-1">
+                                        {SEGMENT_LABEL[quote.segment] || quote.segment}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Link de cotización */}
+                            <div className="mt-3 p-3 rounded-2xl bg-white/4 border border-white/8">
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                    <ExternalLink className="w-3 h-3" /> Link de cotización
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <span className="flex-1 text-[10px] text-slate-400 font-mono truncate">/cotizacion/{quote.id}</span>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                        <button
+                                            onClick={copyLink}
+                                            className={`p-1.5 rounded-lg transition-all text-[10px] font-bold flex items-center gap-1 ${
+                                                copied
+                                                    ? 'bg-[#10B981]/20 text-[#10B981]'
+                                                    : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                                            }`}
+                                            title="Copiar link"
+                                        >
+                                            {copied ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Hash className="w-3.5 h-3.5" />}
+                                        </button>
+                                        <a
+                                            href={`/cotizacion/${quote.id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="p-1.5 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                                            title="Abrir"
+                                        >
+                                            <ArrowUpRight className="w-3.5 h-3.5" />
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ── Right: Details scroll ─────────────────────────────── */}
+                    <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
+
+                        {/* ── Asesor asignado ── */}
+                        <div>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                <User className="w-3.5 h-3.5 text-[#10B981]" /> Asesor asignado
+                            </p>
+                            <div className="p-4 rounded-2xl bg-[#10B981]/6 border border-[#10B981]/15 flex items-center gap-4">
+                                <div className="w-14 h-14 rounded-2xl bg-[#10B981]/15 border-2 border-[#10B981]/30 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+                                    <span className="text-[#10B981] font-black text-base">{advisorInitials}</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-white font-black text-base leading-tight">
+                                        {advisor?.name || 'Equipo Elemotor'}
+                                    </p>
+                                    <p className="text-slate-500 text-[10px] font-medium mt-0.5">Asesor Comercial</p>
+                                    {advisor?.email && (
+                                        <p className="text-slate-400 text-[10px] mt-1 flex items-center gap-1 truncate">
+                                            <Mail className="w-3 h-3 shrink-0" /> {advisor.email}
+                                        </p>
+                                    )}
+                                    {advisor?.phone && (
+                                        <p className="text-slate-400 text-[10px] mt-0.5 flex items-center gap-1">
+                                            <Phone className="w-3 h-3 shrink-0" /> {advisor.phone}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex flex-col gap-2 shrink-0">
+                                    <a
+                                        href={`https://wa.me/${(advisor?.phone || '573117762260').replace(/\D/g, '')}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/12 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/22 transition-all text-[10px] font-black uppercase tracking-widest"
+                                    >
+                                        <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                                    </a>
+                                    {advisor?.email && (
+                                        <a
+                                            href={`mailto:${advisor.email}`}
+                                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 transition-all text-[10px] font-black uppercase tracking-widest"
+                                        >
+                                            <Mail className="w-3.5 h-3.5" /> Email
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Modelo de interés (texto libre) ── */}
+                        {quote.modelInterest && (
+                            <div>
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                    <Car className="w-3.5 h-3.5 text-[#10B981]" /> Modelo de interés
+                                </p>
+                                <div className="bg-white/4 border border-white/6 rounded-2xl px-4 py-3">
+                                    <p className="text-white text-sm font-bold">{quote.modelInterest}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── Estado detallado ── */}
+                        <div>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                <Info className="w-3.5 h-3.5 text-[#10B981]" /> Estado del proceso
+                            </p>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-white/4 border border-white/6 rounded-2xl p-4">
+                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Etapa actual</p>
+                                    <p className="text-white font-bold text-sm">
+                                        {STATUS_INTERNAL[quote.rawStatus || ''] || quote.status}
+                                    </p>
+                                </div>
+                                <div className="bg-white/4 border border-white/6 rounded-2xl p-4">
+                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> Válido hasta</p>
+                                    <p className="text-white font-bold text-sm">{quote.validUntil}</p>
+                                </div>
+                                <div className="bg-white/4 border border-white/6 rounded-2xl p-4">
+                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1"><Smartphone className="w-3 h-3" /> Canal preferido</p>
+                                    <p className="text-white font-bold text-sm capitalize">
+                                        {CHANNEL_LABEL[quote.preferredChannel || 'email'] || quote.preferredChannel}
+                                    </p>
+                                </div>
+                                {quote.trackingCode && (
+                                    <div className="bg-white/4 border border-white/6 rounded-2xl p-4">
+                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1"><Hash className="w-3 h-3" /> Tracking</p>
+                                        <p className="text-white font-mono text-xs truncate">{quote.trackingCode}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* ── Datos del solicitante ── */}
+                        <div>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                <User className="w-3.5 h-3.5 text-[#10B981]" /> Tus datos de contacto
+                            </p>
+                            <div className="bg-white/4 border border-white/6 rounded-2xl divide-y divide-white/5 overflow-hidden">
+                                {[
+                                    { icon: User, label: 'Nombre', value: quote.name },
+                                    { icon: Mail, label: 'Email', value: quote.email },
+                                    { icon: Phone, label: 'Teléfono', value: quote.phone },
+                                    { icon: MapPin, label: 'Ciudad', value: quote.city },
+                                    { icon: Globe, label: 'País', value: quote.country },
+                                ].filter(f => f.value).map(({ icon: Icon, label, value }) => (
+                                    <div key={label} className="flex items-center justify-between px-4 py-3">
+                                        <span className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                            <Icon className="w-3 h-3" /> {label}
+                                        </span>
+                                        <span className="text-white text-xs font-bold">{value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* ── Observaciones ── */}
+                        {quote.message && (
+                            <div>
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">Observaciones</p>
+                                <div className="bg-white/4 border border-white/6 rounded-2xl px-5 py-4 relative">
+                                    <div className="absolute left-3 top-4 bottom-4 w-0.5 bg-[#10B981]/30 rounded-full" />
+                                    <p className="text-slate-300 text-sm leading-relaxed italic pl-3">"{quote.message}"</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── Action buttons ── */}
+                        <div className="flex gap-3 pt-1 border-t border-white/5">
+                            <button
+                                onClick={onDownload}
+                                className="flex-1 bg-[#10B981] hover:bg-emerald-400 text-[#0A110F] font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-[0_8px_25px_rgba(16,185,129,0.2)] text-sm"
+                            >
+                                <Download className="w-4 h-4" />
+                                Descargar PDF
+                            </button>
+                            <a
+                                href={`/cotizacion/${quote.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-black transition-all text-sm whitespace-nowrap"
+                            >
+                                <ExternalLink className="w-4 h-4" />
+                                Ver cotización
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ─── Sub-Component: Quote Card with Image Carousel ────────────────────────────
 function QuoteCard({ quote, onDownload, onViewDetail }: { quote: ExtendedQuoteData, onDownload: () => void, onViewDetail: () => void }) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -246,6 +587,8 @@ export default function MisCotizacionesPage() {
                         paymentMethod: apiQuote.paymentMethod,
                         trackingCode: apiQuote.trackingCode,
                         message: apiQuote.message,
+                        modelInterest: apiQuote.modelInterest,
+                        segment: apiQuote.segment,
                         rawStatus: apiQuote.status,
                         assignedTo: apiQuote.assignedTo ?? null
                     };
@@ -438,219 +781,11 @@ export default function MisCotizacionesPage() {
 
             {/* Modal de Detalle de Cotización */}
             {selectedQuote && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-[#0A110F]/90 backdrop-blur-xl animate-in fade-in duration-300" onClick={() => setSelectedQuote(null)} />
-                    <div className="bg-[#15201D] border border-white/10 w-full max-w-4xl rounded-[40px] overflow-hidden relative shadow-2xl animate-in zoom-in-95 duration-500 flex flex-col md:flex-row max-h-[95vh]">
-                        <button onClick={() => setSelectedQuote(null)} className="absolute top-6 right-6 z-20 p-2 rounded-full bg-white/5 text-slate-400 hover:text-white transition-all">
-                            <X className="w-5 h-5" />
-                        </button>
-
-                        {/* Visual Side */}
-                        <div className="w-full md:w-[42%] bg-[#0A110F] p-10 flex flex-col justify-center relative overflow-hidden shrink-0">
-                            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-[#10B981]/10 to-transparent pointer-events-none" />
-                            <div className="relative aspect-video scale-110 mb-8">
-                                <Image
-                                    src={selectedQuote.images?.[0] || 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=400&auto=format&fit=crop'}
-                                    alt={selectedQuote.model}
-                                    fill
-                                    className="object-contain"
-                                    unoptimized
-                                />
-                            </div>
-                            <div className="space-y-3 relative z-10">
-                                {selectedQuote.trimName && (
-                                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] text-[10px] font-black uppercase tracking-widest">
-                                        <Car className="w-3.5 h-3.5" />
-                                        {selectedQuote.trimName}
-                                    </div>
-                                )}
-                                <h2 className="text-3xl font-black text-white leading-tight">{selectedQuote.model}</h2>
-                                {selectedQuote.color && (
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <Palette className="w-3.5 h-3.5 text-slate-500" />
-                                        <span className="text-slate-400 text-xs font-bold capitalize">{selectedQuote.color}</span>
-                                    </div>
-                                )}
-                                {/* Status badge */}
-                                <div className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest mt-2 ${
-                                    selectedQuote.statusCode === 'approved' ? 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30' :
-                                    selectedQuote.statusCode === 'pending' ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30' :
-                                    'bg-slate-700/50 text-slate-400 border border-slate-700'
-                                }`}>
-                                    {selectedQuote.statusCode === 'approved' ? <CheckCircle2 className="w-3.5 h-3.5" /> :
-                                     selectedQuote.statusCode === 'pending' ? <Clock className="w-3.5 h-3.5" /> :
-                                     <AlertCircle className="w-3.5 h-3.5" />}
-                                    {selectedQuote.status}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Content Side */}
-                        <div className="w-full p-8 flex flex-col overflow-y-auto custom-scrollbar gap-5">
-                            {/* Header */}
-                            <div>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{selectedQuote.id}</span>
-                                <h3 className="text-xl font-black text-white mt-0.5">Detalles de <span className="text-[#10B981]">Cotización</span></h3>
-                            </div>
-
-                            {/* Dates grid */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
-                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1"><Calendar className="w-3 h-3" /> Fecha</p>
-                                    <p className="text-white font-bold text-sm">{selectedQuote.date}</p>
-                                </div>
-                                <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
-                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> Válido hasta</p>
-                                    <p className="text-white font-bold text-sm">{selectedQuote.validUntil}</p>
-                                </div>
-                                <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
-                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1"><DollarSign className="w-3 h-3" /> Presupuesto</p>
-                                    <p className="text-[#10B981] font-black text-lg">{selectedQuote.amount}</p>
-                                </div>
-                                <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
-                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1"><Info className="w-3 h-3" /> Estado interno</p>
-                                    <p className="text-white font-bold text-sm">
-                                        {({
-                                            pending: 'Pendiente',
-                                            contacted: 'Contactado',
-                                            responded: 'Propuesta enviada',
-                                            negotiation: 'En negociación',
-                                            closed_won: 'Ganada',
-                                            closed_lost: 'Cerrada',
-                                        } as Record<string, string>)[selectedQuote.rawStatus || ''] || selectedQuote.status}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Datos del Solicitante */}
-                            <div className="bg-white/5 border border-white/5 rounded-2xl p-5 space-y-3">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                    <User className="w-3.5 h-3.5 text-[#10B981]" /> Datos del Solicitante
-                                </p>
-                                <div className="grid grid-cols-1 gap-2.5">
-                                    {selectedQuote.name && (
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nombre</span>
-                                            <span className="text-white font-bold text-xs">{selectedQuote.name}</span>
-                                        </div>
-                                    )}
-                                    {selectedQuote.email && (
-                                        <div className="flex items-center justify-between gap-4">
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1"><Mail className="w-3 h-3" /> Email</span>
-                                            <span className="text-slate-300 font-medium text-xs truncate">{selectedQuote.email}</span>
-                                        </div>
-                                    )}
-                                    {selectedQuote.phone && (
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1"><Phone className="w-3 h-3" /> Teléfono</span>
-                                            <span className="text-white font-bold text-xs">{selectedQuote.phone}</span>
-                                        </div>
-                                    )}
-                                    {selectedQuote.city && (
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1"><MapPin className="w-3 h-3" /> Ciudad</span>
-                                            <span className="text-white font-bold text-xs">{selectedQuote.city}</span>
-                                        </div>
-                                    )}
-                                    {selectedQuote.country && (
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1"><Globe className="w-3 h-3" /> País</span>
-                                            <span className="text-white font-bold text-xs">{selectedQuote.country}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Condiciones de Compra */}
-                            <div className="bg-white/5 border border-white/5 rounded-2xl p-5 space-y-3">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                    <Wallet className="w-3.5 h-3.5 text-[#10B981]" /> Condiciones de Compra
-                                </p>
-                                <div className="grid grid-cols-1 gap-2.5">
-                                    {selectedQuote.paymentMethod && (
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1"><CreditCard className="w-3 h-3" /> Forma de pago</span>
-                                            <span className="text-white font-bold text-xs capitalize">{selectedQuote.paymentMethod}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1"><Smartphone className="w-3 h-3" /> Canal preferido</span>
-                                        <span className="text-white font-bold text-xs capitalize">{selectedQuote.preferredChannel || 'email'}</span>
-                                    </div>
-                                    {selectedQuote.trackingCode && (
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1"><Hash className="w-3 h-3" /> Tracking code</span>
-                                            <span className="text-slate-300 font-mono text-xs">{selectedQuote.trackingCode}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Observaciones */}
-                            {selectedQuote.message && (
-                                <div className="space-y-2">
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Observaciones</p>
-                                    <p className="text-slate-300 text-xs leading-relaxed italic bg-white/5 border border-white/5 rounded-2xl px-4 py-3">"{selectedQuote.message}"</p>
-                                </div>
-                            )}
-
-                            {/* Tu Asesor */}
-                            <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-3">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                    <User className="w-3.5 h-3.5 text-[#10B981]" /> Tu Asesor
-                                </p>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-11 h-11 rounded-2xl bg-[#10B981]/15 border border-[#10B981]/20 flex items-center justify-center shrink-0">
-                                        {selectedQuote.assignedTo ? (
-                                            <span className="text-[#10B981] font-black text-sm">
-                                                {selectedQuote.assignedTo.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                                            </span>
-                                        ) : (
-                                            <User className="w-5 h-5 text-[#10B981]" />
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-white font-black text-sm leading-tight">
-                                            {selectedQuote.assignedTo?.name || 'Equipo Elemotor'}
-                                        </p>
-                                        {selectedQuote.assignedTo?.email && (
-                                            <p className="text-slate-500 text-[10px] font-medium mt-0.5 truncate">{selectedQuote.assignedTo.email}</p>
-                                        )}
-                                    </div>
-                                    <a
-                                        href={`https://wa.me/${(selectedQuote.assignedTo?.phone || '573117762260').replace(/\D/g, '')}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all text-[10px] font-black uppercase tracking-widest shrink-0"
-                                    >
-                                        <MessageCircle className="w-3.5 h-3.5" />
-                                        WhatsApp
-                                    </a>
-                                </div>
-                            </div>
-
-                            {/* Action buttons */}
-                            <div className="flex gap-3 pt-2 border-t border-white/5 mt-auto">
-                                <button
-                                    onClick={() => downloadQuotePDF(selectedQuote)}
-                                    className="flex-1 bg-[#10B981] hover:bg-emerald-400 text-[#0A110F] font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg text-sm"
-                                >
-                                    <Download className="w-4 h-4" />
-                                    Descargar PDF
-                                </button>
-                                <a
-                                    href={`/cotizacion/${selectedQuote.id}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-black transition-all text-sm whitespace-nowrap"
-                                >
-                                    <ExternalLink className="w-4 h-4" />
-                                    Ver cotización
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <QuoteDetailModal
+                    quote={selectedQuote}
+                    onClose={() => setSelectedQuote(null)}
+                    onDownload={() => downloadQuotePDF(selectedQuote)}
+                />
             )}
 
             {/* Modal de Nueva Cotización */}

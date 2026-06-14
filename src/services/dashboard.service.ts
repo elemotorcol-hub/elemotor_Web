@@ -5,6 +5,9 @@ export interface DashboardMetrics {
     leadsWeekly: number;
     activeOrders: number;
     vehiclesInStock: number;
+    totalAsesores: number;
+    totalClients: number;
+    totalUsers: number;
 }
 
 export interface ActivityItem {

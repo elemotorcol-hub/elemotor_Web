@@ -45,7 +45,7 @@ export const authService = {
     },
     resetPassword: async (data: any) => {
         return fetchApi('/api/auth/reset-password', {
-            method: 'POST',
+            method: 'PUT',
             body: JSON.stringify(data),
         });
     },
