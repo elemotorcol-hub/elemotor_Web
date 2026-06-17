@@ -5,7 +5,7 @@ import {
     X, Save, Car, Loader2, Download, User, Mail, Phone,
     MapPin, Hash, Zap, Clock, CheckCircle2, Circle, AlertCircle,
     Package, Truck, Shield, Flag, Star, FileText, Calendar,
-    ChevronRight, ExternalLink, FolderOpen, Upload, Eye, Trash2
+    ChevronRight, ExternalLink, FolderOpen, Upload, Eye, Trash2, ImagePlus, Camera
 } from 'lucide-react';
 import { Order, OrderStatus, OrderStatusHistory } from '@/types/orders';
 import { orderService } from '@/services/order.service';
@@ -616,6 +616,119 @@ function AddOrderForm({ onClose, onSave }: { onClose: () => void; onSave: (data:
     );
 }
 
+// ─── Delivery Photo Section ───────────────────────────────────────────────────
+
+function DeliveryPhotoSection({ orderId, initialPhotoUrl }: { orderId: number; initialPhotoUrl?: string | null }) {
+    const [photoUrl, setPhotoUrl] = React.useState<string | null>(initialPhotoUrl ?? null);
+    const [uploading, setUploading] = React.useState(false);
+    const [deleting, setDeleting] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
+    const [success, setSuccess] = React.useState(false);
+    const fileRef = React.useRef<HTMLInputElement>(null);
+
+    const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        setError(null);
+        setSuccess(false);
+        try {
+            const result = await orderService.uploadDeliveryPhoto(orderId, file);
+            setPhotoUrl(result.deliveryPhotoUrl);
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 2500);
+        } catch (err: any) {
+            setError(err?.message || 'Error al subir la foto');
+        } finally {
+            setUploading(false);
+            if (fileRef.current) fileRef.current.value = '';
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!confirm('¿Eliminar la foto de entrega de la galería?')) return;
+        setDeleting(true);
+        setError(null);
+        try {
+            await orderService.removeDeliveryPhoto(orderId);
+            setPhotoUrl(null);
+        } catch (err: any) {
+            setError(err?.message || 'Error al eliminar la foto');
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    return (
+        <div className="bg-[#161b22] border border-white/[0.06] rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+                <SectionHeader icon={<Camera size={11} />} title="Foto de Entrega" />
+                <button
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 bg-[#10B981] hover:bg-emerald-400 disabled:opacity-50 text-[#0A110F] rounded-lg transition-colors"
+                >
+                    {uploading ? <Loader2 size={11} className="animate-spin" /> : <ImagePlus size={11} />}
+                    {photoUrl ? 'Cambiar' : 'Subir foto'}
+                </button>
+            </div>
+
+            <input
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleFile}
+            />
+
+            {error && <p className="text-[11px] text-red-400 mb-2">{error}</p>}
+            {success && <p className="text-[11px] text-emerald-400 mb-2">¡Foto subida y visible en la galería!</p>}
+
+            {photoUrl ? (
+                <div className="relative group rounded-xl overflow-hidden aspect-[4/3] bg-black/20">
+                    <img
+                        src={photoUrl}
+                        alt="Foto de entrega"
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <a
+                            href={photoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                            title="Ver en pantalla completa"
+                        >
+                            <Eye size={16} />
+                        </a>
+                        <button
+                            onClick={handleDelete}
+                            disabled={deleting}
+                            className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-400 transition-colors disabled:opacity-50"
+                            title="Eliminar foto"
+                        >
+                            {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <button
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="w-full aspect-[4/3] border-2 border-dashed border-white/10 hover:border-[#10B981]/40 rounded-xl flex flex-col items-center justify-center gap-2 text-slate-500 hover:text-[#10B981] transition-all disabled:opacity-50"
+                >
+                    <ImagePlus size={28} strokeWidth={1.5} />
+                    <span className="text-[12px] font-medium">Sube la foto del momento de entrega</span>
+                    <span className="text-[10px] opacity-60">JPG, PNG o WebP · Máx. 8 MB</span>
+                </button>
+            )}
+            <p className="text-[10px] text-slate-600 mt-2">
+                * La foto aparecerá automáticamente en la galería de la landing page.
+            </p>
+        </div>
+    );
+}
+
 // ─── Admin Documents Section ──────────────────────────────────────────────────
 
 const DOC_TYPE_LABELS: Record<string, string> = {
@@ -1126,6 +1239,12 @@ function EditOrderDetail({ order, onClose, onSave }: { order: Order; onClose: ()
                                     {submitting ? 'Guardando...' : saveSuccess ? '¡Guardado!' : 'Guardar Cambios'}
                                 </button>
                             </div>
+
+                            {/* Foto de entrega */}
+                            <DeliveryPhotoSection
+                                orderId={Number(order.id)}
+                                initialPhotoUrl={(effectiveOrder as any).deliveryPhotoUrl ?? null}
+                            />
 
                             {/* Documentos del pedido */}
                             <AdminDocumentsSection orderId={Number(order.id)} />

@@ -56,6 +56,16 @@ export const userAdminService = {
     },
 
     /**
+     * Actualizar datos de perfil de cualquier usuario (solo super_admin)
+     */
+    updateUser: async (userId: number, data: { name?: string; phone?: string; city?: string }) => {
+        return fetchApi(`/api/users/${userId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(data),
+        });
+    },
+
+    /**
      * Crear un usuario empleado (solo para super_admins)
      */
     createEmployee: async (data: CreateEmployeeData) => {

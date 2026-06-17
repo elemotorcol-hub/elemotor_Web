@@ -45,6 +45,11 @@
     "use-debounce": "^10.1.0",
     "zod": "^4.3.6"
   },
+  "overrides": {
+    "@hookform/resolvers": {
+      "react-hook-form": "$react-hook-form"
+    }
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

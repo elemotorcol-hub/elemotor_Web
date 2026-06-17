@@ -13,7 +13,7 @@ export interface AppNotification {
 
 export const notificationsService = {
   getAll: () => fetchApi('/api/notifications', { method: 'GET' }),
-  getUnreadCount: () => fetchApi('/api/notifications/unread-count', { method: 'GET' }) as Promise<{ count: number }>,
+  getUnreadCount: () => fetchApi('/api/notifications/unread-count', { method: 'GET' }) as Promise<{ unreadCount: number }>,
   markRead: (id: number) => fetchApi(`/api/notifications/${id}/read`, { method: 'PATCH' }),
   markAllRead: () => fetchApi('/api/notifications/read-all', { method: 'POST' }),
 };

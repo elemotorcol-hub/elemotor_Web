@@ -92,6 +92,7 @@ export interface ExtendedQuoteData extends QuoteData {
     message?: string;
     modelInterest?: string;
     segment?: string;
+    budgetRange?: number;
     images: string[];
     trimName?: string;
     rawStatus?: string;

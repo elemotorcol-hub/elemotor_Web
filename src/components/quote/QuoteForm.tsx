@@ -40,6 +40,8 @@ interface Props {
     initialTrimId?: string;
     initialColor?: string;
     onModelChange: (modelId: string) => void;
+    onSuccess?: () => void;
+    defaultUserData?: { name?: string; email?: string; phone?: string };
 }
 
 const DEFAULT_VALUES: QuoteFormValues = {
@@ -59,13 +61,16 @@ const DEFAULT_VALUES: QuoteFormValues = {
     message: '',
 };
 
-export function QuoteForm({ vehicles, advisors, initialModelId, initialTrimId, initialColor, onModelChange }: Props) {
+export function QuoteForm({ vehicles, advisors, initialModelId, initialTrimId, initialColor, onModelChange, onSuccess, defaultUserData }: Props) {
     const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm<QuoteFormValues>({
         resolver: zodResolver(quoteSchema),
         defaultValues: {
             ...DEFAULT_VALUES,
+            fullName: defaultUserData?.name || '',
+            email: defaultUserData?.email || '',
+            phone: defaultUserData?.phone || '',
             model_id: initialModelId || vehicles[0]?.id || '',
             trim_id: initialTrimId || '',
             color: initialColor || '',
@@ -77,6 +82,9 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialTrimId, i
     const paymentMethod = watch('payment_method');
     const selectedColor = watch('color');
     const selectedTrimId = watch('trim_id');
+
+    // Saltar el primer disparo del efecto de modelo (carga inicial con valor por defecto)
+    const isFirstModelChange = React.useRef(true);
 
     // Backend ya devuelve solo trims activos — no filtrar por t.active (campo no incluido en respuesta)
     const availableTrims = React.useMemo(() => {
@@ -98,20 +106,19 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialTrimId, i
         });
     }, [selectedModelId, selectedTrimId, vehicles]);
 
-    // Cuando cambia el modelo, limpiar trim y color y notificar al padre
+    // Cuando cambia el modelo, limpiar trim y color y notificar al padre.
+    // Se omite el primer disparo para preservar el trim pre-seleccionado desde URL.
     useEffect(() => {
+        if (isFirstModelChange.current) {
+            isFirstModelChange.current = false;
+            onModelChange(selectedModelId);
+            return;
+        }
         setValue('trim_id', '');
         setValue('color', '');
         onModelChange(selectedModelId);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedModelId]);
-
-    // Pre-seleccionar trim desde URL param
-    useEffect(() => {
-        if (initialTrimId) {
-            setValue('trim_id', initialTrimId);
-        }
-    }, [initialTrimId, setValue]);
 
     const onSubmit = async (data: QuoteFormValues) => {
         setNotification(null);
@@ -147,6 +154,7 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialTrimId, i
                     model_id: initialModelId || vehicles[0]?.id || '',
                     preferred_channel: 'whatsapp',
                 });
+                onSuccess?.();
             } else {
                 setNotification({ type: 'error', message: result.error || 'Ocurrió un error al enviar tu cotización.' });
             }
@@ -252,7 +260,7 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialTrimId, i
                     </div>
                 </div>
 
-                {/* Modelo y Color */}
+                {/* Modelo y Versión */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <label className={labelClasses}>Modelo de interés</label>
@@ -268,56 +276,56 @@ export function QuoteForm({ vehicles, advisors, initialModelId, initialTrimId, i
                         {errors.model_id && <p className="text-xs text-red-500 mt-1 font-medium">{errors.model_id.message}</p>}
                     </div>
                     <div>
-                        <label className={labelClasses}>Color de interés (Opcional)</label>
-                        {availableColors.length > 0 ? (
-                            <div className="flex flex-wrap gap-2 pt-1">
-                                {availableColors.map(c => (
-                                    <button
-                                        key={c.name}
-                                        type="button"
-                                        title={c.name}
-                                        onClick={() => setValue('color', selectedColor === c.name ? '' : c.name)}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[12px] font-semibold transition-all ${
-                                            selectedColor === c.name
-                                                ? 'border-[#00D4AA] bg-[#00D4AA]/10 text-white'
-                                                : 'border-white/10 bg-[#121c19] text-slate-400 hover:border-white/20'
-                                        }`}
-                                    >
-                                        <span
-                                            className="w-4 h-4 rounded-full border border-white/20 shrink-0"
-                                            style={{ backgroundColor: `#${(c as any).hexCode ?? c.hex_code}` }}
-                                        />
-                                        {c.name}
-                                    </button>
+                        <label className={labelClasses}>Referencia / Versión</label>
+                        <div className="relative">
+                            <select
+                                {...register('trim_id')}
+                                disabled={availableTrims.length === 0}
+                                className={`${inputClasses} appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                                <option value="">Selecciona una referencia</option>
+                                {availableTrims.map(t => (
+                                    <option key={t.id} value={t.id}>{t.name}</option>
                                 ))}
-                            </div>
-                        ) : (
-                            <input
-                                {...register('color')}
-                                type="text"
-                                placeholder="Ej: Blanco, Negro, Gris..."
-                                className={inputClasses}
-                            />
-                        )}
+                            </select>
+                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                        </div>
                     </div>
                 </div>
 
-                {/* Referencia / Versión */}
+                {/* Color — solo aparece si hay colores disponibles para la versión seleccionada */}
                 <div>
-                    <label className={labelClasses}>Referencia / Versión</label>
-                    <div className="relative">
-                        <select
-                            {...register('trim_id')}
-                            disabled={availableTrims.length === 0}
-                            className={`${inputClasses} appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
-                        >
-                            <option value="">Selecciona una referencia</option>
-                            {availableTrims.map(t => (
-                                <option key={t.id} value={t.id}>{t.name}</option>
+                    <label className={labelClasses}>Color de interés (Opcional)</label>
+                    {availableColors.length > 0 ? (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                            {availableColors.map(c => (
+                                <button
+                                    key={c.name}
+                                    type="button"
+                                    title={c.name}
+                                    onClick={() => setValue('color', selectedColor === c.name ? '' : c.name)}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[12px] font-semibold transition-all ${
+                                        selectedColor === c.name
+                                            ? 'border-[#00D4AA] bg-[#00D4AA]/10 text-white'
+                                            : 'border-white/10 bg-[#121c19] text-slate-400 hover:border-white/20'
+                                    }`}
+                                >
+                                    <span
+                                        className="w-4 h-4 rounded-full border border-white/20 shrink-0"
+                                        style={{ backgroundColor: `#${(c as any).hexCode ?? c.hex_code}` }}
+                                    />
+                                    {c.name}
+                                </button>
                             ))}
-                        </select>
-                        <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                    </div>
+                        </div>
+                    ) : (
+                        <input
+                            {...register('color')}
+                            type="text"
+                            placeholder="Ej: Blanco, Negro, Gris..."
+                            className={inputClasses}
+                        />
+                    )}
                 </div>
 
                 {/* Asesor */}

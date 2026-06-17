@@ -4,12 +4,16 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { TrendingUp, TrendingDown, CalendarDays } from 'lucide-react';
 
 export interface AdvisorStat {
     id: number;
     name: string;
     email: string;
     assignedCount: number;
+    closedWon: number;
+    closedLost: number;
+    thisMonth: number;
     lastActivityAt?: string;
 }
 
@@ -52,6 +56,19 @@ export default function DashboardAdvisors({ advisors }: { advisors?: AdvisorStat
                 </button>
             </div>
 
+            {/* Header de columnas */}
+            {list.length > 0 && (
+                <div className="hidden md:grid grid-cols-[1fr_auto] gap-4 px-5 py-2 border-b border-white/5">
+                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Asesor</span>
+                    <div className="flex items-center gap-6 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                        <span className="w-14 text-center">Total</span>
+                        <span className="w-14 text-center text-emerald-600">Ganadas</span>
+                        <span className="w-14 text-center text-red-600/70">Perdidas</span>
+                        <span className="w-14 text-center text-blue-600">Mes</span>
+                    </div>
+                </div>
+            )}
+
             {list.length === 0 ? (
                 <div className="px-5 py-8 text-center text-slate-500 italic text-sm">
                     No hay asesores con cotizaciones asignadas.
@@ -60,21 +77,29 @@ export default function DashboardAdvisors({ advisors }: { advisors?: AdvisorStat
                 <div className="divide-y divide-white/5">
                     {list.map((advisor, idx) => {
                         const colorClass = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+                        const winRate = advisor.assignedCount > 0
+                            ? Math.round((advisor.closedWon / advisor.assignedCount) * 100)
+                            : 0;
                         return (
                             <div
                                 key={advisor.id}
                                 className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.02] transition-colors"
                             >
                                 {/* Avatar */}
-                                <div
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 border border-white/10 ${colorClass}`}
-                                >
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 border border-white/10 ${colorClass}`}>
                                     {getInitials(advisor.name)}
                                 </div>
 
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-white truncate">{advisor.name}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm font-semibold text-white truncate">{advisor.name}</p>
+                                        {winRate > 0 && (
+                                            <span className="text-[9px] font-bold text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded-full shrink-0">
+                                                {winRate}% efectividad
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className="text-xs text-slate-500 truncate">
                                         {advisor.lastActivityAt
                                             ? `Última actividad ${formatDistanceToNow(new Date(advisor.lastActivityAt), { addSuffix: true, locale: es })}`
@@ -82,12 +107,34 @@ export default function DashboardAdvisors({ advisors }: { advisors?: AdvisorStat
                                     </p>
                                 </div>
 
-                                {/* Badge */}
-                                <div className="flex-shrink-0 text-right">
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00D4AA]/10 border border-[#00D4AA]/20 text-[#00D4AA] text-xs font-bold">
-                                        {advisor.assignedCount}
-                                        <span className="font-normal text-[#00D4AA]/70">cotiz.</span>
-                                    </span>
+                                {/* Stats */}
+                                <div className="flex items-center gap-3 shrink-0">
+                                    {/* Total */}
+                                    <div className="text-center w-14">
+                                        <p className="text-base font-bold text-white">{advisor.assignedCount}</p>
+                                        <p className="text-[9px] text-slate-500 uppercase">Total</p>
+                                    </div>
+                                    {/* Won */}
+                                    <div className="text-center w-14">
+                                        <p className="text-base font-bold text-emerald-400 flex items-center justify-center gap-0.5">
+                                            <TrendingUp className="w-3.5 h-3.5" />{advisor.closedWon}
+                                        </p>
+                                        <p className="text-[9px] text-slate-500 uppercase">Ganadas</p>
+                                    </div>
+                                    {/* Lost */}
+                                    <div className="text-center w-14">
+                                        <p className="text-base font-bold text-red-400 flex items-center justify-center gap-0.5">
+                                            <TrendingDown className="w-3.5 h-3.5" />{advisor.closedLost}
+                                        </p>
+                                        <p className="text-[9px] text-slate-500 uppercase">Perdidas</p>
+                                    </div>
+                                    {/* This Month */}
+                                    <div className="text-center w-14">
+                                        <p className="text-base font-bold text-blue-400 flex items-center justify-center gap-0.5">
+                                            <CalendarDays className="w-3.5 h-3.5" />{advisor.thisMonth}
+                                        </p>
+                                        <p className="text-[9px] text-slate-500 uppercase">Este mes</p>
+                                    </div>
                                 </div>
                             </div>
                         );

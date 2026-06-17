@@ -4,6 +4,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { orderService } from '@/services/order.service';
 
 // ─── Tipos públicos ────────────────────────────────────────────────────────────
 
@@ -38,11 +39,11 @@ type ReviewItem =
 
 // ─── Imágenes de entregas ──────────────────────────────────────────────────────
 
-const TOTAL_IMAGES = 29;
-const IMAGES: string[] = Array.from(
-    { length: TOTAL_IMAGES },
-    (_, i) => `/fotos carrusel entregas/${i + 1}.webp`
-);
+const EXCLUDED_IMAGES = new Set([15, 21, 23]);
+const IMAGES: string[] = Array.from({ length: 29 }, (_, i) => i + 1)
+    .filter((n) => !EXCLUDED_IMAGES.has(n))
+    .map((n) => `/fotos carrusel entregas/${n}.webp`);
+const TOTAL_IMAGES = IMAGES.length;
 
 // ─── Datos de respaldo ─────────────────────────────────────────────────────────
 
@@ -234,6 +235,18 @@ function ReviewCard({ item }: { item: ReviewItem }) {
 
 export function EntregasYResenas({ googleReviews = [], clientTestimonials = [] }: Props) {
 
+    // ── Fotos dinámicas de la API ──────────────────────────────────────────────
+    const [dynamicPhotos, setDynamicPhotos] = React.useState<string[]>([]);
+    React.useEffect(() => {
+        orderService.fetchDeliveryPhotos()
+            .then((photos) => setDynamicPhotos(photos.map((p) => p.deliveryPhotoUrl)))
+            .catch(() => {});
+    }, []);
+
+    // Combinar: fotos dinámicas primero, luego estáticas
+    const allPhotos = React.useMemo(() => [...dynamicPhotos, ...IMAGES], [dynamicPhotos]);
+    const totalPhotos = allPhotos.length;
+
     // ── Estado carrusel fotos ──────────────────────────────────────────────────
     const [photoCurrent, setPhotoCurrent] = React.useState(0);
     const [isHovered, setIsHovered] = React.useState(false);
@@ -271,16 +284,16 @@ export function EntregasYResenas({ googleReviews = [], clientTestimonials = [] }
     React.useEffect(() => {
         if (isHovered) return;
         photoIntervalRef.current = setInterval(() => {
-            setPhotoCurrent((prev) => mod(prev + 1, TOTAL_IMAGES));
+            setPhotoCurrent((prev) => mod(prev + 1, totalPhotos));
         }, 3000);
         return () => {
             if (photoIntervalRef.current) clearInterval(photoIntervalRef.current);
         };
-    }, [isHovered]);
+    }, [isHovered, totalPhotos]);
 
     // ── Handlers carrusel fotos ────────────────────────────────────────────────
-    const photoPrev = () => setPhotoCurrent((p) => mod(p - 1, TOTAL_IMAGES));
-    const photoNext = () => setPhotoCurrent((p) => mod(p + 1, TOTAL_IMAGES));
+    const photoPrev = () => setPhotoCurrent((p) => mod(p - 1, totalPhotos));
+    const photoNext = () => setPhotoCurrent((p) => mod(p + 1, totalPhotos));
 
     const handlePhotoDragDown = (e: React.PointerEvent) => {
         dragStartX.current = e.clientX;
@@ -331,7 +344,7 @@ export function EntregasYResenas({ googleReviews = [], clientTestimonials = [] }
     // ── Índices visibles fotos ─────────────────────────────────────────────────
     const visiblePhotoIndices = Array.from(
         { length: visibleCount },
-        (_, i) => mod(photoCurrent + i, TOTAL_IMAGES)
+        (_, i) => mod(photoCurrent + i, totalPhotos)
     );
 
     // ── Índices visibles reseñas ───────────────────────────────────────────────
@@ -342,9 +355,9 @@ export function EntregasYResenas({ googleReviews = [], clientTestimonials = [] }
 
     // ── Dots fotos ─────────────────────────────────────────────────────────────
     const MAX_DOTS = 7;
-    const dotStep = TOTAL_IMAGES <= MAX_DOTS ? 1 : Math.ceil(TOTAL_IMAGES / MAX_DOTS);
+    const dotStep = totalPhotos <= MAX_DOTS ? 1 : Math.ceil(totalPhotos / MAX_DOTS);
     const photoDots = Array.from(
-        { length: Math.ceil(TOTAL_IMAGES / dotStep) },
+        { length: Math.ceil(totalPhotos / dotStep) },
         (_, i) => i * dotStep
     );
 
@@ -374,7 +387,7 @@ export function EntregasYResenas({ googleReviews = [], clientTestimonials = [] }
                 >
                     <span className="inline-flex items-center gap-2 border border-[#00D4AA]/40 text-[#00D4AA] text-[10px] font-black tracking-[0.25em] uppercase px-4 py-1.5 rounded-full mb-5">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#00D4AA] animate-pulse" />
-                        Entregas &amp; Reseñas
+                        Reseñas
                     </span>
                     <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight uppercase leading-none">
                         ELLOS YA ELIGIERON{' '}
@@ -418,7 +431,7 @@ export function EntregasYResenas({ googleReviews = [], clientTestimonials = [] }
                                 >
                                     <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/5 hover:border-[#00D4AA]/30 transition-colors duration-300 group">
                                         <Image
-                                            src={IMAGES[imgIdx]}
+                                            src={allPhotos[imgIdx]}
                                             alt={`Entrega Elemotor ${imgIdx + 1}`}
                                             fill
                                             unoptimized
@@ -434,7 +447,7 @@ export function EntregasYResenas({ googleReviews = [], clientTestimonials = [] }
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-[#060D0B]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                         <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-sm border border-white/10 rounded-full px-2.5 py-1 text-[9px] text-white/50 font-bold tracking-wider">
-                                            {imgIdx + 1} / {TOTAL_IMAGES}
+                                            {imgIdx + 1} / {totalPhotos}
                                         </div>
                                     </div>
                                 </motion.div>
@@ -490,8 +503,8 @@ export function EntregasYResenas({ googleReviews = [], clientTestimonials = [] }
                     <span>
                         <span className="text-[#00D4AA] font-black">{photoCurrent + 1}</span>
                         {' '}de{' '}
-                        <span className="font-semibold text-white/40">{TOTAL_IMAGES}</span>
-                        {' '}entregas
+                        <span className="font-semibold text-white/40">{totalPhotos}</span>
+                        {' '}fotos
                     </span>
                     <span className="w-8 h-px bg-white/10" />
                 </motion.div>

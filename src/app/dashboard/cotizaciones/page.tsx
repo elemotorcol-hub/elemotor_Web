@@ -3,23 +3,24 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import {
-    Car, ArrowRight, Search, FileText,
+    Car, ArrowRight, Search,
     CheckCircle2, Clock, AlertCircle,
-    Calendar, Filter, ChevronRight,
+    Calendar, ChevronRight,
     ArrowUpRight, DollarSign, RefreshCcw,
-    X, Wallet, Timer as TimerIcon, Info,
-    Check, Download, Eye, MapPin, Smartphone,
+    X, Download, MapPin, Info, Smartphone,
     ChevronLeft, Mail, MessageCircle, Phone,
     User, ExternalLink, Globe, CreditCard,
     Palette, Hash
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { fetchActiveCatalogModels, CatalogModel } from '@/services/catalogModels.service';
 import { ExtendedQuoteData, ApiQuoteResponse } from '@/types/dashboard';
-import { formatCurrency, sanitizeHTML, deformatCurrency } from '@/lib/utils/sanitizationUtils';
-import { getMyQuotesAction, submitQuoteAction } from '@/actions/quote';
+import { getMyQuotesAction } from '@/actions/quote';
 import { getSession } from '@/lib/auth.client';
 import { downloadQuotePDF } from '@/lib/utils/pdfGenerator';
+import { QuoteForm } from '@/components/quote/QuoteForm';
+import { modelService } from '@/services/model.service';
+import { VehicleModel } from '@/types/inventory';
+import { fetchApi } from '@/lib/api';
 
 // ─── Sub-Component: Quote Detail Modal ───────────────────────────────────────
 function QuoteDetailModal({
@@ -52,20 +53,32 @@ function QuoteDetailModal({
 
     const CHANNEL_LABEL: Record<string, string> = {
         whatsapp: 'WhatsApp',
+        call: 'Llamada',
         phone: 'Teléfono',
         email: 'Correo electrónico',
     };
 
     const PAYMENT_LABEL: Record<string, string> = {
+        cash: 'Contado',
+        financing: 'Financiamiento',
+        leasing: 'Leasing',
+        trade_in: 'Entrega de vehículo',
         credito_banco: 'Crédito bancario',
         recursos_propios: 'Recursos propios',
-        Recursos_propios: 'Recursos propios',
-        leasing: 'Leasing',
         no_definido: 'No definido',
+    };
+
+    const BUDGET_RANGE_LABELS: Record<number, string> = {
+        65000000:  '60M – 80M COP',
+        90000000:  '80M – 100M COP',
+        125000000: '100M – 150M COP',
+        175000000: '150M – 200M COP',
+        250000000: 'Más de 200M COP',
     };
 
     const SEGMENT_LABEL: Record<string, string> = {
         particular: 'Particular',
+        corporate: 'Corporativo',
         corporativo: 'Corporativo',
     };
 
@@ -162,16 +175,20 @@ function QuoteDetailModal({
                             {/* Budget highlight */}
                             <div className="mt-4 p-4 rounded-2xl bg-[#10B981]/8 border border-[#10B981]/15">
                                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Presupuesto</p>
-                                <p className="text-2xl font-black text-[#10B981]">{quote.amount}</p>
+                                <p className="text-xl font-black text-[#10B981] leading-tight">
+                                    {quote.budgetRange
+                                        ? (BUDGET_RANGE_LABELS[quote.budgetRange] ?? `$${Number(quote.budgetRange).toLocaleString('es-CO')}`)
+                                        : 'Sin definir'}
+                                </p>
                                 {quote.paymentMethod && (
-                                    <p className="text-[10px] text-slate-500 font-medium mt-1 capitalize flex items-center gap-1">
-                                        <CreditCard className="w-3 h-3" />
-                                        {PAYMENT_LABEL[quote.paymentMethod] || quote.paymentMethod.replace(/_/g, ' ')}
+                                    <p className="text-[10px] text-slate-400 font-medium mt-1.5 flex items-center gap-1">
+                                        <CreditCard className="w-3 h-3 shrink-0" />
+                                        {PAYMENT_LABEL[quote.paymentMethod] ?? quote.paymentMethod.replace(/_/g, ' ')}
                                     </p>
                                 )}
                                 {quote.segment && (
-                                    <p className="text-[10px] text-slate-500 font-medium mt-1">
-                                        {SEGMENT_LABEL[quote.segment] || quote.segment}
+                                    <p className="text-[10px] text-slate-400 font-medium mt-1">
+                                        {SEGMENT_LABEL[quote.segment] ?? quote.segment}
                                     </p>
                                 )}
                             </div>
@@ -509,28 +526,16 @@ export default function MisCotizacionesPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending' | 'expired'>('all');
     const [quotes, setQuotes] = useState<ExtendedQuoteData[]>([]);
-    const [modelsData, setModelsData] = useState<CatalogModel[]>([]);
+    const [modelsData, setModelsData] = useState<VehicleModel[]>([]);
+    const [advisors, setAdvisors] = useState<{ id: number; name: string }[]>([]);
+    const [sessionUser, setSessionUser] = useState<{ name?: string; email?: string; phone?: string }>({});
     const [isLoading, setIsLoading] = useState(true);
 
     // Modal New Quote State
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
 
     // Details Modal State
     const [selectedQuote, setSelectedQuote] = useState<ExtendedQuoteData | null>(null);
-    const [paymentError, setPaymentError] = useState<string | null>(null);
-
-    // Form State
-    const [formData, setFormData] = useState({
-        modelId: '',
-        trimId: '',
-        initialPayment: '',
-        installments: '12',
-        comments: '',
-        city: '',
-        preferredChannel: 'email'
-    });
 
     const fetchQuotes = useCallback(async () => {
         setIsLoading(true);
@@ -565,11 +570,21 @@ export default function MisCotizacionesPage() {
                         ? imagesList.map(i => i.url) 
                         : ['https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=400&auto=format&fit=crop'];
                     
+                    const BUDGET_RANGE_MAP: Record<number, string> = {
+                        65000000:  '60M – 80M COP',
+                        90000000:  '80M – 100M COP',
+                        125000000: '100M – 150M COP',
+                        175000000: '150M – 200M COP',
+                        250000000: 'Más de 200M COP',
+                    };
+
                     return {
                         id: apiQuote.referenceCode || `COT-${apiQuote.id}`,
                         model: modelName,
                         trimName: apiQuote.trim?.name,
-                        amount: apiQuote.budgetRange ? `$${Number(apiQuote.budgetRange).toLocaleString('es-CO')}` : 'Sin definir',
+                        amount: apiQuote.budgetRange
+                            ? (BUDGET_RANGE_MAP[apiQuote.budgetRange] ?? `$${Number(apiQuote.budgetRange).toLocaleString('es-CO')}`)
+                            : 'Sin definir',
                         date: dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
                         status: statusText,
                         statusCode: uiStatusCode,
@@ -589,6 +604,7 @@ export default function MisCotizacionesPage() {
                         message: apiQuote.message,
                         modelInterest: apiQuote.modelInterest,
                         segment: apiQuote.segment,
+                        budgetRange: apiQuote.budgetRange,
                         rawStatus: apiQuote.status,
                         assignedTo: apiQuote.assignedTo ?? null
                     };
@@ -604,8 +620,21 @@ export default function MisCotizacionesPage() {
 
     useEffect(() => {
         fetchQuotes();
-        // Cargar modelos reales para el Modal de Nueva Cotización
-        fetchActiveCatalogModels().then(data => setModelsData(data)).catch(console.error);
+        Promise.all([
+            modelService.getModels({ active: true, limit: 100 }),
+            fetchApi('/api/users/advisors', { method: 'GET' }),
+            getSession(),
+        ]).then(([modelsRes, advisorsRes, session]) => {
+            setModelsData(modelsRes?.data || []);
+            setAdvisors(Array.isArray(advisorsRes) ? advisorsRes : []);
+            if (session?.user) {
+                setSessionUser({
+                    name: session.user.name,
+                    email: session.user.email,
+                    phone: session.user.phone,
+                });
+            }
+        }).catch(console.error);
     }, [fetchQuotes]);
 
     const filteredQuotes = useMemo(() => {
@@ -617,75 +646,12 @@ export default function MisCotizacionesPage() {
         });
     }, [searchQuery, statusFilter, quotes]);
 
-    const availableTrims = useMemo(() => {
-        if (!formData.modelId) return [];
-        const selectedModel = modelsData.find(m => m.id.toString() === formData.modelId);
-        return selectedModel?.trims || [];
-    }, [formData.modelId, modelsData]);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        const numericValue = deformatCurrency(formData.initialPayment);
-
-        if (numericValue < 5000000) {
-            setPaymentError('La cuota inicial mínima es de $5,000,000');
-            return;
-        }
-
-        setPaymentError(null);
-        setIsSubmitting(true);
-
-        try {
-            const session = await getSession();
-            if (!session) {
-                alert('Sesión expirada. Por favor inicie sesión nuevamente.');
-                setIsSubmitting(false);
-                return;
-            }
-
-            // Extract UTMs from current URL context
-            const searchParams = new URLSearchParams(window.location.search);
-            const utmSource = searchParams.get('utm_source') || null;
-            const utmMedium = searchParams.get('utm_medium') || null;
-            const utmCampaign = searchParams.get('utm_campaign') || null;
-
-            const backendData = {
-                name: session.user?.name || 'Usuario',
-                email: session.user?.email || 'email@example.com',
-                phone: session.user?.phone || undefined,
-                city: formData.city || 'No especificada',
-                modelId: formData.modelId ? parseInt(formData.modelId) : undefined,
-                trimId: formData.trimId ? parseInt(formData.trimId) : undefined,
-                budgetRange: numericValue,
-                preferredChannel: formData.preferredChannel,
-                message: `Plazo: ${formData.installments} meses. ${formData.comments ? `Obs: ${sanitizeHTML(formData.comments)}` : ''}`.trim(),
-                utmSource,
-                utmMedium,
-                utmCampaign,
-                source: 'web',
-            };
-
-            const result = await submitQuoteAction(backendData);
-
-            if (result.success) {
-                setIsSuccess(true);
-                await fetchQuotes(); // Refresh automatico del listado
-                setTimeout(() => {
-                    setIsModalOpen(false);
-                    setIsSuccess(false);
-                    setFormData({ modelId: '', trimId: '', initialPayment: '', installments: '12', comments: '', city: '', preferredChannel: 'email' });
-                }, 2000);
-            } else {
-                alert(result.error || 'Error al enviar la cotización.');
-            }
-        } catch (error) {
-            console.error(error);
-            alert('Error inesperado procesando la cotización');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+    const handleQuoteSuccess = useCallback(() => {
+        setTimeout(() => {
+            setIsModalOpen(false);
+            fetchQuotes();
+        }, 1800);
+    }, [fetchQuotes]);
 
     return (
         <div className="flex flex-col gap-10 max-w-7xl mx-auto w-full pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -791,224 +757,24 @@ export default function MisCotizacionesPage() {
             {/* Modal de Nueva Cotización */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    {/* Backdrop */}
                     <div
                         className="absolute inset-0 bg-[#0A110F]/80 backdrop-blur-md animate-in fade-in duration-300"
-                        onClick={() => !isSubmitting && setIsModalOpen(false)}
+                        onClick={() => setIsModalOpen(false)}
                     />
-
-                    {/* Modal Content */}
-                    <div className="bg-[#15201D] border border-white/10 w-full max-w-2xl rounded-[40px] overflow-hidden relative shadow-2xl animate-in zoom-in-95 duration-300">
-                        {/* Header Image/Pattern */}
-                        <div className="h-2 bg-linear-to-r from-emerald-500 via-teal-500 to-emerald-500" />
-
-                        <div className="p-8 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
-                            <button
-                                onClick={() => !isSubmitting && setIsModalOpen(false)}
-                                className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/5 text-slate-500 hover:text-white transition-all z-20"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-
-                            {!isSuccess ? (
-                                <>
-                                    <div className="mb-10">
-                                        <h2 className="text-3xl font-black text-white mb-2 tracking-tighter">Nueva <span className="text-[#10B981]">Cotización</span></h2>
-                                        <p className="text-slate-400 font-medium">Completa los detalles para recibir una oferta personalizada.</p>
-                                    </div>
-
-                                    <form onSubmit={handleSubmit} className="space-y-8">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            {/* Vehicle Selection */}
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                                                    <Car className="w-3 h-3" />
-                                                    Modelo de Interés
-                                                </label>
-                                                <select
-                                                    required
-                                                    value={formData.modelId}
-                                                    onChange={(e) => setFormData({ ...formData, modelId: e.target.value, trimId: '' })}
-                                                    className="w-full bg-[#0A110F] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all appearance-none cursor-pointer"
-                                                >
-                                                    <option value="" disabled>Selecciona un vehículo...</option>
-                                                    {modelsData.map(v => (
-                                                        <option key={v.id} value={v.id}>{v.brand?.name} {v.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-
-                                            {/* Trim Selection */}
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                                                    <Filter className="w-3 h-3" />
-                                                    Versión (Configuración)
-                                                </label>
-                                                <select
-                                                    value={formData.trimId}
-                                                    onChange={(e) => setFormData({ ...formData, trimId: e.target.value })}
-                                                    disabled={availableTrims.length === 0}
-                                                    className="w-full bg-[#0A110F] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all appearance-none cursor-pointer disabled:opacity-50"
-                                                >
-                                                    <option value="">Cualquier versión</option>
-                                                    {availableTrims.map(t => (
-                                                        <option key={t.id} value={t.id}>
-                                                            {t.name} {t.price ? `- $${Number(t.price).toLocaleString('es-CO')}` : ''}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            {/* City Selection */}
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                                                    <MapPin className="w-3 h-3" />
-                                                    Ciudad
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    placeholder="Ej: Bogotá"
-                                                    value={formData.city}
-                                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                                    className="w-full bg-[#0A110F] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all"
-                                                />
-                                            </div>
-
-                                            {/* Preferred Channel */}
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                                                    <Smartphone className="w-3 h-3" />
-                                                    Canal Preferido
-                                                </label>
-                                                <div className="grid grid-cols-3 gap-2 h-14">
-                                                    {[
-                                                        { id: 'whatsapp', icon: MessageCircle, color: 'hover:text-emerald-400 hover:border-emerald-400/50', active: 'border-[#10B981] text-[#10B981] bg-[#10B981]/10' },
-                                                        { id: 'phone', icon: Phone, color: 'hover:text-blue-400 hover:border-blue-400/50', active: 'border-blue-400 text-blue-400 bg-blue-400/10' },
-                                                        { id: 'email', icon: Mail, color: 'hover:text-white hover:border-white/50', active: 'border-white text-white bg-white/10' }
-                                                    ].map(channel => (
-                                                        <button
-                                                            key={channel.id}
-                                                            type="button"
-                                                            onClick={() => setFormData({ ...formData, preferredChannel: channel.id })}
-                                                            className={`flex items-center justify-center border rounded-xl transition-all ${
-                                                                formData.preferredChannel === channel.id 
-                                                                ? channel.active 
-                                                                : `border-white/5 text-slate-500 bg-[#0A110F] ${channel.color}`
-                                                            }`}
-                                                            title={channel.id}
-                                                        >
-                                                            <channel.icon className="w-4 h-4" />
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            {/* Initial Payment */}
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                                                    <Wallet className="w-3 h-3" />
-                                                    Presupuesto Inicial
-                                                </label>
-                                                <div className="relative">
-                                                    <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Ej: 20,000,000"
-                                                        value={formData.initialPayment}
-                                                        onKeyDown={(e) => {
-                                                            if (!/[0-9]/.test(e.key) && !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key)) {
-                                                                e.preventDefault();
-                                                            }
-                                                        }}
-                                                        onChange={(e) => {
-                                                            const formatted = formatCurrency(e.target.value);
-                                                            setFormData({ ...formData, initialPayment: formatted });
-                                                        }}
-                                                        className={`w-full bg-[#0A110F] border rounded-2xl pl-12 pr-6 py-4 text-sm text-white focus:outline-none transition-all ${paymentError ? 'border-red-500/50 focus:border-red-500' : 'border-white/5 focus:border-[#10B981]/30'
-                                                            }`}
-                                                    />
-                                                </div>
-                                                {paymentError && (
-                                                    <p className="text-[10px] text-red-500 font-bold mt-2 animate-in fade-in slide-in-from-top-1">
-                                                        {paymentError}
-                                                    </p>
-                                                )}
-                                            </div>
-
-                                            {/* Financing installments */}
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                                                    <TimerIcon className="w-3 h-3" />
-                                                    Plazo (Meses)
-                                                </label>
-                                                <select
-                                                    value={formData.installments}
-                                                    onChange={(e) => setFormData({ ...formData, installments: e.target.value })}
-                                                    className="w-full bg-[#0A110F] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all appearance-none cursor-pointer"
-                                                >
-                                                    <option value="12">12 Meses</option>
-                                                    <option value="24">24 Meses</option>
-                                                    <option value="36">36 Meses</option>
-                                                    <option value="48">48 Meses</option>
-                                                    <option value="60">60 Meses</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        {/* Comments */}
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                                                <Info className="w-3 h-3" />
-                                                Comentarios Adicionales
-                                            </label>
-                                            <textarea
-                                                rows={3}
-                                                placeholder="Ej: Color preferido, trade-in, etc."
-                                                value={formData.comments}
-                                                onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
-                                                className="w-full bg-[#0A110F] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#10B981]/30 transition-all resize-none"
-                                            />
-                                        </div>
-
-                                        <button
-                                            type="submit"
-                                            disabled={isSubmitting}
-                                            className="w-full bg-[#10B981] hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-[#0A110F] font-black py-5 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 shadow-[0_15px_40px_rgba(16,185,129,0.2)] mt-4 z-10 relative"
-                                        >
-                                            {isSubmitting ? (
-                                                <>
-                                                    <RefreshCcw className="w-5 h-5 animate-spin" />
-                                                    Procesando...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    Solicitar Cotización Oficial
-                                                    <ArrowRight className="w-5 h-5" />
-                                                </>
-                                            )}
-                                        </button>
-                                    </form>
-                                </>
-                            ) : (
-                                <div className="py-10 flex flex-col items-center text-center animate-in zoom-in-95 duration-500">
-                                    <div className="w-24 h-24 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(16,185,129,0.15)]">
-                                        <Check className="w-12 h-12 text-[#10B981]" />
-                                    </div>
-                                    <h2 className="text-3xl font-black text-white mb-4 tracking-tighter">¡Solicitud <span className="text-[#10B981]">Enviada!</span></h2>
-                                    <p className="text-slate-400 font-medium max-w-sm mb-8">
-                                        Tu asesor comercial ha recibido la solicitud y se pondrá en contacto contigo en las próximas 24 horas.
-                                    </p>
-                                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-[#10B981] animate-progress-modal" />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                    <div className="relative w-full max-w-2xl max-h-[92dvh] overflow-y-auto custom-scrollbar animate-in zoom-in-95 duration-300 rounded-[32px]">
+                        <button
+                            onClick={() => setIsModalOpen(false)}
+                            className="absolute top-5 right-5 z-20 p-2 rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        <QuoteForm
+                            vehicles={modelsData}
+                            advisors={advisors}
+                            onModelChange={() => {}}
+                            onSuccess={handleQuoteSuccess}
+                            defaultUserData={sessionUser}
+                        />
                     </div>
                 </div>
             )}

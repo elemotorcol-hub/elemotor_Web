@@ -27,6 +27,7 @@ export default function UserSlideOver({ isOpen, onClose, onUserUpdated, user }: 
 
     // Edit mode state
     const [role, setRole] = useState(user?.role || 'admin');
+    const [editForm, setEditForm] = useState({ name: user?.name || '', phone: user?.phone || '', city: user?.city || '' });
 
     // Create mode state
     const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', role: 'admin', cedula: '', city: '' });
@@ -36,6 +37,7 @@ export default function UserSlideOver({ isOpen, onClose, onUserUpdated, user }: 
     useEffect(() => {
         if (user) {
             setRole(user.role);
+            setEditForm({ name: user.name || '', phone: user.phone || '', city: user.city || '' });
         } else {
             setForm({ name: '', email: '', phone: '', password: '', role: 'admin', cedula: '', city: '' });
             setError(null);
@@ -49,11 +51,18 @@ export default function UserSlideOver({ isOpen, onClose, onUserUpdated, user }: 
         setLoading(true);
         setError(null);
         try {
-            await userAdminService.updateRole(user.id, role);
+            await Promise.all([
+                userAdminService.updateRole(user.id, role),
+                userAdminService.updateUser(user.id, {
+                    name:  editForm.name  || undefined,
+                    phone: editForm.phone || undefined,
+                    city:  editForm.city  || undefined,
+                }),
+            ]);
             await onUserUpdated();
             onClose();
         } catch (e: any) {
-            setError(e?.message || 'Error al actualizar el rol del usuario');
+            setError(e?.message || 'Error al actualizar el usuario');
         } finally {
             setLoading(false);
         }
@@ -162,7 +171,7 @@ export default function UserSlideOver({ isOpen, onClose, onUserUpdated, user }: 
                                                     {user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                                                 </div>
                                             )}
-                                            <h3 className="text-lg font-bold text-white text-center">{user.name}</h3>
+                                            <h3 className="text-lg font-bold text-white text-center">{editForm.name || user.name}</h3>
                                             <div className="mt-2 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400">
                                                 <Shield className="w-3.5 h-3.5" />
                                                 Rol: {getRoleLabel(user.role)}
@@ -175,18 +184,49 @@ export default function UserSlideOver({ isOpen, onClose, onUserUpdated, user }: 
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Información Básica</label>
-                                                <div className="bg-white/5 rounded-xl p-4 space-y-3">
-                                                    <div className="flex items-center gap-3">
-                                                        <Mail size={16} className="text-slate-500" />
-                                                        <span className="text-sm text-slate-200">{user?.email}</span>
+                                                <div className="space-y-3">
+                                                    {/* Email — solo lectura */}
+                                                    <div className="relative">
+                                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                                                        <input
+                                                            type="email"
+                                                            value={user?.email || ''}
+                                                            disabled
+                                                            className={`${inputClass} opacity-50 cursor-not-allowed`}
+                                                        />
                                                     </div>
-                                                    <div className="flex items-center gap-3">
-                                                        <Phone size={16} className="text-slate-500" />
-                                                        <span className="text-sm text-slate-200">{user?.phone || 'Sin teléfono'}</span>
+                                                    {/* Nombre */}
+                                                    <div className="relative">
+                                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Nombre completo"
+                                                            value={editForm.name}
+                                                            onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))}
+                                                            className={inputClass}
+                                                        />
                                                     </div>
-                                                    <div className="flex items-center gap-3">
-                                                        <User size={16} className="text-slate-500" />
-                                                        <span className="text-sm text-slate-200">{user?.city || 'Ciudad no especificada'}</span>
+                                                    {/* Teléfono */}
+                                                    <div className="relative">
+                                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Teléfono (+573001234567)"
+                                                            value={editForm.phone}
+                                                            onChange={(e) => setEditForm(f => ({ ...f, phone: e.target.value }))}
+                                                            className={inputClass}
+                                                        />
+                                                    </div>
+                                                    {/* Ciudad */}
+                                                    <div className="relative">
+                                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Ciudad"
+                                                            value={editForm.city}
+                                                            onChange={(e) => setEditForm(f => ({ ...f, city: e.target.value }))}
+                                                            className={inputClass}
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>

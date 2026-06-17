@@ -162,10 +162,27 @@ export const orderService = {
     /**
      * [Cliente] Subir foto de entrega de un pedido — POST /api/orders/:id/delivery-photo
      */
-    async uploadDeliveryPhoto(id: number | string, file: File): Promise<Order> {
+    async uploadDeliveryPhoto(id: number | string, file: File): Promise<{ id: number; deliveryPhotoUrl: string }> {
         const form = new FormData();
-        form.append('deliveryPhoto', file);
+        form.append('file', file);
         return fetchApi(`/api/orders/${id}/delivery-photo`, { method: 'POST', body: form });
+    },
+
+    /**
+     * [Admin] Eliminar foto de entrega de un pedido
+     */
+    async removeDeliveryPhoto(id: number | string): Promise<{ success: boolean }> {
+        return fetchApi(`/api/orders/${id}/delivery-photo`, { method: 'DELETE' });
+    },
+
+    /**
+     * [Público] Listar fotos de entrega dinámicas para el carrusel de la landing
+     */
+    async fetchDeliveryPhotos(): Promise<{ id: number; trackingCode: string | null; deliveryPhotoUrl: string; createdAt: string }[]> {
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        const res = await fetch(`${API_BASE}/api/orders/delivery-photos`);
+        if (!res.ok) return [];
+        return res.json();
     },
 
     /**

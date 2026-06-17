@@ -6,11 +6,11 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // ─── Imágenes de entregas ──────────────────────────────────────────────────────
-const TOTAL_IMAGES = 29;
-const IMAGES: string[] = Array.from(
-    { length: TOTAL_IMAGES },
-    (_, i) => `/fotos carrusel entregas/${i + 1}.jpeg`
-);
+const EXCLUDED_IMAGES = new Set([15, 21, 23]);
+const IMAGES: string[] = Array.from({ length: 29 }, (_, i) => i + 1)
+    .filter((n) => !EXCLUDED_IMAGES.has(n))
+    .map((n) => `/fotos carrusel entregas/${n}.jpeg`);
+const TOTAL_IMAGES = IMAGES.length;
 
 // Cuántas imágenes mostrar a la vez según breakpoint
 const VISIBLE_DESKTOP = 3;
@@ -125,7 +125,7 @@ export function DeliveryCarousel() {
                 >
                     <span className="inline-flex items-center gap-2 border border-[#00D4AA]/40 text-[#00D4AA] text-[10px] font-black tracking-[0.25em] uppercase px-4 py-1.5 rounded-full mb-5">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#00D4AA] animate-pulse" />
-                        Entregas
+                        Reseñas
                     </span>
                     <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight uppercase leading-none">
                         CADA ENTREGA,{' '}
@@ -248,7 +248,7 @@ export function DeliveryCarousel() {
                         <span className="text-[#00D4AA] font-black">{current + 1}</span>
                         {' '}de{' '}
                         <span className="font-semibold text-white/40">{TOTAL_IMAGES}</span>
-                        {' '}entregas
+                        {' '}fotos
                     </span>
                     <span className="w-8 h-px bg-white/10" />
                 </motion.div>

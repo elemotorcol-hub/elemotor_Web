@@ -19,7 +19,7 @@ export function NotificationBell() {
     { refreshInterval: 30000 }
   );
 
-  const count = unreadData?.count ?? 0;
+  const count = unreadData?.unreadCount ?? 0;
 
   const fetchNotifications = useCallback(async () => {
     setLoadingNotifs(true);

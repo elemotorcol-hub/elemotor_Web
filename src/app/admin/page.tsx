@@ -16,8 +16,12 @@ import { Quote } from '@/types/crm';
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 interface CRMMetricsData {
-    totalActive: number;
+    total: number;
+    active: number;
     assigned: number;
+    unassigned: number;
+    closedWon: number;
+    closedLost: number;
     inProcess: number;
     contacted: number;
 }
@@ -26,30 +30,46 @@ function buildCRMMetrics(quotes: Quote[]): CRMMetricsData {
     const ACTIVE_STATUSES = new Set(['pending', 'contacted', 'responded', 'negotiation']);
     const active = quotes.filter((q) => ACTIVE_STATUSES.has(q.status));
     return {
-        totalActive: active.length,
-        assigned: active.filter((q) => q.assignedToId != null).length,
-        inProcess: active.filter((q) => q.status === 'responded' || q.status === 'negotiation').length,
-        contacted: active.filter((q) => q.status === 'contacted').length,
+        total:      quotes.length,
+        active:     active.length,
+        assigned:   active.filter((q) => q.assignedTo != null).length,
+        unassigned: active.filter((q) => q.assignedTo == null).length,
+        closedWon:  quotes.filter((q) => q.status === 'closed_won').length,
+        closedLost: quotes.filter((q) => q.status === 'closed_lost').length,
+        inProcess:  active.filter((q) => q.status === 'responded' || q.status === 'negotiation').length,
+        contacted:  active.filter((q) => q.status === 'contacted').length,
     };
 }
 
 function buildAdvisors(quotes: Quote[]): AdvisorStat[] {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const map = new Map<number, AdvisorStat>();
+
     for (const q of quotes) {
-        if (!q.assignedToId || !q.assignedTo) continue;
-        const existing = map.get(q.assignedToId);
+        if (!q.assignedTo) continue;
+        const { id, name } = q.assignedTo;
         const qDate = q.updatedAt ?? q.createdAt;
+        const isThisMonth = q.createdAt ? new Date(q.createdAt) >= startOfMonth : false;
+        const existing = map.get(id);
+
         if (existing) {
             existing.assignedCount += 1;
+            if (q.status === 'closed_won')  existing.closedWon  += 1;
+            if (q.status === 'closed_lost') existing.closedLost += 1;
+            if (isThisMonth) existing.thisMonth += 1;
             if (qDate && (!existing.lastActivityAt || qDate > existing.lastActivityAt)) {
                 existing.lastActivityAt = qDate;
             }
         } else {
-            map.set(q.assignedToId, {
-                id: q.assignedToId,
-                name: q.assignedTo.name,
+            map.set(id, {
+                id,
+                name,
                 email: '',
                 assignedCount: 1,
+                closedWon:  q.status === 'closed_won'  ? 1 : 0,
+                closedLost: q.status === 'closed_lost' ? 1 : 0,
+                thisMonth:  isThisMonth ? 1 : 0,
                 lastActivityAt: qDate,
             });
         }

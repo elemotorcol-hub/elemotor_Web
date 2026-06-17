@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, User, CheckCircle2, XCircle, Loader2, UserPlus } from 'lucide-react';
+import { Search, User, CheckCircle2, XCircle, Loader2, UserPlus, ChevronDown } from 'lucide-react';
 import { userAdminService, AdminUser } from '@/services/user_admin.service';
 import UserSlideOver from './UserSlideOver';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -9,6 +9,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 export default function UsersTable() {
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [roleFilter, setRoleFilter] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const debouncedSearch = useDebounce(searchTerm, 500);
@@ -17,11 +18,11 @@ export default function UsersTable() {
     const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
-    const fetchData = useCallback(async (search?: string) => {
+    const fetchData = useCallback(async (search?: string, role?: string) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await userAdminService.getUsers({ search, limit: 100 });
+            const response = await userAdminService.getUsers({ search, role: role || undefined, limit: 100 });
             setUsers(response.data);
         } catch (err: any) {
             setError(err.message || "Error al cargar usuarios");
@@ -31,8 +32,8 @@ export default function UsersTable() {
     }, []);
 
     useEffect(() => {
-        fetchData(debouncedSearch);
-    }, [debouncedSearch, fetchData]);
+        fetchData(debouncedSearch, roleFilter);
+    }, [debouncedSearch, roleFilter, fetchData]);
 
     const getRoleLabel = (role: string): string => {
         const labels: Record<string, string> = {
@@ -81,13 +82,28 @@ export default function UsersTable() {
                             className="w-full bg-black/20 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/50 transition-all font-light"
                         />
                     </div>
-                    <button
-                        onClick={handleCreateUser}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-[#10B981]/20 whitespace-nowrap"
-                    >
-                        <UserPlus size={16} />
-                        Crear Usuario
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <select
+                                value={roleFilter}
+                                onChange={(e) => setRoleFilter(e.target.value)}
+                                className="appearance-none bg-black/20 border border-white/10 rounded-xl py-2 pl-4 pr-9 text-sm text-white focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/50 transition-all font-light"
+                            >
+                                <option value="">Todos los roles</option>
+                                <option value="client">Cliente</option>
+                                <option value="admin">Asesor Comercial</option>
+                                <option value="super_admin">Super Admin</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+                        </div>
+                        <button
+                            onClick={handleCreateUser}
+                            className="flex items-center gap-2 px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-[#10B981]/20 whitespace-nowrap"
+                        >
+                            <UserPlus size={16} />
+                            Crear Usuario
+                        </button>
+                    </div>
                 </div>
 
                 {/* Table */}
@@ -168,7 +184,7 @@ export default function UsersTable() {
                 isOpen={isSlideOverOpen} 
                 onClose={() => setIsSlideOverOpen(false)} 
                 user={selectedUser} 
-                onUserUpdated={() => fetchData(debouncedSearch)}
+                onUserUpdated={() => fetchData(debouncedSearch, roleFilter)}
             />
         </>
     );
